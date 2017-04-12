@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="StickerPlayerView">
+        <attr name="randomLocation" format="boolean" />
+        <attr name="delSrc" format="reference" />
+        <attr name="copySrc" format="reference" />
+        <attr name="dragSrc" format="reference" />
+        <attr name="flipSrc" format="reference" />
+        <attr name="frameColor" format="color" />
+        <attr name="frameWidth" format="dimension" />
+        <attr name="framePadding" format="dimension" />
+    </declare-styleable>
+</resources>
