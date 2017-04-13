@@ -18,7 +18,7 @@ import java.io.InputStream;
  */
 public class StickerUtil {
 
-    public static final int PAINT_FLAG = Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
+    public static final int PAINT_FLAG = Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG;
 
     private StickerUtil() {
     }
@@ -30,7 +30,7 @@ public class StickerUtil {
      * @param dpValue dp值
      */
     public static int dpToPx(Context context, float dpValue) {
-        final float scale = context.getResources().getDisplayMetrics().density;
+        float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
     }
 
@@ -67,8 +67,8 @@ public class StickerUtil {
      */
     public static Bitmap readBitmap(String path) {
         try {
-            final InputStream is = new BufferedInputStream(new FileInputStream(path));
-            final Bitmap bitmap = BitmapFactory.decodeStream(is);
+            InputStream is = new BufferedInputStream(new FileInputStream(path));
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
             is.close();
             return bitmap;
         } catch (IOException e) {
@@ -85,8 +85,8 @@ public class StickerUtil {
      */
     public static Bitmap readAssetsBitmap(Context context, String path) {
         try {
-            final InputStream is = context.getAssets().open(path);
-            final Bitmap bitmap = BitmapFactory.decodeStream(is);
+            InputStream is = context.getAssets().open(path);
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
             is.close();
             return bitmap;
         } catch (IOException e) {

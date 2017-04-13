@@ -2,6 +2,8 @@ package com.xiuyukeji.stickerplayerview.bean;
 
 import android.graphics.Matrix;
 
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateAngle;
+
 /**
  * 记录贴纸数据
  *
@@ -13,6 +15,7 @@ public class StickerBean {
     private final String index;
     private final int width;
     private final int height;
+    private final int angle;
 
     private int dx;
     private int dy;
@@ -24,6 +27,7 @@ public class StickerBean {
         this.index = index;
         this.width = width;
         this.height = height;
+        this.angle = calculateAngle(this);
         this.scale = 1f;
     }
 
@@ -41,6 +45,10 @@ public class StickerBean {
 
     public int getHeight() {
         return height;
+    }
+
+    public int getAngle() {
+        return angle;
     }
 
     public int getDx() {
@@ -78,9 +86,11 @@ public class StickerBean {
     @Override
     public String toString() {
         return "StickerBean{" +
-                ", index=" + index +
+                "matrix=" + matrix.toString() +
+                ", index='" + index + '\'' +
                 ", width=" + width +
                 ", height=" + height +
+                ", angle=" + angle +
                 ", dx=" + dx +
                 ", dy=" + dy +
                 ", degrees=" + degrees +

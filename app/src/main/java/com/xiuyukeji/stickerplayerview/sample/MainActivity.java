@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_settings:
                 mStickerPlayerView.addTextSticker(0, BitmapSource.ASSETS, "test.png",
-                        "testText", 0xff000000, StickerUtil.dpToPx(this, 24),
+                        "testText", 0xff000000, StickerUtil.dpToPx(this, 18),
                         false, false, false,
                         176, 80, 74, 97);
                 return true;

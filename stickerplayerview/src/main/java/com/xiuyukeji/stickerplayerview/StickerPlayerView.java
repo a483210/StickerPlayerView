@@ -22,6 +22,7 @@ import com.xiuyukeji.stickerplayerview.utils.BitmapSource;
 import java.util.ArrayList;
 
 import static com.xiuyukeji.stickerplayerview.utils.BitmapSource.ASSETS;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.attachBackground;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.dpToPx;
 
@@ -35,7 +36,7 @@ public class StickerPlayerView extends View {
     private boolean mIsRandomLocation;
 
     private final StickerRenderer mStickerRenderer;
-    private final StickerTouch mStickerTouch;
+    private final StickerEvent mStickerEvent;
 
     private final SparseArray<ArrayList<StickerBean>> mStickers;
     private ArrayList<StickerBean> mCurrentStickers;
@@ -56,7 +57,7 @@ public class StickerPlayerView extends View {
         mStickers = new SparseArray<>();
 
         mStickerRenderer = new StickerRenderer();
-        mStickerTouch = new StickerTouch(this);
+        mStickerEvent = new StickerEvent(this);
 
         initAttrs(attrs);
         initView();
@@ -108,7 +109,7 @@ public class StickerPlayerView extends View {
                 attachBackground(flipBitmap, color, padding),
                 frameColor, frameWidth);
 
-        mStickerTouch.setIcon(new IconBean(delBitmap.getWidth(), delBitmap.getHeight()),
+        mStickerEvent.setIcon(new IconBean(delBitmap.getWidth(), delBitmap.getHeight()),
                 new IconBean(copyBitmap.getWidth(), copyBitmap.getHeight()),
                 new IconBean(dragBitmap.getWidth(), dragBitmap.getHeight()),
                 new IconBean(flipBitmap.getWidth(), flipBitmap.getHeight()),
@@ -126,7 +127,7 @@ public class StickerPlayerView extends View {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        return mStickerTouch.dispatchTouchEvent(event);
+        return mStickerEvent.dispatchTouchEvent(event);
     }
 
     /**
@@ -219,8 +220,9 @@ public class StickerPlayerView extends View {
                                int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
         TextStickerBean textStickerBean;
 
-        if (TextUtils.isEmpty(path)) {
-            textStickerBean = new TextStickerBean(text, textColor, textSize,
+        if (TextUtils.isEmpty(path)) {//这里的width和height需要调整
+            textStickerBean = new TextStickerBean(getWidth(), getHeight(),
+                    text, textColor, textSize,
                     isBold, isItalic, isUnderline,
                     leftPadding, topPadding, rightPadding, bottomPadding);
         } else {
@@ -236,7 +238,11 @@ public class StickerPlayerView extends View {
 
         setStickerLocation(textStickerBean);
 
-        getStickers(frameIndex).add(textStickerBean);
+        ArrayList<StickerBean> stickers = getStickers(frameIndex);
+        stickers.add(textStickerBean);
+
+        mStickerEvent.setSelectedPosition(stickers.size() - 1);
+
         invalidate();
     }
 
@@ -265,12 +271,11 @@ public class StickerPlayerView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
         if (mCurrentStickers.isEmpty()) {
             return;
         }
         int count = mCurrentStickers.size();
-        int selectedPosition = mStickerTouch.getSelectedPosition();
+        int selectedPosition = mStickerEvent.getSelectedPosition();
         for (int i = 0; i < count; i++) {
             StickerBean stickerBean = mCurrentStickers.get(i);
             if (stickerBean instanceof TextStickerBean) {
@@ -279,11 +284,11 @@ public class StickerPlayerView extends View {
                 mStickerRenderer.drawSticker(canvas, stickerBean);
             }
             if (i == selectedPosition) {
-                mStickerRenderer.drawSelected(canvas, mStickerTouch.getFramePath(),
-                        mStickerTouch.getDelMatrix(),
-                        mStickerTouch.getCopyMatrix(),
-                        mStickerTouch.getDragMatrix(),
-                        mStickerTouch.getFlipMatrix(),
+                mStickerRenderer.drawSelected(canvas, mStickerEvent.getFramePath(),
+                        mStickerEvent.getDelMatrix(),
+                        mStickerEvent.getCopyMatrix(),
+                        mStickerEvent.getDragMatrix(),
+                        mStickerEvent.getFlipMatrix(),
                         stickerBean);
             }
         }
@@ -299,11 +304,12 @@ public class StickerPlayerView extends View {
             stickerBean.setDx(distanceWidth / 2);
             stickerBean.setDy(distanceHeight / 2);
         }
+        calculateSticker(stickerBean);
     }
 
     private void setCurrentStickers(int frameIndex) {
         mCurrentStickers = getStickers(frameIndex);
-        mStickerTouch.setStickers(mCurrentStickers);
+        mStickerEvent.setStickers(mCurrentStickers);
     }
 
     private ArrayList<StickerBean> getStickers(int frameIndex) {
@@ -313,5 +319,11 @@ public class StickerPlayerView extends View {
             mStickers.put(frameIndex, stickers);
         }
         return stickers;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mStickerEvent.onDetached();
     }
 }
