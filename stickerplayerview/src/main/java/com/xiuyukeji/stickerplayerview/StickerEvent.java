@@ -12,15 +12,16 @@ import com.xiuyukeji.stickerplayerview.intefaces.OnClickListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickListener;
-import com.xiuyukeji.stickerplayerview.intefaces.OnFlipListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnSelectedListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 
 import java.util.ArrayList;
 
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateDegrees;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateEdge;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSelected;
-import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.degreesWith;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMatrix;
 
 /**
  * 贴纸帮助类
@@ -38,7 +39,7 @@ class StickerEvent extends StickerClickEvent {
     private final Matrix mInvertMatrix;
     private final Rect mRect;
 
-    private final float[][] mFramePoint;
+    private final float[] mFramePoint;
     private int mFramePadding;
 
     private IconBean mDelIconBean;
@@ -57,7 +58,7 @@ class StickerEvent extends StickerClickEvent {
     private int mLastMoveY;
 
     private float mLastEdge;
-    private int mLastDegrees;
+    private float mLastDegrees;
 
     private final int mStickerMaxSize;
     private final int mStickerMinSize;
@@ -73,7 +74,6 @@ class StickerEvent extends StickerClickEvent {
 
     private OnDeleteListener mOnDeleteListener;
     private OnCopyListener mOnCopyListener;
-    private OnFlipListener mOnFlipListener;
 
     private OnClickListener mOnClickListener;
     private OnDoubleClickListener mOnDoubleClickListener;
@@ -88,7 +88,7 @@ class StickerEvent extends StickerClickEvent {
         mInvertMatrix = new Matrix();
         mRect = new Rect();
 
-        mFramePoint = new float[4][2];
+        mFramePoint = new float[8];
 
         ViewConfiguration vc = ViewConfiguration.get(view.getContext());
         mTouchSlop = vc.getScaledTouchSlop();
@@ -120,7 +120,7 @@ class StickerEvent extends StickerClickEvent {
         return mSelectedPosition;
     }
 
-    float[][] getFramePath() {
+    float[] getFramePoint() {
         return mFramePoint;
     }
 
@@ -181,7 +181,7 @@ class StickerEvent extends StickerClickEvent {
                 }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                if (event.getPointerCount() == 2) {
+                if (event.getPointerCount() == 2 && isDragSecond(event)) {
                     mScrollState = SCROLL_START;
                     mAction = ACTION_DRAG_SECOND;
                     return onTouchEvent(event);
@@ -237,7 +237,9 @@ class StickerEvent extends StickerClickEvent {
                         && mAction != ACTION_DRAG_SECOND) {
                     break;
                 }
-                mAction = ACTION_DRAG_SECOND;
+                if (isDragSecond(event)) {
+                    mAction = ACTION_DRAG_SECOND;
+                }
                 break;
             case MotionEvent.ACTION_POINTER_UP:// 第二点弹起
                 if (event.getPointerCount() > 2
@@ -288,6 +290,15 @@ class StickerEvent extends StickerClickEvent {
         return true;
     }
 
+    private boolean isDragSecond(MotionEvent event) {
+        if (mStickerBean == null) {
+            return false;
+        }
+        int downX = (int) event.getX(1);
+        int downY = (int) event.getY(1);
+        return containPoint(mStickerBean, downX, downY);
+    }
+
     private void drag(StickerBean stickerBean) {
         int px = stickerBean.getDx() + stickerBean.getWidth() / 2;
         int py = stickerBean.getDy() + stickerBean.getHeight() / 2;
@@ -303,18 +314,13 @@ class StickerEvent extends StickerClickEvent {
     private void drag(StickerBean stickerBean, int x, int y, int px, int py) {
         int xEdge = mMoveX - x;
         int yEdge = mMoveY - y;
-        float edge = (float) Math.sqrt(xEdge * xEdge + yEdge * yEdge);
 
-        float scaleDiff = calculateScaleDiff(stickerBean, edge);
+        float scaleDiff = calculateScaleDiff(stickerBean, calculateEdge(xEdge, yEdge));
 
         stickerBean.getMatrix().postScale(scaleDiff, scaleDiff, px, py);
         stickerBean.setScale(stickerBean.getScale() * scaleDiff);
 
-        int degrees = (int) Math.round((Math.asin(yEdge / edge) / Math.PI * 180));
-        degrees = degreesWith(degrees, xEdge, yEdge);
-        degrees -= stickerBean.getAngle();
-
-        int degreesDiff = calculateDegreesDiff(degrees);
+        float degreesDiff = calculateDegreesDiff(calculateDegrees(xEdge, yEdge));
 
         stickerBean.getMatrix().postRotate(degreesDiff, px, py);
         stickerBean.setDegrees(stickerBean.getDegrees() + degreesDiff);
@@ -341,11 +347,11 @@ class StickerEvent extends StickerClickEvent {
         return scaleDiff;
     }
 
-    private int calculateDegreesDiff(int degrees) {
+    private float calculateDegreesDiff(float degrees) {
         if (mLastDegrees == 0) {
             mLastDegrees = degrees;
         }
-        int degreesDiff = degrees - mLastDegrees;
+        float degreesDiff = degrees - mLastDegrees;
         mLastDegrees = degrees;
         return degreesDiff;
     }
@@ -411,9 +417,13 @@ class StickerEvent extends StickerClickEvent {
         if (mStickerBean == null) {
             return;
         }
-        if (mOnFlipListener != null) {
-            mOnFlipListener.onFlip(mStickerBean);
-        }
+
+        mStickerBean.setFlip(!mStickerBean.isFlip());
+
+        flipMatrix(mStickerBean);
+        flipMatrix(mFlipIconBean);
+
+        mView.invalidate();
     }
 
     @Override
@@ -428,20 +438,14 @@ class StickerEvent extends StickerClickEvent {
 
     @Override
     protected void doubleClick() {
-        if (mStickerBean == null) {
-            return;
-        }
-        if (mOnDoubleClickListener != null) {
+        if (mStickerBean != null && mOnDoubleClickListener != null) {
             mOnDoubleClickListener.onDoubleClick(mStickerBean);
         }
     }
 
     @Override
     protected void longClick() {
-        if (mStickerBean == null) {
-            return;
-        }
-        if (mOnLongClickListener != null) {
+        if (mStickerBean != null && mOnLongClickListener != null) {
             mOnLongClickListener.onLongClick(mStickerBean);
         }
     }
@@ -493,6 +497,10 @@ class StickerEvent extends StickerClickEvent {
         return containPoint(stickerBean.getMatrix(), stickerBean.getWidth(), stickerBean.getHeight(), mDownX, mDownY);
     }
 
+    private boolean containPoint(StickerBean stickerBean, float x, float y) {
+        return containPoint(stickerBean.getMatrix(), stickerBean.getWidth(), stickerBean.getHeight(), x, y);
+    }
+
     //判断坐标是否在变换过后的矩阵内
     private boolean containPoint(Matrix matrix, int width, int height, float x, float y) {
         if (matrix.invert(mInvertMatrix)) {
@@ -517,19 +525,15 @@ class StickerEvent extends StickerClickEvent {
         this.mOnCopyListener = l;
     }
 
-    void setOnFlipListener(OnFlipListener l) {
-        this.mOnFlipListener = l;
-    }
-
-    void setClickListener(OnClickListener l) {
+    void setOnClickListener(OnClickListener l) {
         this.mOnClickListener = l;
     }
 
-    void setDoubleClickListener(OnDoubleClickListener l) {
+    void setOnDoubleClickListener(OnDoubleClickListener l) {
         this.mOnDoubleClickListener = l;
     }
 
-    void setLongClickListener(OnLongClickListener l) {
+    void setOnLongClickListener(OnLongClickListener l) {
         this.mOnLongClickListener = l;
     }
 

@@ -1,6 +1,5 @@
 package com.xiuyukeji.stickerplayerview.bean;
 
-import android.graphics.Matrix;
 import android.text.StaticLayout;
 
 /**
@@ -9,7 +8,6 @@ import android.text.StaticLayout;
  * @author Created by jz on 2017/4/11 16:58
  */
 public class TextStickerBean extends StickerBean {
-    private final Matrix textMatrix;
     private final int textWidth;
     private final int textHeight;
     private StaticLayout staticLayout;
@@ -43,7 +41,6 @@ public class TextStickerBean extends StickerBean {
                            boolean isBold, boolean isItalic, boolean isUnderline,
                            int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
         super(index, width, height);
-        this.textMatrix = new Matrix();
         this.textWidth = width - leftPadding - rightPadding;
         this.textHeight = width - topPadding - bottomPadding;
         this.text = text;
@@ -57,10 +54,6 @@ public class TextStickerBean extends StickerBean {
         this.topPadding = topPadding;
         this.rightPadding = rightPadding;
         this.bottomPadding = bottomPadding;
-    }
-
-    public Matrix getTextMatrix() {
-        return textMatrix;
     }
 
     public int getTextWidth() {
@@ -170,7 +163,6 @@ public class TextStickerBean extends StickerBean {
     @Override
     public String toString() {
         return "TextStickerBean{" +
-                "textMatrix=" + textMatrix.toString() +
                 ", textWidth=" + textWidth +
                 ", textHeight=" + textHeight +
                 ", staticLayout=" + staticLayout +

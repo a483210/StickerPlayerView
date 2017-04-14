@@ -34,6 +34,8 @@ class StickerRenderer {
     private final TextPaint mTextPaint;
     private final Paint mFramePaint;
 
+    private final float[] mPoint;
+
     private Bitmap mDelBitmap;
     private Bitmap mCopyBitmap;
     private Bitmap mDragBitmap;
@@ -43,10 +45,10 @@ class StickerRenderer {
         this.mBitmapBuffers = new HashMap<>();
 
         mPaint = new Paint(PAINT_FLAG);
-
         mTextPaint = new TextPaint(PAINT_FLAG);
-
         mFramePaint = new Paint(PAINT_FLAG);
+
+        mPoint = new float[2];
     }
 
     void setFrameStyle(Bitmap delBitmap, Bitmap copyBitmap, Bitmap dragBitmap, Bitmap flipBitmap,
@@ -90,18 +92,19 @@ class StickerRenderer {
             textStickerBean.setStaticLayout(staticLayout);
         }
 
-        calculateTextSticker(textStickerBean, staticLayout.getHeight());//这里需要重新计算文字位置
+        calculateTextSticker(textStickerBean, mPoint, staticLayout.getHeight());//这里需要重新计算文字位置
 
         canvas.save();
 
         canvas.concat(textStickerBean.getMatrix());
-        canvas.concat(textStickerBean.getTextMatrix());
+        canvas.translate(mPoint[0], mPoint[1]);
+
         staticLayout.draw(canvas);
 
         canvas.restore();
     }
 
-    void drawSelected(Canvas canvas, float[][] framePoint,
+    void drawSelected(Canvas canvas, float[] framePoint,
                       Matrix delMatrix, Matrix copyMatrix, Matrix dragMatrix, Matrix flipMatrix,
                       StickerBean stickerBean) {
         if (TextUtils.isEmpty(stickerBean.getIndex())) {//如果没有背景则不绘制选择框
@@ -116,15 +119,15 @@ class StickerRenderer {
         canvas.drawBitmap(mFlipBitmap, flipMatrix, mPaint);
     }
 
-    private void drawFrame(Canvas canvas, float[][] framePoint) {
-        canvas.drawLine(framePoint[0][0], framePoint[0][1],
-                framePoint[1][0], framePoint[1][1], mFramePaint);
-        canvas.drawLine(framePoint[1][0], framePoint[1][1],
-                framePoint[2][0], framePoint[2][1], mFramePaint);
-        canvas.drawLine(framePoint[2][0], framePoint[2][1],
-                framePoint[3][0], framePoint[3][1], mFramePaint);
-        canvas.drawLine(framePoint[3][0], framePoint[3][1],
-                framePoint[0][0], framePoint[0][1], mFramePaint);
+    private void drawFrame(Canvas canvas, float[] framePoint) {
+        canvas.drawLine(framePoint[0], framePoint[1],
+                framePoint[2], framePoint[3], mFramePaint);
+        canvas.drawLine(framePoint[2], framePoint[3],
+                framePoint[6], framePoint[7], mFramePaint);
+        canvas.drawLine(framePoint[6], framePoint[7],
+                framePoint[4], framePoint[5], mFramePaint);
+        canvas.drawLine(framePoint[4], framePoint[5],
+                framePoint[0], framePoint[1], mFramePaint);
     }
 
     Bitmap getBitmapBuffer(Context context, int source, String path) {

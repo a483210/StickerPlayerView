@@ -1,6 +1,7 @@
 package com.xiuyukeji.stickerplayerview.utils;
 
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
+import com.xiuyukeji.stickerplayerview.bean.MatrixBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 
@@ -20,24 +21,26 @@ public class StickerCalculateUtil {
      * @param textStickerBean 贴纸数据
      * @param textHeight      文字高度
      */
-    public static void calculateTextSticker(TextStickerBean textStickerBean, int textHeight) {
-        calculateTextSticker(textStickerBean, textHeight, 1, 1);
+    public static void calculateTextSticker(TextStickerBean textStickerBean, float[] point,
+                                            int textHeight) {
+        point[0] = textStickerBean.getLeftPadding();
+        point[1] = textStickerBean.getTopPadding() + (textStickerBean.getTextHeight() - textHeight) / 2f;
     }
 
     /**
-     * 重新计算贴纸文字位置
+     * 重新计算贴纸文字位置，当需要缩放时
      *
      * @param textStickerBean 贴纸数据
      * @param textHeight      文字高度
      * @param srcWidth        来源宽度
      * @param dstWidth        目的宽度
      */
-    public static void calculateTextSticker(TextStickerBean textStickerBean, int textHeight,
-                                            int srcWidth, int dstWidth) {
+    public static void calculateTextSticker(TextStickerBean textStickerBean, float[] point,
+                                            int textHeight, int srcWidth, int dstWidth) {
         float ratio = dstWidth / (float) srcWidth;
 
-        textStickerBean.getTextMatrix().setTranslate(textStickerBean.getLeftPadding() * ratio,
-                (textStickerBean.getTopPadding() + (textStickerBean.getTextHeight() - textHeight) / 2f) * ratio);
+        point[0] = textStickerBean.getLeftPadding() * ratio;
+        point[1] = (textStickerBean.getTopPadding() + (textStickerBean.getTextHeight() - textHeight) / 2f) * ratio;
     }
 
     /**
@@ -46,11 +49,20 @@ public class StickerCalculateUtil {
      * @param stickerBean 贴纸数据
      */
     public static void calculateSticker(StickerBean stickerBean) {
-        calculateSticker(stickerBean, 1, 1);
+        float px = stickerBean.getWidth() / 2f;
+        float py = stickerBean.getHeight() / 2f;
+
+        stickerBean.getMatrix().setRotate(stickerBean.getDegrees(), px, py);
+        stickerBean.getMatrix().postScale(stickerBean.getScale(), stickerBean.getScale(), px, py);
+        stickerBean.getMatrix().postTranslate(stickerBean.getDx(), stickerBean.getDy());
+
+        if (stickerBean.isFlip()) {
+            flipMatrix(stickerBean);
+        }
     }
 
     /**
-     * 重新计算贴纸位置
+     * 重新计算贴纸位置，当需要缩放时
      *
      * @param stickerBean 贴纸数据
      * @param srcWidth    来源宽度
@@ -81,6 +93,10 @@ public class StickerCalculateUtil {
         stickerBean.getMatrix().setRotate(stickerBean.getDegrees(), px, py);
         stickerBean.getMatrix().postScale(scale, scale, px, py);
         stickerBean.getMatrix().postTranslate(dx, dy);
+
+        if (stickerBean.isFlip()) {
+            flipMatrix(stickerBean);
+        }
     }
 
     /**
@@ -91,12 +107,12 @@ public class StickerCalculateUtil {
      * @param copyIconBean 复制图标数据
      * @param dragIconBean 移动图标数据
      * @param flipIconBean 反转图标数据
-     * @param framePoint   边框路径
+     * @param framePoint   边框坐标
      * @param framePadding 边框间距
      */
     public static void calculateSelected(StickerBean stickerBean,
                                          IconBean delIconBean, IconBean copyIconBean, IconBean dragIconBean, IconBean flipIconBean,
-                                         float[][] framePoint, int framePadding) {
+                                         float[] framePoint, int framePadding) {
         float scale = (stickerBean.getScale() - 1) * stickerBean.getWidth();
         float width = stickerBean.getWidth() + scale + framePadding * 2;
         float height = stickerBean.getHeight() + scale + framePadding * 2;
@@ -106,9 +122,7 @@ public class StickerCalculateUtil {
         float pointX = dx + width / 2;
         float pointY = dy + height / 2;
 
-        calculateFrame(framePoint, stickerBean.getDegrees(),
-                dx, dy, dx + width, dy + height,
-                pointX, pointY);
+        calculateFrame(stickerBean, framePoint, framePadding);
 
         calculateIcon(delIconBean, stickerBean.getDegrees(),
                 dx, dy,
@@ -125,88 +139,63 @@ public class StickerCalculateUtil {
         calculateIcon(flipIconBean, stickerBean.getDegrees(),
                 dx, dy + height,
                 pointX, pointY);
+
+        if (stickerBean.isFlip()) {
+            flipMatrix(flipIconBean);
+        }
     }
 
-    //设置矩阵
+    //设置图标矩阵
     private static void calculateIcon(IconBean iconBean, float degrees, float dx, float dy,
                                       float pointX, float pointY) {
-        iconBean.getMatrix().setTranslate(dx - iconBean.getWidth() / 2, dy - iconBean.getHeight() / 2);
+        iconBean.getMatrix().setTranslate(dx - iconBean.getWidth() / 2,
+                dy - iconBean.getHeight() / 2);
         iconBean.getMatrix().postRotate(degrees, pointX, pointY);
     }
 
-    //设置路径
-    private static void calculateFrame(float[][] framePoint, float degrees,
-                                       float left, float top, float right, float bottom,
-                                       float pointX, float pointY) {
+    //设置边框矩阵
+    private static void calculateFrame(StickerBean stickerBean, float[] framePoint, int framePadding) {
+        framePoint[0] = -framePadding;
+        framePoint[1] = -framePadding;
+        framePoint[2] = stickerBean.getWidth() + framePadding;
+        framePoint[3] = -framePadding;
+        framePoint[4] = -framePadding;
+        framePoint[5] = stickerBean.getHeight() + framePadding;
+        framePoint[6] = framePoint[2];
+        framePoint[7] = framePoint[5];
 
-        degrees = (float) (degrees * Math.PI / 180);
-
-        framePoint[0][0] = calculateRotateX(degrees, left, top, pointX, pointY);
-        framePoint[0][1] = calculateRotateY(degrees, left, top, pointX, pointY);
-        framePoint[1][0] = calculateRotateX(degrees, right, top, pointX, pointY);
-        framePoint[1][1] = calculateRotateY(degrees, right, top, pointX, pointY);
-        framePoint[2][0] = calculateRotateX(degrees, right, bottom, pointX, pointY);
-        framePoint[2][1] = calculateRotateY(degrees, right, bottom, pointX, pointY);
-        framePoint[3][0] = calculateRotateX(degrees, left, bottom, pointX, pointY);
-        framePoint[3][1] = calculateRotateY(degrees, left, bottom, pointX, pointY);
+        stickerBean.getMatrix().mapPoints(framePoint, framePoint);
     }
 
     /**
-     * 计算变换角度X
+     * 计算斜边长
      *
-     * @param degrees 角度
-     * @param dx      偏移量x
-     * @param dy      偏移量y
-     * @param pointX  中心点x
-     * @param pointY  中心点y
+     * @param xEdge x边
+     * @param yEdge y边
      */
-    private static float calculateRotateX(float degrees, float dx, float dy, float pointX, float pointY) {
-        return (float) (Math.cos(degrees) * (dx - pointX) - Math.sin(degrees) * (dy - pointY) + pointX);
+    public static float calculateEdge(float xEdge, float yEdge) {
+        return (float) Math.sqrt(xEdge * xEdge + yEdge * yEdge);
     }
 
     /**
-     * 计算变换角度Y
+     * 计算角度
      *
-     * @param degrees 角度
-     * @param dx      偏移量x
-     * @param dy      偏移量y
-     * @param pointX  中心点x
-     * @param pointY  中心点y
+     * @param xEdge x边
+     * @param yEdge y边
      */
-    private static float calculateRotateY(float degrees, float dx, float dy, float pointX, float pointY) {
-        return (float) (Math.sin(degrees) * (dx - pointX) + Math.cos(degrees) * (dy - pointY) + pointY);
+    public static float calculateDegrees(float xEdge, float yEdge) {
+        return (float) Math.toDegrees(Math.atan2(yEdge, xEdge));
     }
 
     /**
-     * 计算初始角度
+     * 反转矩阵
      *
-     * @param stickerBean 贴纸数据
+     * @param matrixBean 矩阵数据
      */
-    public static int calculateAngle(StickerBean stickerBean) {
-        int xEdge = stickerBean.getWidth() / 2;
-        int yEdge = stickerBean.getHeight() / 2;
+    public static void flipMatrix(MatrixBean matrixBean) {
+        float px = matrixBean.getWidth() / 2f;
+        float py = matrixBean.getHeight() / 2f;
 
-        float edge = (float) Math.sqrt(xEdge * xEdge + yEdge * yEdge);
-
-        return (int) Math.round((Math.asin(yEdge / edge) / Math.PI * 180));
-    }
-
-    /**
-     * 计算象限转换为360制
-     *
-     * @param degrees 角度
-     * @param xEdge   邻边
-     * @param yEdge   斜边
-     */
-    public static int degreesWith(int degrees, int xEdge, int yEdge) {
-        if (xEdge >= 0 && yEdge <= 0) {// 第一象限
-            return 360 + degrees;
-        } else if (xEdge <= 0 && yEdge <= 0) {// 第二象限
-            return 180 - degrees;
-        } else if (xEdge <= 0 && yEdge >= 0) {// 第三象限
-            return 180 - degrees;
-        } else {//if (xEdge >= 0 && yEdge >= 0) {// 第四象限
-            return degrees;
-        }
+        matrixBean.getMatrix().preScale(-1, 1, px, py);
     }
 }

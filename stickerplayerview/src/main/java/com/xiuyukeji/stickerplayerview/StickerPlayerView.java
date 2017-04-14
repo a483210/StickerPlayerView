@@ -17,6 +17,7 @@ import android.view.View;
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
+import com.xiuyukeji.stickerplayerview.intefaces.*;
 import com.xiuyukeji.stickerplayerview.utils.BitmapSource;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import static com.xiuyukeji.stickerplayerview.utils.BitmapSource.ASSETS;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.attachBackground;
+import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.copyStickerBean;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.dpToPx;
 
 /**
@@ -102,11 +104,20 @@ public class StickerPlayerView extends View {
             throw new RuntimeException("图标不能为空！");
         }
 
-        mStickerRenderer.setFrameStyle(
-                attachBackground(delBitmap, color, padding),
-                attachBackground(copyBitmap, color, padding),
-                attachBackground(dragBitmap, color, padding),
-                attachBackground(flipBitmap, color, padding),
+        if (delResId == R.drawable.ic_close_white_18dp) {
+            delBitmap = attachBackground(delBitmap, color, padding);
+        }
+        if (copyResId == R.drawable.ic_content_copy_white_18dp) {
+            copyBitmap = attachBackground(copyBitmap, color, padding);
+        }
+        if (dragResId == R.drawable.ic_zoom_out_map_white_18dp) {
+            dragBitmap = attachBackground(dragBitmap, color, padding);
+        }
+        if (flipResId == R.drawable.ic_flip_white_18dp) {
+            flipBitmap = attachBackground(flipBitmap, color, padding);
+        }
+
+        mStickerRenderer.setFrameStyle(delBitmap, copyBitmap, dragBitmap, flipBitmap,
                 frameColor, frameWidth);
 
         mStickerEvent.setIcon(new IconBean(delBitmap.getWidth(), delBitmap.getHeight()),
@@ -123,6 +134,12 @@ public class StickerPlayerView extends View {
     }
 
     private void setListener() {
+        mStickerEvent.setOnCopyListener(new OnCopyListener() {
+            @Override
+            public void onCopy(StickerBean stickerBean) {
+                copySticker(stickerBean);
+            }
+        });
     }
 
     @Override
@@ -247,6 +264,49 @@ public class StickerPlayerView extends View {
     }
 
     /**
+     * 复制贴纸
+     *
+     * @param stickerBean 贴纸数据
+     */
+    public void copySticker(StickerBean stickerBean) {
+        copySticker(stickerBean, mFrameIndex, 1);
+    }
+
+    /**
+     * 复制贴纸
+     *
+     * @param stickerBean 贴纸数据
+     * @param frameIndex  复制到哪一帧
+     */
+    public void copySticker(StickerBean stickerBean, int frameIndex) {
+        copySticker(stickerBean, frameIndex, 1);
+    }
+
+    /**
+     * 复制贴纸
+     *
+     * @param stickerBean 贴纸数据
+     * @param frameIndex  复制到哪一帧
+     * @param count       复制从frameIndex到多少帧
+     */
+    public void copySticker(StickerBean stickerBean, int frameIndex, @IntRange(from = 1) int count) {
+        for (int i = 0; i < count; i++) {
+            int index = frameIndex + i;
+            ArrayList<StickerBean> stickers = getStickers(index);
+
+            StickerBean newStickerBean = copyStickerBean(stickerBean);
+
+            newStickerBean.setDx(newStickerBean.getDx() + 100);
+            newStickerBean.setDy(newStickerBean.getDy() + 100);
+
+            calculateSticker(newStickerBean);
+
+            stickers.add(newStickerBean);
+        }
+        invalidate();
+    }
+
+    /**
      * 获取当前帧
      */
     public int getCurrentFrame() {
@@ -284,7 +344,7 @@ public class StickerPlayerView extends View {
                 mStickerRenderer.drawSticker(canvas, stickerBean);
             }
             if (i == selectedPosition) {
-                mStickerRenderer.drawSelected(canvas, mStickerEvent.getFramePath(),
+                mStickerRenderer.drawSelected(canvas, mStickerEvent.getFramePoint(),
                         mStickerEvent.getDelMatrix(),
                         mStickerEvent.getCopyMatrix(),
                         mStickerEvent.getDragMatrix(),
@@ -297,6 +357,7 @@ public class StickerPlayerView extends View {
     private void setStickerLocation(StickerBean stickerBean) {
         int distanceWidth = getWidth() - stickerBean.getWidth();
         int distanceHeight = getHeight() - stickerBean.getHeight();
+
         if (mIsRandomLocation) {
             stickerBean.setDx((int) (Math.random() * distanceWidth));
             stickerBean.setDy((int) (Math.random() * distanceHeight));
@@ -304,6 +365,7 @@ public class StickerPlayerView extends View {
             stickerBean.setDx(distanceWidth / 2);
             stickerBean.setDy(distanceHeight / 2);
         }
+
         calculateSticker(stickerBean);
     }
 
@@ -319,6 +381,30 @@ public class StickerPlayerView extends View {
             mStickers.put(frameIndex, stickers);
         }
         return stickers;
+    }
+
+    public void setOnDeleteListener(OnDeleteListener l) {
+        mStickerEvent.setOnDeleteListener(l);
+    }
+
+    public void setClickListener(com.xiuyukeji.stickerplayerview.intefaces.OnClickListener l) {
+        mStickerEvent.setOnClickListener(l);
+    }
+
+    public void setDoubleClickListener(OnDoubleClickListener l) {
+        mStickerEvent.setOnDoubleClickListener(l);
+    }
+
+    public void setLongClickListener(com.xiuyukeji.stickerplayerview.intefaces.OnLongClickListener l) {
+        mStickerEvent.setOnLongClickListener(l);
+    }
+
+    public void setOnSelectedListener(OnSelectedListener l) {
+        mStickerEvent.setOnSelectedListener(l);
+    }
+
+    public void setOnUnselectedListener(OnUnselectedListener l) {
+        mStickerEvent.setOnUnselectedListener(l);
     }
 
     @Override

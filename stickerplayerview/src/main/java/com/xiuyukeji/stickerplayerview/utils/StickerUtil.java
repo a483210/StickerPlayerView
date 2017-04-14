@@ -6,6 +6,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
+import com.xiuyukeji.stickerplayerview.bean.StickerBean;
+import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,6 +24,41 @@ public class StickerUtil {
     public static final int PAINT_FLAG = Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG;
 
     private StickerUtil() {
+    }
+
+    /**
+     * 复制贴纸数据
+     *
+     * @param src 数据来源
+     */
+    public static StickerBean copyStickerBean(StickerBean src) {
+        if (src instanceof TextStickerBean) {
+            return copyTextStickerBean((TextStickerBean) src);
+        } else {
+            StickerBean dst = new StickerBean(src.getIndex(),
+                    src.getWidth(), src.getHeight());
+            dst.setDx(src.getDx());
+            dst.setDy(src.getDy());
+            dst.setDegrees(src.getDegrees());
+            dst.setScale(src.getScale());
+            dst.setFlip(src.isFlip());
+            return dst;
+        }
+    }
+
+    //复制文字贴纸数据
+    private static TextStickerBean copyTextStickerBean(TextStickerBean src) {
+        TextStickerBean dst = new TextStickerBean(src.getIndex(),
+                src.getWidth(), src.getHeight(),
+                src.getText(), src.getTextColor(), src.getTextSize(),
+                src.isBold(), src.isItalic(), src.isUnderline(),
+                src.getLeftPadding(), src.getTopPadding(), src.getRightPadding(), src.getBottomPadding());
+        dst.setDx(src.getDx());
+        dst.setDy(src.getDy());
+        dst.setDegrees(src.getDegrees());
+        dst.setScale(src.getScale());
+        dst.setFlip(src.isFlip());
+        return dst;
     }
 
     /**

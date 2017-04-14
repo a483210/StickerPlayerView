@@ -1,54 +1,28 @@
 package com.xiuyukeji.stickerplayerview.bean;
 
-import android.graphics.Matrix;
-
-import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateAngle;
-
 /**
  * 记录贴纸数据
  *
  * @author Created by jz on 2017/4/11 16:58
  */
-public class StickerBean {
-    private final Matrix matrix;
-
+public class StickerBean extends MatrixBean {
     private final String index;
-    private final int width;
-    private final int height;
-    private final int angle;
 
     private int dx;
     private int dy;
-    private int degrees;
+    private float degrees;
     private float scale;
 
-    public StickerBean(String index, int width, int height) {
-        this.matrix = new Matrix();
-        this.index = index;
-        this.width = width;
-        this.height = height;
-        this.angle = calculateAngle(this);
-        this.scale = 1f;
-    }
+    private boolean isFlip;
 
-    public Matrix getMatrix() {
-        return matrix;
+    public StickerBean(String index, int width, int height) {
+        super(width, height);
+        this.index = index;
+        this.scale = 1f;
     }
 
     public String getIndex() {
         return index;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public int getAngle() {
-        return angle;
     }
 
     public int getDx() {
@@ -67,11 +41,11 @@ public class StickerBean {
         this.dy = dy;
     }
 
-    public int getDegrees() {
+    public float getDegrees() {
         return degrees;
     }
 
-    public void setDegrees(int degrees) {
+    public void setDegrees(float degrees) {
         this.degrees = degrees;
     }
 
@@ -83,18 +57,23 @@ public class StickerBean {
         this.scale = scale;
     }
 
+    public boolean isFlip() {
+        return isFlip;
+    }
+
+    public void setFlip(boolean flip) {
+        this.isFlip = flip;
+    }
+
     @Override
     public String toString() {
         return "StickerBean{" +
-                "matrix=" + matrix.toString() +
                 ", index='" + index + '\'' +
-                ", width=" + width +
-                ", height=" + height +
-                ", angle=" + angle +
                 ", dx=" + dx +
                 ", dy=" + dy +
                 ", degrees=" + degrees +
                 ", scale=" + scale +
+                ", isFlip=" + isFlip +
                 '}';
     }
 }
