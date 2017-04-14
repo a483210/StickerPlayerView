@@ -2,6 +2,7 @@
 <resources>
     <declare-styleable name="StickerPlayerView">
         <attr name="randomLocation" format="boolean" />
+        <attr name="maxNumber" format="integer" />
         <attr name="delSrc" format="reference" />
         <attr name="copySrc" format="reference" />
         <attr name="dragSrc" format="reference" />

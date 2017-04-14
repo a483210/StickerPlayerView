@@ -113,11 +113,12 @@ public class StickerCalculateUtil {
     public static void calculateSelected(StickerBean stickerBean,
                                          IconBean delIconBean, IconBean copyIconBean, IconBean dragIconBean, IconBean flipIconBean,
                                          float[] framePoint, int framePadding) {
-        float scale = (stickerBean.getScale() - 1) * stickerBean.getWidth();
-        float width = stickerBean.getWidth() + scale + framePadding * 2;
-        float height = stickerBean.getHeight() + scale + framePadding * 2;
-        float dx = stickerBean.getDx() - framePadding - scale / 2;
-        float dy = stickerBean.getDy() - framePadding - scale / 2;
+        float scaleWidth = (stickerBean.getScale() - 1) * stickerBean.getWidth();
+        float scaleHeight = (stickerBean.getScale() - 1) * stickerBean.getHeight();
+        float width = stickerBean.getWidth() + scaleWidth + framePadding * 2;
+        float height = stickerBean.getHeight() + scaleHeight + framePadding * 2;
+        float dx = stickerBean.getDx() - framePadding - scaleWidth / 2;
+        float dy = stickerBean.getDy() - framePadding - scaleHeight / 2;
 
         float pointX = dx + width / 2;
         float pointY = dy + height / 2;
@@ -154,7 +155,9 @@ public class StickerCalculateUtil {
     }
 
     //设置边框矩阵
-    private static void calculateFrame(StickerBean stickerBean, float[] framePoint, int framePadding) {
+    private static void calculateFrame(StickerBean stickerBean, float[] framePoint, float framePadding) {
+        framePadding = framePadding / stickerBean.getScale();
+
         framePoint[0] = -framePadding;
         framePoint[1] = -framePadding;
         framePoint[2] = stickerBean.getWidth() + framePadding;

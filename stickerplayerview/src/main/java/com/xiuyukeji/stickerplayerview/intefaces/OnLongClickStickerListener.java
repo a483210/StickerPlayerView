@@ -7,6 +7,6 @@ import com.xiuyukeji.stickerplayerview.bean.StickerBean;
  *
  * @author Created by jz on 2017/4/13 14:16
  */
-public interface OnLongClickListener {
+public interface OnLongClickStickerListener {
     void onLongClick(StickerBean stickerBean);
 }

@@ -132,4 +132,15 @@ public class StickerUtil {
             return null;
         }
     }
+
+    /**
+     * 回收Bitmap内存
+     *
+     * @param bitmap 图片
+     */
+    public static void recycleBitmap(Bitmap bitmap) {
+        if (bitmap != null && !bitmap.isRecycled()) {
+            bitmap.recycle();
+        }
+    }
 }

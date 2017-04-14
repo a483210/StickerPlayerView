@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">StickerPlayerView</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_clear">清除贴纸</string>
 </resources>

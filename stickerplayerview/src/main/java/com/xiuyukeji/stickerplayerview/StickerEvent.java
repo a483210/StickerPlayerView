@@ -7,12 +7,13 @@ import android.view.View;
 import android.view.ViewConfiguration;
 
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
+import com.xiuyukeji.stickerplayerview.bean.MatrixBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
-import com.xiuyukeji.stickerplayerview.intefaces.OnClickListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
-import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickListener;
-import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnSelectedListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 
@@ -31,13 +32,14 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMat
 class StickerEvent extends StickerClickEvent {
 
     private final static int SCROLL_START = 0, SCROLL_STOP = 1;
-    private final static int STATE_NORMAL = -1, STATE_DELETE = 0, STATE_COPY = 1, STATE_DRAG = 2, STATE_FLIP = 3, STATE_TRANSLATE = 4;
+    private final static int STATE_CANCEL = -2, STATE_NORMAL = -1, STATE_DELETE = 0, STATE_COPY = 1, STATE_DRAG = 2, STATE_FLIP = 3, STATE_TRANSLATE = 4;
     private final static int ACTION_TRANSLATE = 0, ACTION_DRAG = 1, ACTION_DRAG_SECOND = 2;
 
     private final View mView;
 
     private final Matrix mInvertMatrix;
     private final Rect mRect;
+    private final float[] mPoint;
 
     private final float[] mFramePoint;
     private int mFramePadding;
@@ -75,9 +77,9 @@ class StickerEvent extends StickerClickEvent {
     private OnDeleteListener mOnDeleteListener;
     private OnCopyListener mOnCopyListener;
 
-    private OnClickListener mOnClickListener;
-    private OnDoubleClickListener mOnDoubleClickListener;
-    private OnLongClickListener mOnLongClickListener;
+    private OnClickStickerListener mOnClickStickerListener;
+    private OnDoubleClickStickerListener mOnDoubleClickStickerListener;
+    private OnLongClickStickerListener mOnLongClickStickerListener;
 
     private OnSelectedListener mOnSelectedListener;
     private OnUnselectedListener mOnUnselectedListener;
@@ -87,6 +89,7 @@ class StickerEvent extends StickerClickEvent {
 
         mInvertMatrix = new Matrix();
         mRect = new Rect();
+        mPoint = new float[2];
 
         mFramePoint = new float[8];
 
@@ -182,7 +185,7 @@ class StickerEvent extends StickerClickEvent {
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 if (event.getPointerCount() == 2 && isDragSecond(event)) {
-                    mScrollState = SCROLL_START;
+                    startScroll();
                     mAction = ACTION_DRAG_SECOND;
                     return onTouchEvent(event);
                 }
@@ -194,7 +197,7 @@ class StickerEvent extends StickerClickEvent {
                 mLastMoveY = mMoveY;
 
                 if (mState == STATE_DRAG) {
-                    mScrollState = SCROLL_START;
+                    startScroll();
                     mAction = ACTION_DRAG;
                     return onTouchEvent(event);
                 } else if (mState == STATE_TRANSLATE) {
@@ -203,18 +206,24 @@ class StickerEvent extends StickerClickEvent {
 
                     if (Math.abs(dx) > mTouchSlop ||
                             Math.abs(dy) > mTouchSlop) {
-                        mScrollState = SCROLL_START;
+                        startScroll();
                         mAction = ACTION_TRANSLATE;
                         return onTouchEvent(event);
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                if (mState == STATE_DELETE) {
+                float upX = event.getX(0);
+                float upY = event.getY(0);
+
+                if (mState == STATE_DELETE
+                        && containPoint(mDelIconBean, upX, upY)) {
                     delete();
-                } else if (mState == STATE_COPY) {
+                } else if (mState == STATE_COPY
+                        && containPoint(mCopyIconBean, upX, upY)) {
                     copy();
-                } else if (mState == STATE_FLIP) {
+                } else if (mState == STATE_FLIP
+                        && containPoint(mFlipIconBean, upX, upY)) {
                     flip();
                 } else if (mState == STATE_TRANSLATE &&
                         mScrollState == SCROLL_STOP) {
@@ -290,13 +299,16 @@ class StickerEvent extends StickerClickEvent {
         return true;
     }
 
+    private void startScroll() {
+        mScrollState = SCROLL_START;
+        cancelLong();
+    }
+
     private boolean isDragSecond(MotionEvent event) {
-        if (mStickerBean == null) {
+        if (mStickerBean == null || mState == STATE_CANCEL) {
             return false;
         }
-        int downX = (int) event.getX(1);
-        int downY = (int) event.getY(1);
-        return containPoint(mStickerBean, downX, downY);
+        return containPoint(mStickerBean, event.getX(1), event.getY(1));
     }
 
     private void drag(StickerBean stickerBean) {
@@ -395,9 +407,14 @@ class StickerEvent extends StickerClickEvent {
         if (mStickerBean == null) {
             return;
         }
+        delete(mSelectedPosition);
+    }
 
-        StickerBean stickerBean = mStickers.remove(mSelectedPosition);
-        unselected();
+    void delete(int position) {
+        StickerBean stickerBean = mStickers.remove(position);
+        if (position == mSelectedPosition) {
+            unselected();
+        }
 
         if (mOnDeleteListener != null) {
             mOnDeleteListener.onDelete(stickerBean);
@@ -431,22 +448,23 @@ class StickerEvent extends StickerClickEvent {
         if (mStickerBean == null) {
             return;
         }
-        if (mOnClickListener != null) {
-            mOnClickListener.onClick(mStickerBean);
+        if (mOnClickStickerListener != null) {
+            mOnClickStickerListener.onClick(mStickerBean);
         }
     }
 
     @Override
     protected void doubleClick() {
-        if (mStickerBean != null && mOnDoubleClickListener != null) {
-            mOnDoubleClickListener.onDoubleClick(mStickerBean);
+        if (mStickerBean != null && mOnDoubleClickStickerListener != null) {
+            mOnDoubleClickStickerListener.onDoubleClick(mStickerBean);
         }
     }
 
     @Override
     protected void longClick() {
-        if (mStickerBean != null && mOnLongClickListener != null) {
-            mOnLongClickListener.onLongClick(mStickerBean);
+        mState = STATE_CANCEL;
+        if (mStickerBean != null && mOnLongClickStickerListener != null) {
+            mOnLongClickStickerListener.onLongClick(mStickerBean);
         }
     }
 
@@ -471,12 +489,12 @@ class StickerEvent extends StickerClickEvent {
 
         mSelectedPosition = STATE_NORMAL;
 
-        mView.invalidate();
-
         if (mOnUnselectedListener != null) {
             mOnUnselectedListener.onUnselected(mStickerBean);
         }
         mStickerBean = null;
+
+        mView.invalidate();
     }
 
     private void invalidateSelected() {
@@ -489,28 +507,24 @@ class StickerEvent extends StickerClickEvent {
                 mFramePoint, mFramePadding);
     }
 
-    private boolean containPoint(IconBean iconBean) {
+    private boolean containPoint(MatrixBean iconBean) {
         return containPoint(iconBean.getMatrix(), iconBean.getWidth(), iconBean.getHeight(), mDownX, mDownY);
     }
 
-    private boolean containPoint(StickerBean stickerBean) {
-        return containPoint(stickerBean.getMatrix(), stickerBean.getWidth(), stickerBean.getHeight(), mDownX, mDownY);
-    }
-
-    private boolean containPoint(StickerBean stickerBean, float x, float y) {
+    private boolean containPoint(MatrixBean stickerBean, float x, float y) {
         return containPoint(stickerBean.getMatrix(), stickerBean.getWidth(), stickerBean.getHeight(), x, y);
     }
 
     //判断坐标是否在变换过后的矩阵内
     private boolean containPoint(Matrix matrix, int width, int height, float x, float y) {
         if (matrix.invert(mInvertMatrix)) {
-            float[] pointsSrc = new float[]{x, y};
-            float[] pointsEnd = new float[]{0, 0};
+            mPoint[0] = x;
+            mPoint[1] = y;
 
-            mInvertMatrix.mapPoints(pointsEnd, pointsSrc);
+            mInvertMatrix.mapPoints(mPoint, mPoint);
 
-            x = pointsEnd[0];
-            y = pointsEnd[1];
+            x = mPoint[0];
+            y = mPoint[1];
         }
 
         mRect.set(0, 0, width, height);
@@ -525,16 +539,16 @@ class StickerEvent extends StickerClickEvent {
         this.mOnCopyListener = l;
     }
 
-    void setOnClickListener(OnClickListener l) {
-        this.mOnClickListener = l;
+    void setOnClickStickerListener(OnClickStickerListener l) {
+        this.mOnClickStickerListener = l;
     }
 
-    void setOnDoubleClickListener(OnDoubleClickListener l) {
-        this.mOnDoubleClickListener = l;
+    void setOnDoubleClickStickerListener(OnDoubleClickStickerListener l) {
+        this.mOnDoubleClickStickerListener = l;
     }
 
-    void setOnLongClickListener(OnLongClickListener l) {
-        this.mOnLongClickListener = l;
+    void setOnLongClickStickerListener(OnLongClickStickerListener l) {
+        this.mOnLongClickStickerListener = l;
     }
 
     void setOnSelectedListener(OnSelectedListener l) {

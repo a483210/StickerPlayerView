@@ -10,6 +10,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 
+import com.xiuyukeji.stickerplayerview.bean.BitmapBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 
@@ -20,6 +21,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calcula
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.PAINT_FLAG;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.readAssetsBitmap;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.readBitmap;
+import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.recycleBitmap;
 
 /**
  * 贴纸渲染类
@@ -28,7 +30,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.readBitmap;
  */
 class StickerRenderer {
 
-    private final HashMap<String, Bitmap> mBitmapBuffers;
+    private final HashMap<String, BitmapBean> mBitmapBuffers;
 
     private final Paint mPaint;
     private final TextPaint mTextPaint;
@@ -63,7 +65,7 @@ class StickerRenderer {
     }
 
     void drawSticker(Canvas canvas, StickerBean stickerBean) {
-        Bitmap bitmap = mBitmapBuffers.get(stickerBean.getIndex());
+        Bitmap bitmap = mBitmapBuffers.get(stickerBean.getIndex()).getBitmap();
         if (bitmap == null || bitmap.isRecycled()) {
             return;
         }
@@ -134,16 +136,47 @@ class StickerRenderer {
         if (TextUtils.isEmpty(path)) {
             return null;
         }
-        Bitmap bitmap = mBitmapBuffers.get(path);
-        if (bitmap == null) {
+        BitmapBean bitmapBean = mBitmapBuffers.get(path);
+        if (bitmapBean == null) {
+            Bitmap bitmap;
             if (source == FILE) {
                 bitmap = readBitmap(path);
             } else {
                 bitmap = readAssetsBitmap(context, path);
             }
-            mBitmapBuffers.put(path, bitmap);
+            bitmapBean = new BitmapBean(bitmap);
+            mBitmapBuffers.put(path, bitmapBean);
+        } else {
+            bitmapBean.setUseCount(bitmapBean.getUseCount() + 1);
         }
-        return bitmap;
+        return bitmapBean.getBitmap();
     }
 
+    void addUserCount(String index) {
+        if (TextUtils.isEmpty(index)) {
+            return;
+        }
+        BitmapBean bitmapBean = mBitmapBuffers.get(index);
+        if (bitmapBean == null) {
+            return;
+        }
+        bitmapBean.setUseCount(bitmapBean.getUseCount() + 1);
+    }
+
+    void cutUserCount(String index) {
+        if (TextUtils.isEmpty(index)) {
+            return;
+        }
+        BitmapBean bitmapBean = mBitmapBuffers.get(index);
+        if (bitmapBean == null) {
+            return;
+        }
+
+        bitmapBean.setUseCount(bitmapBean.getUseCount() - 1);
+
+        if (bitmapBean.getUseCount() <= 0) {
+            recycleBitmap(bitmapBean.getBitmap());
+            mBitmapBuffers.remove(index);
+        }
+    }
 }

@@ -44,7 +44,6 @@ abstract class StickerClickEvent {
         if (mTouchState == UP) {
             return;
         }
-
         mTouchState = UP;
 
         long upTimeMs = System.currentTimeMillis();
@@ -54,6 +53,8 @@ abstract class StickerClickEvent {
                 mDownTimeMs - mLastDownTimeMs <= DOUBLE_TIMEOUT &&//二次点击间隔符合
                 mLastUpTimeMs - mLastDownTimeMs <= CLICK_MIN_TIME) {//上次事件是单击事件
             doubleClick();
+            mDownTimeMs = 0;
+            mLastUpTimeMs = 0;
         } else if (upTimeMs - mDownTimeMs <= CLICK_MIN_TIME) {
             click();
             mLastUpTimeMs = upTimeMs;
@@ -64,6 +65,10 @@ abstract class StickerClickEvent {
         Message message = Message.obtain();
         message.what = MESSAGE_CLICK;
         mHandler.sendMessageAtTime(message, SystemClock.uptimeMillis() + LONG_ClICK_TIMEOUT);
+    }
+
+    protected void cancelLong() {
+        mHandler.removeMessages(MESSAGE_CLICK);
     }
 
     protected abstract void click();
@@ -88,6 +93,6 @@ abstract class StickerClickEvent {
     }
 
     void onDetached() {
-        mHandler.removeMessages(MESSAGE_CLICK);
+        cancelLong();
     }
 }
