@@ -32,11 +32,41 @@ public class StickerUtil {
      * @param src 数据来源
      */
     public static StickerBean copyStickerBean(StickerBean src) {
-        if (src instanceof TextStickerBean) {
-            return copyTextStickerBean((TextStickerBean) src);
+        return copyStickerBean(src, "", null);
+    }
+
+    /**
+     * 复制贴纸数据
+     *
+     * @param src   数据来源
+     * @param index 图片索引
+     */
+    public static StickerBean copyStickerBean(StickerBean src, String index, Bitmap bitmap) {
+        String newIndex;
+        int width;
+        int height;
+        if ("".equals(index)) {
+            newIndex = src.getIndex();
+            width = src.getWidth();
+            height = src.getHeight();
         } else {
-            StickerBean dst = new StickerBean(src.getIndex(),
-                    src.getWidth(), src.getHeight());
+            if (index != null) {
+                newIndex = index;
+            } else {
+                newIndex = src.getIndex();
+            }
+            if (bitmap != null) {
+                width = bitmap.getWidth();
+                height = bitmap.getHeight();
+            } else {
+                width = src.getWidth();
+                height = src.getHeight();
+            }
+        }
+        if (src instanceof TextStickerBean) {
+            return copyTextStickerBean((TextStickerBean) src, newIndex, width, height);
+        } else {
+            StickerBean dst = new StickerBean(newIndex, width, height);
             dst.setDx(src.getDx());
             dst.setDy(src.getDy());
             dst.setDegrees(src.getDegrees());
@@ -47,9 +77,9 @@ public class StickerUtil {
     }
 
     //复制文字贴纸数据
-    private static TextStickerBean copyTextStickerBean(TextStickerBean src) {
-        TextStickerBean dst = new TextStickerBean(src.getIndex(),
-                src.getWidth(), src.getHeight(),
+    private static TextStickerBean copyTextStickerBean(TextStickerBean src, String index, int width, int height) {
+        TextStickerBean dst = new TextStickerBean(
+                index, width, height,
                 src.getText(), src.getTextColor(), src.getTextSize(),
                 src.isBold(), src.isItalic(), src.isUnderline(),
                 src.getLeftPadding(), src.getTopPadding(), src.getRightPadding(), src.getBottomPadding());

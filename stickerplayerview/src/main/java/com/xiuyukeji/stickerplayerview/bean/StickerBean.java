@@ -68,12 +68,12 @@ public class StickerBean extends MatrixBean {
     @Override
     public String toString() {
         return "StickerBean{" +
-                ", index='" + index + '\'' +
+                "index='" + index + '\'' +
                 ", dx=" + dx +
                 ", dy=" + dy +
                 ", degrees=" + degrees +
                 ", scale=" + scale +
                 ", isFlip=" + isFlip +
-                '}';
+                "} " + super.toString();
     }
 }

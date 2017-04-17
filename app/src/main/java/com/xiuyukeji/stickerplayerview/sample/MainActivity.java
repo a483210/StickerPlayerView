@@ -26,8 +26,11 @@ import com.xiuyukeji.stickerplayerview.utils.StickerUtil;
 public class MainActivity extends AppCompatActivity {
 
     private Toolbar mToolbar;
-    private FloatingActionButton nFabView;
     private StickerPlayerView mStickerPlayerView;
+    private FloatingActionButton nAddedView;
+    private FloatingActionButton nCopyView;
+    private FloatingActionButton nReplaceView;
+    private FloatingActionButton nDeleteView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +44,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void findView() {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        nFabView = (FloatingActionButton) findViewById(R.id.fab);
         mStickerPlayerView = (StickerPlayerView) findViewById(R.id.sticker);
+        nAddedView = (FloatingActionButton) findViewById(R.id.added);
+        nCopyView = (FloatingActionButton) findViewById(R.id.copy);
+        nReplaceView = (FloatingActionButton) findViewById(R.id.replace);
+        nDeleteView = (FloatingActionButton) findViewById(R.id.delete);
     }
 
     private void initView() {
@@ -50,34 +56,54 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setListener() {
-        nFabView.setOnClickListener(new View.OnClickListener() {
+        nAddedView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mStickerPlayerView.addTextSticker(0, BitmapSource.ASSETS, "test.png",
+                mStickerPlayerView.addTextSticker(mStickerPlayerView.getCurrentFrame(),
+                        BitmapSource.ASSETS, "text1.png",
                         "testText", 0xff000000, StickerUtil.dpToPx(MainActivity.this, 18),
-                        false, false, false,
                         176, 80, 74, 97);
+            }
+        });
+        nCopyView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mStickerPlayerView.copySticker();
+            }
+        });
+        nReplaceView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mStickerPlayerView.replaceTextSticker(
+                        BitmapSource.ASSETS, "text2.png",
+                        175, 123, 188, 152);
+            }
+        });
+        nDeleteView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mStickerPlayerView.deleteSticker();
             }
         });
         mStickerPlayerView.setOnClickStickerListener(new OnClickStickerListener() {
             @Override
             public void onClick(StickerBean stickerBean) {
                 Log.i("Tool", "click");
-                Snackbar.make(nFabView, "click", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(nAddedView, "click", Snackbar.LENGTH_SHORT).show();
             }
         });
         mStickerPlayerView.setOnDoubleClickStickerListener(new OnDoubleClickStickerListener() {
             @Override
             public void onDoubleClick(StickerBean stickerBean) {
                 Log.i("Tool", "doubleClick");
-                Snackbar.make(nFabView, "doubleClick", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(nAddedView, "doubleClick", Snackbar.LENGTH_SHORT).show();
             }
         });
         mStickerPlayerView.setOnLongClickStickerListener(new OnLongClickStickerListener() {
             @Override
             public void onLongClick(StickerBean stickerBean) {
                 Log.i("Tool", "longClick");
-                Snackbar.make(nFabView, "longClick", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(nAddedView, "longClick", Snackbar.LENGTH_SHORT).show();
             }
         });
     }

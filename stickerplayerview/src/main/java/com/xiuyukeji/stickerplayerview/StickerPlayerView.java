@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,11 +18,21 @@ import android.view.View;
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
-import com.xiuyukeji.stickerplayerview.intefaces.*;
+import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnSelectedListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 import com.xiuyukeji.stickerplayerview.utils.BitmapSource;
+import com.xiuyukeji.stickerplayerview.utils.FrameSource;
+import com.xiuyukeji.stickerplayerview.utils.PaddingSource;
+import com.xiuyukeji.stickerplayerview.utils.TextSizeSource;
 
 import java.util.ArrayList;
 
+import static com.xiuyukeji.stickerplayerview.StickerEvent.STATE_NORMAL;
 import static com.xiuyukeji.stickerplayerview.utils.BitmapSource.ASSETS;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.attachBackground;
@@ -71,6 +82,7 @@ public class StickerPlayerView extends View {
         setListener();
     }
 
+    //初始化属性
     private void initAttrs(AttributeSet attrs) {
         if (attrs == null) {
             return;
@@ -144,7 +156,7 @@ public class StickerPlayerView extends View {
         mStickerEvent.setOnCopyListener(new OnCopyListener() {
             @Override
             public void onCopy(StickerBean stickerBean) {
-                copySticker(stickerBean);
+                copySticker(stickerBean, mFrameIndex, mFrameIndex + 1);
             }
         });
         mStickerEvent.setOnDeleteListener(new OnDeleteListener() {
@@ -164,8 +176,7 @@ public class StickerPlayerView extends View {
     }
 
     /**
-     * 添加图片贴纸
-     * 默认添加至当前帧
+     * 添加图片贴纸到当前帧
      * 默认地址从assets获取
      *
      * @param path 地址
@@ -175,23 +186,25 @@ public class StickerPlayerView extends View {
     }
 
     /**
-     * 添加图片贴纸
+     * 添加图片贴纸到指定帧
      * 默认地址从assets获取
      *
-     * @param path 地址
+     * @param frameIndex 帧
+     * @param path       地址
      */
-    public void addSticker(@IntRange(from = 0) int frameIndex,
+    public void addSticker(@FrameSource int frameIndex,
                            @NonNull String path) {
         addSticker(frameIndex, ASSETS, path);
     }
 
     /**
-     * 添加贴纸
+     * 添加贴纸到指定帧
      *
-     * @param source 来源
-     * @param path   地址
+     * @param frameIndex 帧
+     * @param source     来源
+     * @param path       地址
      */
-    public void addSticker(@IntRange(from = 0) int frameIndex,
+    public void addSticker(@FrameSource int frameIndex,
                            @BitmapSource int source, @NonNull String path) {
         ArrayList<StickerBean> stickers = getStickers(frameIndex);
 
@@ -212,93 +225,81 @@ public class StickerPlayerView extends View {
     }
 
     /**
-     * 添加文字贴纸，没有背景
+     * 添加文字贴纸到指定帧，没有背景
      *
+     * @param frameIndex 帧
+     * @param text       文字
+     * @param textColor  文字颜色
+     * @param textSize   文字大小
+     */
+    public void addTextSticker(@FrameSource int frameIndex,
+                               String text, @ColorInt int textColor, @TextSizeSource int textSize) {
+        addTextSticker(frameIndex, BitmapSource.ASSETS, null,
+                text, textColor, textSize);
+    }
+
+    /**
+     * 添加文字贴纸到指定帧，没有背景
+     *
+     * @param frameIndex    帧
      * @param text          文字
      * @param textColor     文字颜色
      * @param textSize      文字大小
-     * @param isBold        是否加粗
-     * @param isItalic      是否倾斜
-     * @param isUnderline   是否有下划线
      * @param leftPadding   左边距
      * @param topPadding    上边距
      * @param rightPadding  右边距
      * @param bottomPadding 下边距
      */
-    public void addTextSticker(@IntRange(from = 0) int frameIndex,
-                               @NonNull String text, int textColor, int textSize,
-                               boolean isBold, boolean isItalic, boolean isUnderline,
-                               int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
+    public void addTextSticker(@FrameSource int frameIndex,
+                               String text, @ColorInt int textColor, @TextSizeSource int textSize,
+                               @PaddingSource int leftPadding,
+                               @PaddingSource int topPadding,
+                               @PaddingSource int rightPadding,
+                               @PaddingSource int bottomPadding) {
         addTextSticker(frameIndex, BitmapSource.ASSETS, null,
                 text, textColor, textSize,
-                isBold, isItalic, isUnderline,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
     /**
-     * 添加文字贴纸，没有背景
+     * 添加文字贴纸到指定帧
      *
-     * @param text          文字
-     * @param textColor     文字颜色
-     * @param textSize      文字大小
-     * @param leftPadding   左边距
-     * @param topPadding    上边距
-     * @param rightPadding  右边距
-     * @param bottomPadding 下边距
+     * @param frameIndex 帧
+     * @param source     来源
+     * @param path       地址
+     * @param text       文字
+     * @param textColor  文字颜色
+     * @param textSize   文字大小
      */
-    public void addTextSticker(@IntRange(from = 0) int frameIndex,
-                               @NonNull String text, int textColor, int textSize,
-                               int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
-        addTextSticker(frameIndex, BitmapSource.ASSETS, null,
-                text, textColor, textSize,
-                false, false, false,
-                leftPadding, topPadding, rightPadding, bottomPadding);
-    }
-
-    /**
-     * 添加文字贴纸
-     *
-     * @param source        来源
-     * @param path          地址
-     * @param text          文字
-     * @param textColor     文字颜色
-     * @param textSize      文字大小
-     * @param leftPadding   左边距
-     * @param topPadding    上边距
-     * @param rightPadding  右边距
-     * @param bottomPadding 下边距
-     */
-    public void addTextSticker(@IntRange(from = 0) int frameIndex,
+    public void addTextSticker(@FrameSource int frameIndex,
                                @BitmapSource int source, String path,
-                               @NonNull String text, int textColor, int textSize,
-                               int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
+                               String text, @ColorInt int textColor, @TextSizeSource int textSize) {
         addTextSticker(frameIndex, source, path,
                 text, textColor, textSize,
-                false, false, false,
-                leftPadding, topPadding, rightPadding, bottomPadding);
+                0, 0, 0, 0);
     }
 
     /**
-     * 添加文字贴纸
+     * 添加文字贴纸到指定帧
      *
+     * @param frameIndex    帧
      * @param source        来源
      * @param path          地址
      * @param text          文字
      * @param textColor     文字颜色
      * @param textSize      文字大小
-     * @param isBold        是否加粗
-     * @param isItalic      是否倾斜
-     * @param isUnderline   是否有下划线
      * @param leftPadding   左边距
      * @param topPadding    上边距
      * @param rightPadding  右边距
      * @param bottomPadding 下边距
      */
-    public void addTextSticker(@IntRange(from = 0) int frameIndex,
+    public void addTextSticker(@FrameSource int frameIndex,
                                @BitmapSource int source, String path,
-                               @NonNull String text, int textColor, int textSize,
-                               boolean isBold, boolean isItalic, boolean isUnderline,
-                               int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
+                               String text, @ColorInt int textColor, @TextSizeSource int textSize,
+                               @PaddingSource int leftPadding,
+                               @PaddingSource int topPadding,
+                               @PaddingSource int rightPadding,
+                               @PaddingSource int bottomPadding) {
 
         ArrayList<StickerBean> stickers = getStickers(frameIndex);
 
@@ -309,9 +310,8 @@ public class StickerPlayerView extends View {
         TextStickerBean textStickerBean;
 
         if (TextUtils.isEmpty(path)) {//这里的width和height需要调整
-            textStickerBean = new TextStickerBean(getWidth(), getHeight(),
+            textStickerBean = new TextStickerBean(null, getWidth(), getHeight(),
                     text, textColor, textSize,
-                    isBold, isItalic, isUnderline,
                     leftPadding, topPadding, rightPadding, bottomPadding);
         } else {
             Bitmap bitmap = mStickerRenderer.getBitmapBuffer(getContext(), source, path);
@@ -320,7 +320,6 @@ public class StickerPlayerView extends View {
             }
             textStickerBean = new TextStickerBean(path, bitmap.getWidth(), bitmap.getHeight(),
                     text, textColor, textSize,
-                    isBold, isItalic, isUnderline,
                     leftPadding, topPadding, rightPadding, bottomPadding);
         }
 
@@ -330,45 +329,227 @@ public class StickerPlayerView extends View {
     }
 
     /**
-     * 复制贴纸
+     * 替换当前选中贴纸的背景
      *
-     * @param stickerBean 贴纸数据
+     * @param source 来源
+     * @param path   地址
      */
-    public void copySticker(StickerBean stickerBean) {
-        copySticker(stickerBean, mFrameIndex, 1);
+    public void replaceSticker(@BitmapSource int source, String path) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        replaceSticker(source, path, mStickerEvent.getSelectedPosition());
     }
 
     /**
-     * 复制贴纸
+     * 替换当前帧指定贴纸的背景
      *
-     * @param stickerBean 贴纸数据
-     * @param frameIndex  复制到哪一帧
+     * @param source   来源
+     * @param path     地址
+     * @param position 索引
      */
-    public void copySticker(StickerBean stickerBean, @IntRange(from = 0) int frameIndex) {
-        copySticker(stickerBean, frameIndex, 1);
+    public void replaceSticker(@BitmapSource int source, String path, @FrameSource int position) {
+        replaceSticker(source, path, mFrameIndex, position);
     }
 
     /**
-     * 复制贴纸
+     * 替换指定帧指定贴纸的背景
      *
-     * @param stickerBean 贴纸数据
-     * @param frameIndex  复制到哪一帧
-     * @param count       复制从frameIndex到多少帧
+     * @param source     来源
+     * @param path       地址
+     * @param frameIndex 帧
+     * @param position   索引
      */
-    public void copySticker(StickerBean stickerBean, @IntRange(from = 0) int frameIndex, @IntRange(from = 1) int count) {
+    public void replaceSticker(@BitmapSource int source, String path,
+                               @FrameSource int frameIndex, @FrameSource int position) {
+        replaceSticker(getSticker(frameIndex, position),
+                source, path,
+                frameIndex, position,
+                -1, -1, -1, -1);
+    }
+
+    /**
+     * 替换当前选中文字贴纸背景
+     *
+     * @param source        来源
+     * @param path          地址
+     * @param leftPadding   左边距
+     * @param topPadding    上边距
+     * @param rightPadding  右边距
+     * @param bottomPadding 下边距
+     */
+    public void replaceTextSticker(@BitmapSource int source, String path,
+                                   @PaddingSource int leftPadding,
+                                   @PaddingSource int topPadding,
+                                   @PaddingSource int rightPadding,
+                                   @PaddingSource int bottomPadding) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        replaceTextSticker(source, path,
+                mStickerEvent.getSelectedPosition(),
+                leftPadding, topPadding, rightPadding, bottomPadding);
+    }
+
+    /**
+     * 替换当前帧指定文字贴纸的背景
+     *
+     * @param source        来源
+     * @param path          地址
+     * @param position      索引
+     * @param leftPadding   左边距
+     * @param topPadding    上边距
+     * @param rightPadding  右边距
+     * @param bottomPadding 下边距
+     */
+    public void replaceTextSticker(@BitmapSource int source, String path, @FrameSource int position,
+                                   @PaddingSource int leftPadding,
+                                   @PaddingSource int topPadding,
+                                   @PaddingSource int rightPadding,
+                                   @PaddingSource int bottomPadding) {
+        replaceTextSticker(source, path,
+                mFrameIndex, position,
+                leftPadding, topPadding, rightPadding, bottomPadding);
+    }
+
+    /**
+     * 替换指定帧指定文字贴纸的背景
+     *
+     * @param source        来源
+     * @param path          地址
+     * @param frameIndex    帧
+     * @param position      索引
+     * @param leftPadding   左边距
+     * @param topPadding    上边距
+     * @param rightPadding  右边距
+     * @param bottomPadding 下边距
+     */
+    public void replaceTextSticker(@BitmapSource int source, String path,
+                                   @FrameSource int frameIndex, @FrameSource int position,
+                                   @PaddingSource int leftPadding,
+                                   @PaddingSource int topPadding,
+                                   @PaddingSource int rightPadding,
+                                   @PaddingSource int bottomPadding) {
+        replaceSticker(getTextSticker(frameIndex, position),
+                source, path,
+                frameIndex, position,
+                leftPadding, topPadding, rightPadding, bottomPadding);
+    }
+
+    //替换贴纸背景
+    private void replaceSticker(StickerBean stickerBean,
+                                int source, String path,
+                                int frameIndex, int position,
+                                int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
+        if (stickerBean == null) {
+            return;
+        }
+
+        String index = stickerBean.getIndex();
+
+        if (index == null && path == null
+                || index != null && index.equals(path)) {
+            return;
+        }
+
+        mStickerRenderer.cutUserCount(index);
+
+        StickerBean newStickerBean;
+
+        if (TextUtils.isEmpty(path)) {
+            newStickerBean = copyStickerBean(stickerBean, null, null);
+        } else {
+            Bitmap bitmap = mStickerRenderer.getBitmapBuffer(getContext(), source, path);
+            if (bitmap == null) {
+                return;
+            }
+
+            newStickerBean = copyStickerBean(stickerBean, path, bitmap);
+        }
+        if (leftPadding != -1
+                && stickerBean instanceof TextStickerBean) {
+            TextStickerBean textStickerBean = (TextStickerBean) newStickerBean;
+            textStickerBean.setPadding(leftPadding, topPadding, rightPadding, bottomPadding);
+        }
+
+        calculateSticker(newStickerBean);
+
+        mStickers.set(position, newStickerBean);
+
+        mStickerEvent.updateSelected();
+
+        invalidate(frameIndex);
+    }
+
+    /**
+     * 复制当前选中的贴纸到当前帧
+     */
+    public void copySticker() {
+        copySticker(mFrameIndex, mFrameIndex + 1);
+    }
+
+    /**
+     * 复制当前选中的贴纸，从form到to
+     *
+     * @param fromFrame 开始帧
+     * @param toFrame   结束帧
+     */
+    public void copySticker(@FrameSource int fromFrame, @FrameSource int toFrame) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        copySticker(mStickerEvent.getSelectedPosition(), fromFrame, toFrame);
+    }
+
+    /**
+     * 复制当前帧的指定贴纸，从form到to
+     *
+     * @param position  索引
+     * @param fromFrame 开始帧
+     * @param toFrame   结束帧
+     */
+    public void copySticker(@FrameSource int position,
+                            @FrameSource int fromFrame, @FrameSource int toFrame) {
+        copySticker(mFrameIndex, position, fromFrame, toFrame);
+    }
+
+    /**
+     * 复制指定帧的指定贴纸，从form到to
+     *
+     * @param frameIndex 帧
+     * @param position   索引
+     * @param fromFrame  开始帧
+     * @param toFrame    结束帧
+     */
+    public void copySticker(@FrameSource int frameIndex, @FrameSource int position,
+                            @FrameSource int fromFrame, @FrameSource int toFrame) {
+
+        ArrayList<StickerBean> stickers = mStickersData.get(frameIndex);
+
+        if (stickers == null || position >= stickers.size()) {
+            return;
+        }
+
+        if (toFrame - fromFrame <= 0) {
+            return;
+        }
+
+        copySticker(stickers.get(position), fromFrame, toFrame);
+    }
+
+    //复制贴纸
+    private void copySticker(StickerBean stickerBean, int fromFrame, int toFrame) {
+        int count = toFrame - fromFrame;
         for (int i = 0; i < count; i++) {
-            int index = frameIndex + i;
+            int index = fromFrame + i;
 
-            ArrayList<StickerBean> stickers = getStickers(frameIndex);
+            ArrayList<StickerBean> stickers = getStickers(index);
 
             if (isOverMaxNumber(stickers)) {
                 continue;
             }
 
             StickerBean newStickerBean = copyStickerBean(stickerBean);
-
-            newStickerBean.setDx(newStickerBean.getDx() + 100);
-            newStickerBean.setDy(newStickerBean.getDy() + 100);
 
             calculateSticker(newStickerBean);
 
@@ -379,24 +560,31 @@ public class StickerPlayerView extends View {
     }
 
     /**
-     * 删除当前帧的某个贴纸
+     * 删除当前选择的贴纸
+     */
+    public void deleteSticker() {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        deleteSticker(mFrameIndex, mStickerEvent.getSelectedPosition());
+    }
+
+    /**
+     * 删除当前帧的指定贴纸
      *
      * @param position 索引
      */
-    public void deleteSticker(int position) {
+    public void deleteSticker(@FrameSource int position) {
         deleteSticker(mFrameIndex, position);
     }
 
     /**
-     * 删除某个帧的某个贴纸
+     * 删除指定帧的指定贴纸
      *
      * @param frameIndex 帧
      * @param position   索引
      */
-    public void deleteSticker(int frameIndex, int position) {
-        if (position < 0) {
-            return;
-        }
+    public void deleteSticker(@FrameSource int frameIndex, @FrameSource int position) {
         ArrayList<StickerBean> stickers = mStickersData.get(frameIndex);
 
         if (stickers == null || position >= stickers.size()) {
@@ -427,7 +615,7 @@ public class StickerPlayerView extends View {
      *
      * @param frameIndex 帧
      */
-    public void clearSticker(int frameIndex) {
+    public void clearSticker(@FrameSource int frameIndex) {
         ArrayList<StickerBean> stickers = mStickersData.get(frameIndex);
         if (stickers == null) {
             return;
@@ -456,6 +644,234 @@ public class StickerPlayerView extends View {
             int key = mStickersData.keyAt(i);
             clearSticker(key);
         }
+    }
+
+    /**
+     * 设置当前选中贴纸的文字
+     *
+     * @param text 文字
+     */
+    public void setText(String text) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        setText(text, mStickerEvent.getSelectedPosition());
+    }
+
+    /**
+     * 设置当前帧的指定贴纸的文字
+     *
+     * @param text     文字
+     * @param position 索引
+     */
+    public void setText(String text, @FrameSource int position) {
+        setText(text, mFrameIndex, position);
+    }
+
+    /**
+     * 设置指定帧的指定贴纸的文字
+     *
+     * @param text       文字
+     * @param frameIndex 帧
+     * @param position   索引
+     */
+    public void setText(String text, @FrameSource int frameIndex, @FrameSource int position) {
+        TextStickerBean textStickerBean = getTextSticker(frameIndex, position);
+        if (textStickerBean == null) {
+            return;
+        }
+        textStickerBean.setText(text);
+        invalidate(frameIndex);
+    }
+
+    /**
+     * 设置当前选中贴纸的文字颜色
+     *
+     * @param color 文字颜色
+     */
+    public void setTextColor(@ColorInt int color) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        setTextColor(color, mStickerEvent.getSelectedPosition());
+    }
+
+    /**
+     * 设置当前帧的指定贴纸的文字颜色
+     *
+     * @param color    文字颜色
+     * @param position 索引
+     */
+    public void setTextColor(@ColorInt int color, @FrameSource int position) {
+        setTextColor(color, mFrameIndex, position);
+    }
+
+    /**
+     * 设置指定帧的指定贴纸的文字颜色
+     *
+     * @param color      文字颜色
+     * @param frameIndex 帧
+     * @param position   索引
+     */
+    public void setTextColor(@ColorInt int color, @FrameSource int frameIndex, @FrameSource int position) {
+        TextStickerBean textStickerBean = getTextSticker(frameIndex, position);
+        if (textStickerBean == null) {
+            return;
+        }
+        textStickerBean.setTextColor(color);
+        invalidate(frameIndex);
+    }
+
+    /**
+     * 设置当前选中贴纸的文字大小
+     *
+     * @param size 文字大小
+     */
+    public void setTextSize(@TextSizeSource int size) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        setTextSize(size, mStickerEvent.getSelectedPosition());
+    }
+
+    /**
+     * 设置当前帧的指定贴纸的文字大小
+     *
+     * @param size     文字大小
+     * @param position 索引
+     */
+    public void setTextSize(@TextSizeSource int size, @FrameSource int position) {
+        setTextSize(size, mFrameIndex, position);
+    }
+
+    /**
+     * 设置指定帧的指定贴纸的文字大小
+     *
+     * @param size       文字大小
+     * @param frameIndex 帧
+     * @param position   索引
+     */
+    public void setTextSize(@TextSizeSource int size, @FrameSource int frameIndex, @FrameSource int position) {
+        TextStickerBean textStickerBean = getTextSticker(frameIndex, position);
+        if (textStickerBean == null) {
+            return;
+        }
+        textStickerBean.setTextSize(size);
+        invalidate(frameIndex);
+    }
+
+    /**
+     * 设置当前选中贴纸的文字加粗
+     *
+     * @param isBold 文字加粗
+     */
+    public void setBold(boolean isBold) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        setBold(isBold, mStickerEvent.getSelectedPosition());
+    }
+
+    /**
+     * 设置当前帧的指定贴纸的文字加粗
+     *
+     * @param isBold   文字加粗
+     * @param position 索引
+     */
+    public void setBold(boolean isBold, @FrameSource int position) {
+        setBold(isBold, mFrameIndex, position);
+    }
+
+    /**
+     * 设置指定帧的指定贴纸的文字加粗
+     *
+     * @param isBold     文字加粗
+     * @param frameIndex 帧
+     * @param position   索引
+     */
+    public void setBold(boolean isBold, @FrameSource int frameIndex, @FrameSource int position) {
+        TextStickerBean textStickerBean = getTextSticker(frameIndex, position);
+        if (textStickerBean == null) {
+            return;
+        }
+        textStickerBean.setBold(isBold);
+        invalidate(frameIndex);
+    }
+
+    /**
+     * 设置当前选中贴纸的文字倾斜
+     *
+     * @param isItalic 文字倾斜
+     */
+    public void setItalic(boolean isItalic) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        setItalic(isItalic, mStickerEvent.getSelectedPosition());
+    }
+
+    /**
+     * 设置当前帧的指定贴纸的文字倾斜
+     *
+     * @param isItalic 文字倾斜
+     * @param position 索引
+     */
+    public void setItalic(boolean isItalic, @FrameSource int position) {
+        setItalic(isItalic, mFrameIndex, position);
+    }
+
+    /**
+     * 设置指定帧的指定贴纸的文字倾斜
+     *
+     * @param isItalic   文字倾斜
+     * @param frameIndex 帧
+     * @param position   索引
+     */
+    public void setItalic(boolean isItalic, @FrameSource int frameIndex, @FrameSource int position) {
+        TextStickerBean textStickerBean = getTextSticker(frameIndex, position);
+        if (textStickerBean == null) {
+            return;
+        }
+        textStickerBean.setItalic(isItalic);
+        invalidate(frameIndex);
+    }
+
+    /**
+     * 设置当前选中贴纸的文字下划线
+     *
+     * @param isUnderline 文字下划线
+     */
+    public void setUnderline(boolean isUnderline) {
+        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        setUnderline(isUnderline, mStickerEvent.getSelectedPosition());
+    }
+
+    /**
+     * 设置当前帧的指定贴纸的文字下划线
+     *
+     * @param isUnderline 文字下划线
+     * @param position    索引
+     */
+    public void setUnderline(boolean isUnderline, @FrameSource int position) {
+        setUnderline(isUnderline, mFrameIndex, position);
+    }
+
+    /**
+     * 设置指定帧的指定贴纸的文字下划线
+     *
+     * @param isUnderline 文字下划线
+     * @param frameIndex  帧
+     * @param position    索引
+     */
+    public void setUnderline(boolean isUnderline, @FrameSource int frameIndex, @FrameSource int position) {
+        TextStickerBean textStickerBean = getTextSticker(frameIndex, position);
+        if (textStickerBean == null) {
+            return;
+        }
+        textStickerBean.setUnderline(isUnderline);
+        invalidate(frameIndex);
     }
 
     /**
@@ -513,6 +929,13 @@ public class StickerPlayerView extends View {
         }
     }
 
+    private void invalidate(int frameIndex) {
+        if (mFrameIndex == frameIndex) {
+            invalidate();
+        }
+    }
+
+    //初始化贴图位置
     private void initStickerLocation(StickerBean stickerBean) {
         int distanceWidth = getWidth() - stickerBean.getWidth();
         int distanceHeight = getHeight() - stickerBean.getHeight();
@@ -528,15 +951,21 @@ public class StickerPlayerView extends View {
         calculateSticker(stickerBean);
     }
 
+    //设置当前贴纸数组
     private void setStickers(int frameIndex) {
         mStickers = getStickers(frameIndex);
         mStickerEvent.setStickers(mStickers);
     }
 
     private boolean isOverMaxNumber(ArrayList<StickerBean> stickers) {
-        return stickers.size() >= mStickerMaxNumber;
+        return isOverMaxNumber(stickers, 1);
     }
 
+    private boolean isOverMaxNumber(ArrayList<StickerBean> stickers, int count) {
+        return stickers.size() + count - 1 >= mStickerMaxNumber;
+    }
+
+    //添加贴纸
     private void addSticker(ArrayList<StickerBean> stickers, int frameIndex, StickerBean stickerBean) {
         stickers.add(stickerBean);
         if (frameIndex == mFrameIndex) {
@@ -545,6 +974,29 @@ public class StickerPlayerView extends View {
         }
     }
 
+    //获得文字贴纸
+    private TextStickerBean getTextSticker(int frameIndex, int position) {
+        StickerBean stickerBean = getSticker(frameIndex, position);
+        if (stickerBean instanceof TextStickerBean) {
+            return (TextStickerBean) stickerBean;
+        } else {
+            return null;
+        }
+    }
+
+    //获得贴纸
+    private StickerBean getSticker(int frameIndex, int position) {
+        ArrayList<StickerBean> stickers = mStickersData.get(frameIndex);
+        if (stickers == null) {
+            return null;
+        }
+        if (position < 0 || position >= stickers.size()) {
+            return null;
+        }
+        return stickers.get(position);
+    }
+
+    //获得贴纸数组
     private ArrayList<StickerBean> getStickers(int frameIndex) {
         ArrayList<StickerBean> stickers = mStickersData.get(frameIndex);
         if (stickers == null) {

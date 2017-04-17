@@ -31,8 +31,10 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMat
  */
 class StickerEvent extends StickerClickEvent {
 
+    public final static int STATE_CANCEL = -2, STATE_NORMAL = -1;
+    private final static int STATE_DELETE = 0, STATE_COPY = 1, STATE_DRAG = 2, STATE_FLIP = 3, STATE_TRANSLATE = 4;
+
     private final static int SCROLL_START = 0, SCROLL_STOP = 1;
-    private final static int STATE_CANCEL = -2, STATE_NORMAL = -1, STATE_DELETE = 0, STATE_COPY = 1, STATE_DRAG = 2, STATE_FLIP = 3, STATE_TRANSLATE = 4;
     private final static int ACTION_TRANSLATE = 0, ACTION_DRAG = 1, ACTION_DRAG_SECOND = 2;
 
     private final View mView;
@@ -468,6 +470,14 @@ class StickerEvent extends StickerClickEvent {
         }
     }
 
+    void updateSelected() {
+        if (mSelectedPosition == STATE_NORMAL) {
+            return;
+        }
+        mStickerBean = mStickers.get(mSelectedPosition);
+        invalidateSelected();
+    }
+
     private void selected(int position) {
         unselected();
 
@@ -497,7 +507,7 @@ class StickerEvent extends StickerClickEvent {
         mView.invalidate();
     }
 
-    private void invalidateSelected() {
+    void invalidateSelected() {
         if (mStickerBean == null) {
             return;
         }

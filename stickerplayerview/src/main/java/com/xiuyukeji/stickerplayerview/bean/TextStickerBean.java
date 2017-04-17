@@ -8,8 +8,8 @@ import android.text.StaticLayout;
  * @author Created by jz on 2017/4/11 16:58
  */
 public class TextStickerBean extends StickerBean {
-    private final int textWidth;
-    private final int textHeight;
+    private int textWidth;
+    private int textHeight;
     private StaticLayout staticLayout;
 
     private String text;
@@ -26,13 +26,12 @@ public class TextStickerBean extends StickerBean {
     private int rightPadding;
     private int bottomPadding;
 
-    public TextStickerBean(int width, int height,
+    public TextStickerBean(String index, int width, int height,
                            String text, int textColor, int textSize,
-                           boolean isBold, boolean isItalic, boolean isUnderline,
                            int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
-        this(null, width, height,
+        this(index, width, height,
                 text, textColor, textSize,
-                isBold, isItalic, isUnderline,
+                false, false, false,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -41,8 +40,6 @@ public class TextStickerBean extends StickerBean {
                            boolean isBold, boolean isItalic, boolean isUnderline,
                            int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
         super(index, width, height);
-        this.textWidth = width - leftPadding - rightPadding;
-        this.textHeight = width - topPadding - bottomPadding;
         this.text = text;
         this.textColor = textColor;
         this.textSize = textSize;
@@ -50,10 +47,7 @@ public class TextStickerBean extends StickerBean {
         this.isBold = isBold;
         this.isItalic = isItalic;
         this.isUnderline = isUnderline;
-        this.leftPadding = leftPadding;
-        this.topPadding = topPadding;
-        this.rightPadding = rightPadding;
-        this.bottomPadding = bottomPadding;
+        setPadding(leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
     public int getTextWidth() {
@@ -132,40 +126,33 @@ public class TextStickerBean extends StickerBean {
         return leftPadding;
     }
 
-    public void setLeftPadding(int leftPadding) {
-        this.leftPadding = leftPadding;
-    }
-
     public int getTopPadding() {
         return topPadding;
-    }
-
-    public void setTopPadding(int topPadding) {
-        this.topPadding = topPadding;
     }
 
     public int getRightPadding() {
         return rightPadding;
     }
 
-    public void setRightPadding(int rightPadding) {
-        this.rightPadding = rightPadding;
-    }
-
     public int getBottomPadding() {
         return bottomPadding;
     }
 
-    public void setBottomPadding(int bottomPadding) {
+    public void setPadding(int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
+        this.textWidth = getWidth() - leftPadding - rightPadding;
+        this.textHeight = getHeight() - topPadding - bottomPadding;
+        this.leftPadding = leftPadding;
+        this.topPadding = topPadding;
+        this.rightPadding = rightPadding;
         this.bottomPadding = bottomPadding;
+        this.staticLayout = null;
     }
 
     @Override
     public String toString() {
         return "TextStickerBean{" +
-                ", textWidth=" + textWidth +
+                "textWidth=" + textWidth +
                 ", textHeight=" + textHeight +
-                ", staticLayout=" + staticLayout +
                 ", text='" + text + '\'' +
                 ", textColor=" + textColor +
                 ", textSize=" + textSize +
