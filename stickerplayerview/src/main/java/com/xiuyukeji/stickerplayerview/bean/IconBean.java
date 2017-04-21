@@ -1,5 +1,7 @@
 package com.xiuyukeji.stickerplayerview.bean;
 
+import android.graphics.Bitmap;
+
 /**
  * 存储图标数据
  *
@@ -7,7 +9,21 @@ package com.xiuyukeji.stickerplayerview.bean;
  */
 public class IconBean extends MatrixBean {
 
-    public IconBean(int width, int height) {
-        super(width, height);
+    private final Bitmap bitmap;
+
+    public IconBean(Bitmap bitmap) {
+        super(bitmap.getWidth(), bitmap.getHeight());
+        this.bitmap = bitmap;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    @Override
+    public String toString() {
+        return "IconBean{" +
+                "bitmap=" + bitmap +
+                "} " + super.toString();
     }
 }

@@ -5,7 +5,7 @@ package com.xiuyukeji.stickerplayerview.bean;
  *
  * @author Created by jz on 2017/4/11 16:58
  */
-public class StickerBean extends MatrixBean {
+public class StickerBean extends FrameBean {
     private final String index;
 
     private int dx;
@@ -15,8 +15,8 @@ public class StickerBean extends MatrixBean {
 
     private boolean isFlip;
 
-    public StickerBean(String index, int width, int height) {
-        super(width, height);
+    public StickerBean(String index, int width, int height, int fromFrame, int toFrame) {
+        super(width, height, fromFrame, toFrame);
         this.index = index;
         this.scale = 1f;
     }

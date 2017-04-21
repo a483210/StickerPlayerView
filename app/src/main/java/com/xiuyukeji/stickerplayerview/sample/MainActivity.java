@@ -2,7 +2,6 @@ package com.xiuyukeji.stickerplayerview.sample;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -15,8 +14,9 @@ import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
-import com.xiuyukeji.stickerplayerview.utils.BitmapSource;
 import com.xiuyukeji.stickerplayerview.utils.StickerUtil;
+
+import static com.xiuyukeji.stickerplayerview.resource.ResourceFactory.createAssetsResource;
 
 /**
  * 主页面
@@ -59,51 +59,57 @@ public class MainActivity extends AppCompatActivity {
         nAddedView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mStickerPlayerView.addTextSticker(mStickerPlayerView.getCurrentFrame(),
-                        BitmapSource.ASSETS, "text1.png",
+//                mStickerPlayerView.addTextSticker(mStickerPlayerView.getCurrentFrame(), mStickerPlayerView.getCurrentFrame(),
+//                        createAssetsResource(MainActivity.this, "text1.png"),
+//                        "testText", 0xff000000, StickerUtil.dpToPx(MainActivity.this, 18),
+//                        176, 80, 74, 97);
+                mStickerPlayerView.addTextSticker(0, 60,
+                        createAssetsResource(MainActivity.this, "dynamic.gif"),
                         "testText", 0xff000000, StickerUtil.dpToPx(MainActivity.this, 18),
-                        176, 80, 74, 97);
+                        0, 0, 0, 0);
             }
         });
         nCopyView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mStickerPlayerView.copySticker();
+                mStickerPlayerView.copySticker(0);
             }
         });
         nReplaceView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mStickerPlayerView.replaceTextSticker(
-                        BitmapSource.ASSETS, "text2.png",
+                        createAssetsResource(MainActivity.this, "text2.png"),
                         175, 123, 188, 152);
             }
         });
         nDeleteView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mStickerPlayerView.deleteSticker();
+//                mStickerPlayerView.deleteSticker();
+                if (mStickerPlayerView.getCurrentFrame() >= 60) {
+                    mStickerPlayerView.setCurrentFrame(0);
+                } else {
+                    mStickerPlayerView.setCurrentFrame(mStickerPlayerView.getCurrentFrame() + 1);
+                }
             }
         });
         mStickerPlayerView.setOnClickStickerListener(new OnClickStickerListener() {
             @Override
             public void onClick(StickerBean stickerBean) {
                 Log.i("Tool", "click");
-                Snackbar.make(nAddedView, "click", Snackbar.LENGTH_SHORT).show();
             }
         });
         mStickerPlayerView.setOnDoubleClickStickerListener(new OnDoubleClickStickerListener() {
             @Override
             public void onDoubleClick(StickerBean stickerBean) {
                 Log.i("Tool", "doubleClick");
-                Snackbar.make(nAddedView, "doubleClick", Snackbar.LENGTH_SHORT).show();
             }
         });
         mStickerPlayerView.setOnLongClickStickerListener(new OnLongClickStickerListener() {
             @Override
             public void onLongClick(StickerBean stickerBean) {
                 Log.i("Tool", "longClick");
-                Snackbar.make(nAddedView, "longClick", Snackbar.LENGTH_SHORT).show();
             }
         });
     }

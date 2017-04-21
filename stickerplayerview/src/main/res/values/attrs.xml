@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="StickerPlayerView">
+        <attr name="frameRate" format="integer" />
         <attr name="randomLocation" format="boolean" />
-        <attr name="maxNumber" format="integer" />
         <attr name="delSrc" format="reference" />
         <attr name="copySrc" format="reference" />
         <attr name="dragSrc" format="reference" />
         <attr name="flipSrc" format="reference" />
-        <attr name="frameColor" format="color" />
-        <attr name="frameWidth" format="dimension" />
-        <attr name="framePadding" format="dimension" />
+        <attr name="sideColor" format="color" />
+        <attr name="sideWidth" format="dimension" />
+        <attr name="sidePadding" format="dimension" />
     </declare-styleable>
 </resources>

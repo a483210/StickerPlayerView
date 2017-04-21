@@ -21,25 +21,30 @@ public class TextStickerBean extends StickerBean {
     private boolean isItalic;
     private boolean isUnderline;
 
+    private int delayFrame;//延迟帧数显示，动态图片才有效
+
     private int leftPadding;
     private int topPadding;
     private int rightPadding;
     private int bottomPadding;
 
     public TextStickerBean(String index, int width, int height,
+                           int fromFrame, int toFrame,
                            String text, int textColor, int textSize,
                            int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
         this(index, width, height,
+                fromFrame, toFrame,
                 text, textColor, textSize,
                 false, false, false,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
     public TextStickerBean(String index, int width, int height,
+                           int fromFrame, int toFrame,
                            String text, int textColor, int textSize,
                            boolean isBold, boolean isItalic, boolean isUnderline,
                            int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
-        super(index, width, height);
+        super(index, width, height, fromFrame, toFrame);
         this.text = text;
         this.textColor = textColor;
         this.textSize = textSize;

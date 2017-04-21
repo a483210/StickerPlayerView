@@ -1,4 +1,4 @@
-package com.xiuyukeji.stickerplayerview;
+package com.xiuyukeji.stickerplayerview.event;
 
 import android.os.Handler;
 import android.os.Message;
@@ -10,7 +10,7 @@ import android.view.ViewConfiguration;
  *
  * @author Created by jz on 2017/4/13 14:44
  */
-abstract class StickerClickEvent {
+public abstract class StickerClickEvent {
 
     private static final int CLICK_MIN_TIME = ViewConfiguration.getTapTimeout();
     private static final int DOUBLE_TIMEOUT = ViewConfiguration.getDoubleTapTimeout();
@@ -92,7 +92,7 @@ abstract class StickerClickEvent {
         }
     }
 
-    void onDetached() {
+    public void onDetached() {
         cancelLong();
     }
 }

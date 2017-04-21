@@ -1,4 +1,4 @@
-package com.xiuyukeji.stickerplayerview;
+package com.xiuyukeji.stickerplayerview.event;
 
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -29,7 +29,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMat
  *
  * @author Created by jz on 2017/4/11 17:18
  */
-class StickerEvent extends StickerClickEvent {
+public class StickerEvent extends StickerClickEvent {
 
     public final static int STATE_CANCEL = -2, STATE_NORMAL = -1;
     private final static int STATE_DELETE = 0, STATE_COPY = 1, STATE_DRAG = 2, STATE_FLIP = 3, STATE_TRANSLATE = 4;
@@ -43,8 +43,8 @@ class StickerEvent extends StickerClickEvent {
     private final Rect mRect;
     private final float[] mPoint;
 
-    private final float[] mFramePoint;
-    private int mFramePadding;
+    private float[] mSidePoint;
+    private int mSidePadding;
 
     private IconBean mDelIconBean;
     private IconBean mCopyIconBean;
@@ -72,9 +72,11 @@ class StickerEvent extends StickerClickEvent {
     private int mState = STATE_NORMAL;
     private int mAction = STATE_NORMAL;
 
-    private ArrayList<StickerBean> mStickers;
+    private final ArrayList<StickerBean> mStickers;
     private StickerBean mStickerBean;
     private int mSelectedPosition = STATE_NORMAL;
+
+    private boolean mIsEnabled = true;//是否可用
 
     private OnDeleteListener mOnDeleteListener;
     private OnCopyListener mOnCopyListener;
@@ -86,14 +88,15 @@ class StickerEvent extends StickerClickEvent {
     private OnSelectedListener mOnSelectedListener;
     private OnUnselectedListener mOnUnselectedListener;
 
-    StickerEvent(View view) {
+    public StickerEvent(View view, ArrayList<StickerBean> stickers) {
         this.mView = view;
+        this.mStickers = stickers;
 
         mInvertMatrix = new Matrix();
         mRect = new Rect();
         mPoint = new float[2];
 
-        mFramePoint = new float[8];
+        mSidePoint = new float[8];
 
         ViewConfiguration vc = ViewConfiguration.get(view.getContext());
         mTouchSlop = vc.getScaledTouchSlop();
@@ -103,49 +106,36 @@ class StickerEvent extends StickerClickEvent {
         mMinBorder = 100;
     }
 
-    void setIcon(IconBean delIconBean, IconBean copyIconBean, IconBean dragIconBean, IconBean flipIconBean,
-                 int framePadding) {
+    //初始化设置图标数据
+    public void setIcon(IconBean delIconBean, IconBean copyIconBean, IconBean dragIconBean, IconBean flipIconBean,
+                        float[] sidePoint, int sidePadding) {
         this.mDelIconBean = delIconBean;
         this.mCopyIconBean = copyIconBean;
         this.mDragIconBean = dragIconBean;
         this.mFlipIconBean = flipIconBean;
-        this.mFramePadding = framePadding;
+        this.mSidePoint = sidePoint;
+        this.mSidePadding = sidePadding;
     }
 
-    void setStickers(ArrayList<StickerBean> currentStickers) {
-        unselected();
-        this.mStickers = currentStickers;
+    //设置是否可用
+    public void setEnabled(boolean enabled) {
+        this.mIsEnabled = enabled;
     }
 
-    void setSelectedPosition(int selectedPosition) {
+    //设置当前选中索引
+    public void selectPosition(int selectedPosition) {
         selected(selectedPosition);
     }
 
-    int getSelectedPosition() {
+    //获得当前选中
+    public int getSelectedPosition() {
         return mSelectedPosition;
     }
 
-    float[] getFramePoint() {
-        return mFramePoint;
-    }
-
-    Matrix getDelMatrix() {
-        return mDelIconBean.getMatrix();
-    }
-
-    Matrix getCopyMatrix() {
-        return mCopyIconBean.getMatrix();
-    }
-
-    Matrix getDragMatrix() {
-        return mDragIconBean.getMatrix();
-    }
-
-    Matrix getFlipMatrix() {
-        return mFlipIconBean.getMatrix();
-    }
-
-    boolean dispatchTouchEvent(MotionEvent event) {
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (!mIsEnabled) {
+            return true;
+        }
         if (mScrollState == SCROLL_START) {
             return onTouchEvent(event);
         }
@@ -412,7 +402,8 @@ class StickerEvent extends StickerClickEvent {
         delete(mSelectedPosition);
     }
 
-    void delete(int position) {
+    //外部调用删除
+    public void delete(int position) {
         StickerBean stickerBean = mStickers.remove(position);
         if (position == mSelectedPosition) {
             unselected();
@@ -470,8 +461,9 @@ class StickerEvent extends StickerClickEvent {
         }
     }
 
-    void updateSelected() {
-        if (mSelectedPosition == STATE_NORMAL) {
+    //替换背景刷新
+    public void updateSelected(int position) {
+        if (mSelectedPosition != position) {
             return;
         }
         mStickerBean = mStickers.get(mSelectedPosition);
@@ -507,14 +499,14 @@ class StickerEvent extends StickerClickEvent {
         mView.invalidate();
     }
 
-    void invalidateSelected() {
+    private void invalidateSelected() {
         if (mStickerBean == null) {
             return;
         }
 
         calculateSelected(mStickerBean,
                 mDelIconBean, mCopyIconBean, mDragIconBean, mFlipIconBean,
-                mFramePoint, mFramePadding);
+                mSidePoint, mSidePadding);
     }
 
     private boolean containPoint(MatrixBean iconBean) {
@@ -541,31 +533,31 @@ class StickerEvent extends StickerClickEvent {
         return mRect.contains((int) x, (int) y);
     }
 
-    void setOnDeleteListener(OnDeleteListener l) {
+    public void setOnDeleteListener(OnDeleteListener l) {
         this.mOnDeleteListener = l;
     }
 
-    void setOnCopyListener(OnCopyListener l) {
+    public void setOnCopyListener(OnCopyListener l) {
         this.mOnCopyListener = l;
     }
 
-    void setOnClickStickerListener(OnClickStickerListener l) {
+    public void setOnClickStickerListener(OnClickStickerListener l) {
         this.mOnClickStickerListener = l;
     }
 
-    void setOnDoubleClickStickerListener(OnDoubleClickStickerListener l) {
+    public void setOnDoubleClickStickerListener(OnDoubleClickStickerListener l) {
         this.mOnDoubleClickStickerListener = l;
     }
 
-    void setOnLongClickStickerListener(OnLongClickStickerListener l) {
+    public void setOnLongClickStickerListener(OnLongClickStickerListener l) {
         this.mOnLongClickStickerListener = l;
     }
 
-    void setOnSelectedListener(OnSelectedListener l) {
+    public void setOnSelectedListener(OnSelectedListener l) {
         this.mOnSelectedListener = l;
     }
 
-    void setOnUnselectedListener(OnUnselectedListener l) {
+    public void setOnUnselectedListener(OnUnselectedListener l) {
         this.mOnUnselectedListener = l;
     }
 }

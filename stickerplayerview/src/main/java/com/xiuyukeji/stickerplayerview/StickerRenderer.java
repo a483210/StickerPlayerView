@@ -1,80 +1,73 @@
 package com.xiuyukeji.stickerplayerview;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 
-import com.xiuyukeji.stickerplayerview.bean.BitmapBean;
+import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 
-import java.util.HashMap;
-
-import static com.xiuyukeji.stickerplayerview.utils.BitmapSource.FILE;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateTextSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.PAINT_FLAG;
-import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.readAssetsBitmap;
-import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.readBitmap;
-import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.recycleBitmap;
 
 /**
- * 贴纸渲染类
+ * 贴纸渲染
  *
  * @author Created by jz on 2017/4/11 17:16
  */
-class StickerRenderer {
-
-    private final HashMap<String, BitmapBean> mBitmapBuffers;
+public class StickerRenderer {
 
     private final Paint mPaint;
     private final TextPaint mTextPaint;
-    private final Paint mFramePaint;
+    private final Paint mSidePaint;
 
-    private final float[] mPoint;
+    private final float[] mTextPoint;
 
-    private Bitmap mDelBitmap;
-    private Bitmap mCopyBitmap;
-    private Bitmap mDragBitmap;
-    private Bitmap mFlipBitmap;
+    private IconBean mDelIconBean;
+    private IconBean mCopyIconBean;
+    private IconBean mDragIconBean;
+    private IconBean mFlipIconBean;
 
-    StickerRenderer() {
-        this.mBitmapBuffers = new HashMap<>();
+    private float[] mSidePoint;
 
+    public StickerRenderer() {
         mPaint = new Paint(PAINT_FLAG);
         mTextPaint = new TextPaint(PAINT_FLAG);
-        mFramePaint = new Paint(PAINT_FLAG);
+        mSidePaint = new Paint(PAINT_FLAG);
 
-        mPoint = new float[2];
+        mTextPoint = new float[2];
     }
 
-    void setFrameStyle(Bitmap delBitmap, Bitmap copyBitmap, Bitmap dragBitmap, Bitmap flipBitmap,
-                       int frameColor, int frameWidth) {
-        this.mDelBitmap = delBitmap;
-        this.mCopyBitmap = copyBitmap;
-        this.mDragBitmap = dragBitmap;
-        this.mFlipBitmap = flipBitmap;
+    //设置边框属性
+    public void setSelectedStyle(IconBean delIconBean, IconBean copyIconBean,
+                                 IconBean dragIconBean, IconBean flipIconBean,
+                                 float[] sidePoint, int sideColor, int sideWidth) {
+        this.mDelIconBean = delIconBean;
+        this.mCopyIconBean = copyIconBean;
+        this.mDragIconBean = dragIconBean;
+        this.mFlipIconBean = flipIconBean;
 
-        this.mFramePaint.setColor(frameColor);
-        this.mFramePaint.setStrokeWidth(frameWidth);
+        this.mSidePoint = sidePoint;
+        this.mSidePaint.setColor(sideColor);
+        this.mSidePaint.setStrokeWidth(sideWidth);
     }
 
-    void drawSticker(Canvas canvas, StickerBean stickerBean) {
-        Bitmap bitmap = mBitmapBuffers.get(stickerBean.getIndex()).getBitmap();
+    //绘制贴纸
+    public void drawSticker(Canvas canvas, StickerBean stickerBean, Bitmap bitmap) {
         if (bitmap == null || bitmap.isRecycled()) {
             return;
         }
-
         canvas.drawBitmap(bitmap, stickerBean.getMatrix(), mPaint);
     }
 
-    void drawTextSticker(Canvas canvas, TextStickerBean textStickerBean) {
-        drawSticker(canvas, textStickerBean);
+    //绘制文字贴纸
+    public void drawTextSticker(Canvas canvas, TextStickerBean textStickerBean, Bitmap bitmap) {
+        drawSticker(canvas, textStickerBean, bitmap);
 
         mTextPaint.setTextSize(textStickerBean.getCurTextSize());
         mTextPaint.setColor(textStickerBean.getTextColor());
@@ -94,89 +87,41 @@ class StickerRenderer {
             textStickerBean.setStaticLayout(staticLayout);
         }
 
-        calculateTextSticker(textStickerBean, mPoint, staticLayout.getHeight());//这里需要重新计算文字位置
+        calculateTextSticker(textStickerBean, mTextPoint, staticLayout.getHeight());//这里需要重新计算文字位置
 
         canvas.save();
 
         canvas.concat(textStickerBean.getMatrix());
-        canvas.translate(mPoint[0], mPoint[1]);
+        canvas.translate(mTextPoint[0], mTextPoint[1]);
 
         staticLayout.draw(canvas);
 
         canvas.restore();
     }
 
-    void drawSelected(Canvas canvas, float[] framePoint,
-                      Matrix delMatrix, Matrix copyMatrix, Matrix dragMatrix, Matrix flipMatrix,
-                      StickerBean stickerBean) {
+    //绘制图标
+    public void drawSelected(Canvas canvas, StickerBean stickerBean) {
         if (TextUtils.isEmpty(stickerBean.getIndex())) {//如果没有背景则不绘制选择框
             return;
         }
 
-        drawFrame(canvas, framePoint);
+        drawSide(canvas);
 
-        canvas.drawBitmap(mDelBitmap, delMatrix, mPaint);
-        canvas.drawBitmap(mCopyBitmap, copyMatrix, mPaint);
-        canvas.drawBitmap(mDragBitmap, dragMatrix, mPaint);
-        canvas.drawBitmap(mFlipBitmap, flipMatrix, mPaint);
+        canvas.drawBitmap(mDelIconBean.getBitmap(), mDelIconBean.getMatrix(), mPaint);
+        canvas.drawBitmap(mCopyIconBean.getBitmap(), mCopyIconBean.getMatrix(), mPaint);
+        canvas.drawBitmap(mDragIconBean.getBitmap(), mDragIconBean.getMatrix(), mPaint);
+        canvas.drawBitmap(mFlipIconBean.getBitmap(), mFlipIconBean.getMatrix(), mPaint);
     }
 
-    private void drawFrame(Canvas canvas, float[] framePoint) {
-        canvas.drawLine(framePoint[0], framePoint[1],
-                framePoint[2], framePoint[3], mFramePaint);
-        canvas.drawLine(framePoint[2], framePoint[3],
-                framePoint[6], framePoint[7], mFramePaint);
-        canvas.drawLine(framePoint[6], framePoint[7],
-                framePoint[4], framePoint[5], mFramePaint);
-        canvas.drawLine(framePoint[4], framePoint[5],
-                framePoint[0], framePoint[1], mFramePaint);
-    }
-
-    Bitmap getBitmapBuffer(Context context, int source, String path) {
-        if (TextUtils.isEmpty(path)) {
-            return null;
-        }
-        BitmapBean bitmapBean = mBitmapBuffers.get(path);
-        if (bitmapBean == null) {
-            Bitmap bitmap;
-            if (source == FILE) {
-                bitmap = readBitmap(path);
-            } else {
-                bitmap = readAssetsBitmap(context, path);
-            }
-            bitmapBean = new BitmapBean(bitmap);
-            mBitmapBuffers.put(path, bitmapBean);
-        } else {
-            bitmapBean.setUseCount(bitmapBean.getUseCount() + 1);
-        }
-        return bitmapBean.getBitmap();
-    }
-
-    void addUserCount(String index) {
-        if (TextUtils.isEmpty(index)) {
-            return;
-        }
-        BitmapBean bitmapBean = mBitmapBuffers.get(index);
-        if (bitmapBean == null) {
-            return;
-        }
-        bitmapBean.setUseCount(bitmapBean.getUseCount() + 1);
-    }
-
-    void cutUserCount(String index) {
-        if (TextUtils.isEmpty(index)) {
-            return;
-        }
-        BitmapBean bitmapBean = mBitmapBuffers.get(index);
-        if (bitmapBean == null) {
-            return;
-        }
-
-        bitmapBean.setUseCount(bitmapBean.getUseCount() - 1);
-
-        if (bitmapBean.getUseCount() <= 0) {
-            recycleBitmap(bitmapBean.getBitmap());
-            mBitmapBuffers.remove(index);
-        }
+    //绘制边框
+    private void drawSide(Canvas canvas) {
+        canvas.drawLine(mSidePoint[0], mSidePoint[1],
+                mSidePoint[2], mSidePoint[3], mSidePaint);
+        canvas.drawLine(mSidePoint[2], mSidePoint[3],
+                mSidePoint[6], mSidePoint[7], mSidePaint);
+        canvas.drawLine(mSidePoint[6], mSidePoint[7],
+                mSidePoint[4], mSidePoint[5], mSidePaint);
+        canvas.drawLine(mSidePoint[4], mSidePoint[5],
+                mSidePoint[0], mSidePoint[1], mSidePaint);
     }
 }

@@ -1,4 +1,4 @@
-package com.xiuyukeji.stickerplayerview.utils;
+package com.xiuyukeji.stickerplayerview.annotations;
 
 import android.support.annotation.IntRange;
 
@@ -6,11 +6,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 图像来源
+ * 边距区间
  *
- * @author Created by jz on 2017/4/12 10:15
+ * @author Created by jz on 2017/4/19 11:57
  */
 @IntRange(from = 0)
 @Retention(RetentionPolicy.SOURCE)
-public @interface PaddingSource {
+public @interface PaddingRange {
 }

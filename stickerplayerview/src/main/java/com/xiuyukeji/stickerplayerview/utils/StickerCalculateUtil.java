@@ -1,5 +1,7 @@
 package com.xiuyukeji.stickerplayerview.utils;
 
+import android.graphics.Matrix;
+
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.MatrixBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
@@ -28,7 +30,7 @@ public class StickerCalculateUtil {
     }
 
     /**
-     * 重新计算贴纸文字位置，当需要缩放时
+     * 重新计算贴纸文字位置
      *
      * @param textStickerBean 贴纸数据
      * @param textHeight      文字高度
@@ -52,11 +54,13 @@ public class StickerCalculateUtil {
         float px = stickerBean.getWidth() / 2f;
         float py = stickerBean.getHeight() / 2f;
 
-        stickerBean.getMatrix().setRotate(stickerBean.getDegrees(), px, py);
-        stickerBean.getMatrix().postScale(stickerBean.getScale(), stickerBean.getScale(), px, py);
-        stickerBean.getMatrix().postTranslate(stickerBean.getDx(), stickerBean.getDy());
+        Matrix matrix = stickerBean.getMatrix();
 
-        if (stickerBean.isFlip()) {
+        matrix.setRotate(stickerBean.getDegrees(), px, py);
+        matrix.postScale(stickerBean.getScale(), stickerBean.getScale(), px, py);
+        matrix.postTranslate(stickerBean.getDx(), stickerBean.getDy());
+
+        if (stickerBean.isFlip()) {//反转
             flipMatrix(stickerBean);
         }
     }
@@ -107,23 +111,23 @@ public class StickerCalculateUtil {
      * @param copyIconBean 复制图标数据
      * @param dragIconBean 移动图标数据
      * @param flipIconBean 反转图标数据
-     * @param framePoint   边框坐标
-     * @param framePadding 边框间距
+     * @param sidePoint    边框坐标
+     * @param sidePadding  边框间距
      */
     public static void calculateSelected(StickerBean stickerBean,
                                          IconBean delIconBean, IconBean copyIconBean, IconBean dragIconBean, IconBean flipIconBean,
-                                         float[] framePoint, int framePadding) {
+                                         float[] sidePoint, int sidePadding) {
         float scaleWidth = (stickerBean.getScale() - 1) * stickerBean.getWidth();
         float scaleHeight = (stickerBean.getScale() - 1) * stickerBean.getHeight();
-        float width = stickerBean.getWidth() + scaleWidth + framePadding * 2;
-        float height = stickerBean.getHeight() + scaleHeight + framePadding * 2;
-        float dx = stickerBean.getDx() - framePadding - scaleWidth / 2;
-        float dy = stickerBean.getDy() - framePadding - scaleHeight / 2;
+        float width = stickerBean.getWidth() + scaleWidth + sidePadding * 2;
+        float height = stickerBean.getHeight() + scaleHeight + sidePadding * 2;
+        float dx = stickerBean.getDx() - sidePadding - scaleWidth / 2;
+        float dy = stickerBean.getDy() - sidePadding - scaleHeight / 2;
 
         float pointX = dx + width / 2;
         float pointY = dy + height / 2;
 
-        calculateFrame(stickerBean, framePoint, framePadding);
+        calculateSide(stickerBean, sidePoint, sidePadding);
 
         calculateIcon(delIconBean, stickerBean.getDegrees(),
                 dx, dy,
@@ -149,25 +153,27 @@ public class StickerCalculateUtil {
     //设置图标矩阵
     private static void calculateIcon(IconBean iconBean, float degrees, float dx, float dy,
                                       float pointX, float pointY) {
-        iconBean.getMatrix().setTranslate(dx - iconBean.getWidth() / 2,
+        Matrix matrix = iconBean.getMatrix();
+
+        matrix.setTranslate(dx - iconBean.getWidth() / 2,
                 dy - iconBean.getHeight() / 2);
-        iconBean.getMatrix().postRotate(degrees, pointX, pointY);
+        matrix.postRotate(degrees, pointX, pointY);
     }
 
     //设置边框矩阵
-    private static void calculateFrame(StickerBean stickerBean, float[] framePoint, float framePadding) {
-        framePadding = framePadding / stickerBean.getScale();
+    private static void calculateSide(StickerBean stickerBean, float[] sidePoint, float sidePadding) {
+        sidePadding = sidePadding / stickerBean.getScale();
 
-        framePoint[0] = -framePadding;
-        framePoint[1] = -framePadding;
-        framePoint[2] = stickerBean.getWidth() + framePadding;
-        framePoint[3] = -framePadding;
-        framePoint[4] = -framePadding;
-        framePoint[5] = stickerBean.getHeight() + framePadding;
-        framePoint[6] = framePoint[2];
-        framePoint[7] = framePoint[5];
+        sidePoint[0] = -sidePadding;
+        sidePoint[1] = -sidePadding;
+        sidePoint[2] = stickerBean.getWidth() + sidePadding;
+        sidePoint[3] = -sidePadding;
+        sidePoint[4] = -sidePadding;
+        sidePoint[5] = stickerBean.getHeight() + sidePadding;
+        sidePoint[6] = sidePoint[2];
+        sidePoint[7] = sidePoint[5];
 
-        stickerBean.getMatrix().mapPoints(framePoint, framePoint);
+        stickerBean.getMatrix().mapPoints(sidePoint, sidePoint);
     }
 
     /**
