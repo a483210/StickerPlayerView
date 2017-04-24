@@ -9,6 +9,8 @@ import android.view.ViewConfiguration;
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.MatrixBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
+import com.xiuyukeji.stickerplayerview.data.DataHandle;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
@@ -29,7 +31,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMat
  *
  * @author Created by jz on 2017/4/11 17:18
  */
-public class StickerEvent extends StickerClickEvent {
+public class EventHandle extends ClickEvent {
 
     public final static int STATE_CANCEL = -2, STATE_NORMAL = -1;
     private final static int STATE_DELETE = 0, STATE_COPY = 1, STATE_DRAG = 2, STATE_FLIP = 3, STATE_TRANSLATE = 4;
@@ -50,6 +52,10 @@ public class StickerEvent extends StickerClickEvent {
     private IconBean mCopyIconBean;
     private IconBean mDragIconBean;
     private IconBean mFlipIconBean;
+
+    private final DataHandle mDataHandle;
+    private StickerBean mStickerBean;
+    private int mSelectedPosition = STATE_NORMAL;
 
     private final int mTouchSlop;
 
@@ -72,10 +78,6 @@ public class StickerEvent extends StickerClickEvent {
     private int mState = STATE_NORMAL;
     private int mAction = STATE_NORMAL;
 
-    private final ArrayList<StickerBean> mStickers;
-    private StickerBean mStickerBean;
-    private int mSelectedPosition = STATE_NORMAL;
-
     private boolean mIsEnabled = true;//是否可用
 
     private OnDeleteListener mOnDeleteListener;
@@ -88,9 +90,9 @@ public class StickerEvent extends StickerClickEvent {
     private OnSelectedListener mOnSelectedListener;
     private OnUnselectedListener mOnUnselectedListener;
 
-    public StickerEvent(View view, ArrayList<StickerBean> stickers) {
+    public EventHandle(View view, DataHandle dataHandle) {
         this.mView = view;
-        this.mStickers = stickers;
+        this.mDataHandle = dataHandle;
 
         mInvertMatrix = new Matrix();
         mRect = new Rect();
@@ -158,16 +160,21 @@ public class StickerEvent extends StickerClickEvent {
                         break;
                     }
                 }
-                int count = mStickers.size();
+
+                ArrayList<Node<StickerBean>> entries = mDataHandle.getCurrentStickers();
+                int count = entries.size();
                 boolean isSelected = false;
                 for (int i = count - 1; i >= 0; i--) {// 判断当前点击是否为贴纸区域
-                    StickerBean stickerBean = mStickers.get(i);
+                    Node<StickerBean> node = entries.get(i);
+                    StickerBean stickerBean = node.getValue();
+
                     if (containPoint(stickerBean)) {
-                        selected(i);
+                        selected(node.getKey());
                         isSelected = true;
                         break;
                     }
                 }
+
                 if (isSelected) {// 如果有选择
                     mState = STATE_TRANSLATE;
                     clickDown();
@@ -339,7 +346,7 @@ public class StickerEvent extends StickerClickEvent {
         return scaleDiff;
     }
 
-    private float isBeyond(StickerBean stickerBean, float scaleDiff) {
+    public float isBeyond(StickerBean stickerBean, float scaleDiff) {
         float maxScale = mStickerMaxSize / (float) stickerBean.getWidth();
         float minScale = mStickerMinSize / (float) stickerBean.getWidth();
         float scale = stickerBean.getScale() * scaleDiff;
@@ -404,7 +411,7 @@ public class StickerEvent extends StickerClickEvent {
 
     //外部调用删除
     public void delete(int position) {
-        StickerBean stickerBean = mStickers.remove(position);
+        StickerBean stickerBean = mDataHandle.removeSticker(position);
         if (position == mSelectedPosition) {
             unselected();
         }
@@ -466,7 +473,7 @@ public class StickerEvent extends StickerClickEvent {
         if (mSelectedPosition != position) {
             return;
         }
-        mStickerBean = mStickers.get(mSelectedPosition);
+        mStickerBean = mDataHandle.getSticker(mSelectedPosition);
         invalidateSelected();
     }
 
@@ -474,7 +481,7 @@ public class StickerEvent extends StickerClickEvent {
         unselected();
 
         mSelectedPosition = position;
-        mStickerBean = mStickers.get(mSelectedPosition);
+        mStickerBean = mDataHandle.getSticker(mSelectedPosition);
 
         invalidateSelected();
         mView.invalidate();

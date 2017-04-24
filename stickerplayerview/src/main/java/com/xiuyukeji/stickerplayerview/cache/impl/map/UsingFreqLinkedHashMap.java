@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 /**
  * 双向环形链表
+ * get会重新调整位置
  *
  * @author Created by jz on 2017/4/20 9:30
  */
@@ -42,7 +43,7 @@ public class UsingFreqLinkedHashMap<K, V> {
     }
 
     /**
-     * 加入数据，会根据权重和时间加入链表
+     * 加入数据，会根据权重调整位置
      *
      * @param key    键
      * @param value  值

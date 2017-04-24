@@ -20,7 +20,9 @@ import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 import com.xiuyukeji.stickerplayerview.cache.MemoryCache;
-import com.xiuyukeji.stickerplayerview.event.StickerEvent;
+import com.xiuyukeji.stickerplayerview.data.DataHandle;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
+import com.xiuyukeji.stickerplayerview.event.EventHandle;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
@@ -31,15 +33,14 @@ import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 import com.xiuyukeji.stickerplayerview.resource.ResourceHandle;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 
-import static com.xiuyukeji.stickerplayerview.event.StickerEvent.STATE_NORMAL;
+import static com.xiuyukeji.stickerplayerview.event.EventHandle.STATE_NORMAL;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkDynamicAndFrameRate;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateNull;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateRange;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.copyStickerBean;
-import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.searchStickerLocation;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.attachBackground;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.dpToPx;
 
@@ -57,10 +58,11 @@ public class StickerPlayerView extends View {
     private boolean mIsRandomLocation;
 
     private final ResourceHandle mResourceHandle;
-    private final StickerRenderer mStickerRenderer;
-    private final StickerEvent mStickerEvent;
+    private final DataHandle mDataHandle;
 
-    private final ArrayList<StickerBean> mStickers;
+    private final RendererHandle mRendererHandle;
+    private final EventHandle mEventHandle;
+    private final PlayerHandle mPlayerHandle;
 
     private int mFrameIndex = 0;//当前帧
     private long mFrameTimeMs = 0;//当前时间
@@ -81,11 +83,12 @@ public class StickerPlayerView extends View {
     public StickerPlayerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        mStickers = new ArrayList<>();
-
         mResourceHandle = new ResourceHandle();
-        mStickerRenderer = new StickerRenderer();
-        mStickerEvent = new StickerEvent(this, mStickers);
+        mDataHandle = new DataHandle();
+
+        mRendererHandle = new RendererHandle();
+        mEventHandle = new EventHandle(this, mDataHandle);
+        mPlayerHandle = new PlayerHandle();
 
         initAttrs(attrs);
         initView();
@@ -148,10 +151,10 @@ public class StickerPlayerView extends View {
         IconBean flipIconBean = new IconBean(flipBitmap);
         float[] sidePoint = new float[8];
 
-        mStickerRenderer.setSelectedStyle(delIconBean, copyIconBean, dragIconBean, flipIconBean,
+        mRendererHandle.setSelectedStyle(delIconBean, copyIconBean, dragIconBean, flipIconBean,
                 sidePoint, sideColor, sideWidth);
 
-        mStickerEvent.setIcon(delIconBean, copyIconBean, dragIconBean, flipIconBean,
+        mEventHandle.setIcon(delIconBean, copyIconBean, dragIconBean, flipIconBean,
                 sidePoint, sidePadding);
 
         mIsRandomLocation = typedArray.getBoolean(R.styleable.StickerPlayerView_randomLocation, false);
@@ -168,13 +171,13 @@ public class StickerPlayerView extends View {
     }
 
     private void setListener() {
-        mStickerEvent.setOnCopyListener(new OnCopyListener() {
+        mEventHandle.setOnCopyListener(new OnCopyListener() {
             @Override
             public void onCopy(StickerBean stickerBean) {
                 copySticker(stickerBean, stickerBean.getFromFrame(), stickerBean.getToFrame());
             }
         });
-        mStickerEvent.setOnDeleteListener(new OnDeleteListener() {
+        mEventHandle.setOnDeleteListener(new OnDeleteListener() {
             @Override
             public void onDelete(StickerBean stickerBean) {
                 mResourceHandle.decrementUseCount(stickerBean.getIndex());
@@ -187,7 +190,7 @@ public class StickerPlayerView extends View {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        return mStickerEvent.dispatchTouchEvent(event);
+        return mEventHandle.dispatchTouchEvent(event);
     }
 
     /**
@@ -197,12 +200,12 @@ public class StickerPlayerView extends View {
      * @param toFrame   结束帧
      * @param resource  资源
      */
-    public void addSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
-                           @NonNull Resource resource) {
+    public int addSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
+                          @NonNull Resource resource) {
 
         resource = mResourceHandle.initResource(resource);
         if (resource == null) {
-            return;
+            return STATE_NORMAL;
         }
 
         checkDynamicAndFrameRate(resource, 1000 / mDelayTimeMs);
@@ -213,7 +216,7 @@ public class StickerPlayerView extends View {
 
         initStickerLocation(stickerBean);
 
-        addSticker(stickerBean);
+        return addSticker(stickerBean);
     }
 
     /**
@@ -225,9 +228,9 @@ public class StickerPlayerView extends View {
      * @param textColor 文字颜色
      * @param textSize  文字大小
      */
-    public void addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
-                               String text, @ColorInt int textColor, @TextSizeRange int textSize) {
-        addTextSticker(fromFrame, toFrame, null,
+    public int addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
+                              String text, @ColorInt int textColor, @TextSizeRange int textSize) {
+        return addTextSticker(fromFrame, toFrame, null,
                 text, textColor, textSize);
     }
 
@@ -244,13 +247,13 @@ public class StickerPlayerView extends View {
      * @param rightPadding  右边距
      * @param bottomPadding 下边距
      */
-    public void addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
-                               String text, @ColorInt int textColor, @TextSizeRange int textSize,
-                               @PaddingRange int leftPadding,
-                               @PaddingRange int topPadding,
-                               @PaddingRange int rightPadding,
-                               @PaddingRange int bottomPadding) {
-        addTextSticker(fromFrame, toFrame, null,
+    public int addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
+                              String text, @ColorInt int textColor, @TextSizeRange int textSize,
+                              @PaddingRange int leftPadding,
+                              @PaddingRange int topPadding,
+                              @PaddingRange int rightPadding,
+                              @PaddingRange int bottomPadding) {
+        return addTextSticker(fromFrame, toFrame, null,
                 text, textColor, textSize,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
@@ -265,9 +268,9 @@ public class StickerPlayerView extends View {
      * @param textColor 文字颜色
      * @param textSize  文字大小
      */
-    public void addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame, Resource resource,
-                               String text, @ColorInt int textColor, @TextSizeRange int textSize) {
-        addTextSticker(fromFrame, toFrame, resource,
+    public int addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame, Resource resource,
+                              String text, @ColorInt int textColor, @TextSizeRange int textSize) {
+        return addTextSticker(fromFrame, toFrame, resource,
                 text, textColor, textSize,
                 0, 0, 0, 0);
     }
@@ -286,13 +289,13 @@ public class StickerPlayerView extends View {
      * @param rightPadding  右边距
      * @param bottomPadding 下边距
      */
-    public void addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
-                               Resource resource,
-                               String text, @ColorInt int textColor, @TextSizeRange int textSize,
-                               @PaddingRange int leftPadding,
-                               @PaddingRange int topPadding,
-                               @PaddingRange int rightPadding,
-                               @PaddingRange int bottomPadding) {
+    public int addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
+                              Resource resource,
+                              String text, @ColorInt int textColor, @TextSizeRange int textSize,
+                              @PaddingRange int leftPadding,
+                              @PaddingRange int topPadding,
+                              @PaddingRange int rightPadding,
+                              @PaddingRange int bottomPadding) {
         TextStickerBean textStickerBean;
 
         if (resource == null) {//todo 这里的width和height需要调整
@@ -303,7 +306,7 @@ public class StickerPlayerView extends View {
         } else {
             resource = mResourceHandle.initResource(resource);
             if (resource == null) {
-                return;
+                return STATE_NORMAL;
             }
 
             checkDynamicAndFrameRate(resource, 1000 / mDelayTimeMs);
@@ -317,7 +320,7 @@ public class StickerPlayerView extends View {
 
         initStickerLocation(textStickerBean);
 
-        addSticker(textStickerBean);
+        return addSticker(textStickerBean);
     }
 
     /**
@@ -326,10 +329,10 @@ public class StickerPlayerView extends View {
      * @param resource 资源
      */
     public void replaceSticker(Resource resource) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        replaceSticker(resource, mStickerEvent.getSelectedPosition());
+        replaceSticker(resource, mEventHandle.getSelectedPosition());
     }
 
     /**
@@ -357,10 +360,10 @@ public class StickerPlayerView extends View {
                                    @PaddingRange int topPadding,
                                    @PaddingRange int rightPadding,
                                    @PaddingRange int bottomPadding) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        replaceTextSticker(resource, mStickerEvent.getSelectedPosition(),
+        replaceTextSticker(resource, mEventHandle.getSelectedPosition(),
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -411,6 +414,8 @@ public class StickerPlayerView extends View {
 
             newStickerBean = copyStickerBean(stickerBean, resource.getIndex(),
                     resource.getWidth(), resource.getHeight());
+
+            newStickerBean.setScale(newStickerBean.getScale() * mEventHandle.isBeyond(newStickerBean, 1f));
         }
         if (leftPadding != -1
                 && stickerBean instanceof TextStickerBean) {
@@ -420,9 +425,9 @@ public class StickerPlayerView extends View {
 
         calculateSticker(newStickerBean);
 
-        mStickers.set(position, newStickerBean);
+        mDataHandle.replaceSticker(position, newStickerBean);
 
-        mStickerEvent.updateSelected(position);
+        mEventHandle.updateSelected(position);
 
         invalidate(newStickerBean);
     }
@@ -443,10 +448,10 @@ public class StickerPlayerView extends View {
      * @param toFrame   结束帧
      */
     public void copySticker(@FrameRange int fromFrame, @FrameRange int toFrame) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        copySticker(mStickerEvent.getSelectedPosition(), fromFrame, toFrame);
+        copySticker(mEventHandle.getSelectedPosition(), fromFrame, toFrame);
     }
 
     /**
@@ -459,16 +464,20 @@ public class StickerPlayerView extends View {
     public void copySticker(@FrameRange int position,
                             @FrameRange int fromFrame, @FrameRange int toFrame) {
 
-        if (position >= mStickers.size()
+        if (position >= mDataHandle.size()
                 || toFrame > fromFrame) {
             return;
         }
 
-        copySticker(mStickers.get(position), fromFrame, toFrame);
+        copySticker(mDataHandle.getSticker(position), fromFrame, toFrame);
     }
 
     //复制贴纸
     private void copySticker(StickerBean stickerBean, int fromFrame, int toFrame) {
+        if (stickerBean == null) {
+            return;
+        }
+
         StickerBean newStickerBean = copyStickerBean(stickerBean, fromFrame, toFrame);
 
         calculateSticker(newStickerBean);
@@ -482,10 +491,10 @@ public class StickerPlayerView extends View {
      * 删除当前选中的贴纸
      */
     public void deleteSticker() {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        deleteSticker(mStickerEvent.getSelectedPosition());
+        deleteSticker(mEventHandle.getSelectedPosition());
     }
 
     /**
@@ -494,19 +503,19 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void deleteSticker(@FrameRange int position) {
-        if (position >= mStickers.size()) {
+        if (position >= mDataHandle.size()) {
             return;
         }
-        mStickerEvent.delete(position);
+        mEventHandle.delete(position);
     }
 
     /**
      * 删除全部贴纸
      */
     public void clearAllSticker() {
-        int count = mStickers.size();
-        for (int i = 0; i < count; i++) {
-            mStickerEvent.delete(0);
+        Iterator<Node<StickerBean>> iterator = mDataHandle.getStickers();
+        while (iterator.hasNext()) {
+            mEventHandle.delete(iterator.next().getKey());
         }
         invalidate();
     }
@@ -517,10 +526,10 @@ public class StickerPlayerView extends View {
      * @param text 文字
      */
     public void setText(String text) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        setText(text, mStickerEvent.getSelectedPosition());
+        setText(text, mEventHandle.getSelectedPosition());
     }
 
     /**
@@ -544,10 +553,10 @@ public class StickerPlayerView extends View {
      * @param color 文字颜色
      */
     public void setTextColor(@ColorInt int color) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        setTextColor(color, mStickerEvent.getSelectedPosition());
+        setTextColor(color, mEventHandle.getSelectedPosition());
     }
 
     /**
@@ -571,10 +580,10 @@ public class StickerPlayerView extends View {
      * @param size 文字大小
      */
     public void setTextSize(@TextSizeRange int size) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        setTextSize(size, mStickerEvent.getSelectedPosition());
+        setTextSize(size, mEventHandle.getSelectedPosition());
     }
 
     /**
@@ -598,10 +607,10 @@ public class StickerPlayerView extends View {
      * @param isBold 文字加粗
      */
     public void setBold(boolean isBold) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        setBold(isBold, mStickerEvent.getSelectedPosition());
+        setBold(isBold, mEventHandle.getSelectedPosition());
     }
 
 
@@ -626,10 +635,10 @@ public class StickerPlayerView extends View {
      * @param isItalic 文字倾斜
      */
     public void setItalic(boolean isItalic) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        setItalic(isItalic, mStickerEvent.getSelectedPosition());
+        setItalic(isItalic, mEventHandle.getSelectedPosition());
     }
 
     /**
@@ -653,10 +662,10 @@ public class StickerPlayerView extends View {
      * @param isUnderline 文字下划线
      */
     public void setUnderline(boolean isUnderline) {
-        if (mStickerEvent.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        setUnderline(isUnderline, mStickerEvent.getSelectedPosition());
+        setUnderline(isUnderline, mEventHandle.getSelectedPosition());
     }
 
     /**
@@ -687,8 +696,8 @@ public class StickerPlayerView extends View {
      * @param timeMs 时间，单位毫秒
      */
     public void setCurrentTime(@IntRange(from = 0) int timeMs) {
-        checkFrameRateNull(1000 / mDelayTimeMs);
-        checkFrameRateRange(1000 / mDelayTimeMs);
+        checkFrameRateNull(mDelayTimeMs);
+        checkFrameRateRange(mDelayTimeMs);
 
         setCurrentFrame(Math.round(timeMs / mDelayTimeMs));
     }
@@ -703,6 +712,7 @@ public class StickerPlayerView extends View {
             return;
         }
         this.mFrameIndex = frameIndex;
+        mDataHandle.setFrameIndex(frameIndex);
 
         invalidate();
     }
@@ -713,15 +723,14 @@ public class StickerPlayerView extends View {
      * @param frameRate 帧率
      */
     public void setFrameRate(@IntRange(from = 1, to = 60) int frameRate) {
-        checkFrameRateRange(frameRate);
-
         this.mDelayTimeMs = 1000 / (float) frameRate;
+
         invalidate();
     }
 
     @Override
     public void setEnabled(boolean enabled) {
-        mStickerEvent.setEnabled(enabled);
+        mEventHandle.setEnabled(enabled);
     }
 
     /**
@@ -735,32 +744,25 @@ public class StickerPlayerView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (mStickers.isEmpty()) {
+        int count = mDataHandle.size();
+        if (count == 0) {
             return;
         }
-        int count = mStickers.size();
-        int selectedPosition = mStickerEvent.getSelectedPosition();
-        for (int i = 0; i < count; i++) {
-            StickerBean stickerBean = mStickers.get(i);
-
-            if (mFrameIndex < stickerBean.getFromFrame()) {
-                continue;
-            }
-            if (mFrameIndex > stickerBean.getToFrame()) {
-                break;
-            }
+        int selectedPosition = mEventHandle.getSelectedPosition();
+        for (Node<StickerBean> node : mDataHandle.getCurrentStickers()) {
+            StickerBean stickerBean = node.getValue();
 
             Bitmap bitmap = mResourceHandle.getBitmap(stickerBean.getIndex(), mFrameIndex);
 
             if (stickerBean instanceof TextStickerBean) {
-                mStickerRenderer.drawTextSticker(canvas, (TextStickerBean) stickerBean, bitmap);
+                mRendererHandle.drawTextSticker(canvas, (TextStickerBean) stickerBean, bitmap);
             } else {
-                mStickerRenderer.drawSticker(canvas, stickerBean, bitmap);
+                mRendererHandle.drawSticker(canvas, stickerBean, bitmap);
             }
 
             if (mState == EDIT//编辑模式才显示边框
-                    && i == selectedPosition) {
-                mStickerRenderer.drawSelected(canvas, stickerBean);
+                    && node.getKey() == selectedPosition) {
+                mRendererHandle.drawSelected(canvas, stickerBean);
             }
         }
     }
@@ -794,14 +796,15 @@ public class StickerPlayerView extends View {
     }
 
     //添加贴纸
-    private void addSticker(StickerBean stickerBean) {
-        int position = searchStickerLocation(mStickers, stickerBean.getFromFrame());
-        mStickers.add(position, stickerBean);
+    private int addSticker(StickerBean stickerBean) {
+        int position = mDataHandle.addSticker(stickerBean);
 
         if (isFrameRange(stickerBean)) {
-            mStickerEvent.selectPosition(position);
+            mEventHandle.selectPosition(position);
             invalidate();
         }
+
+        return position;
     }
 
     //获得文字贴纸
@@ -816,10 +819,7 @@ public class StickerPlayerView extends View {
 
     //获得贴纸
     private StickerBean getSticker(int position) {
-        if (position < 0 || position >= mStickers.size()) {
-            return null;
-        }
-        return mStickers.get(position);
+        return mDataHandle.getSticker(position);
     }
 
     /**
@@ -837,7 +837,7 @@ public class StickerPlayerView extends View {
      * @param l 回调
      */
     public void setOnClickStickerListener(OnClickStickerListener l) {
-        mStickerEvent.setOnClickStickerListener(l);
+        mEventHandle.setOnClickStickerListener(l);
     }
 
     /**
@@ -846,7 +846,7 @@ public class StickerPlayerView extends View {
      * @param l 回调
      */
     public void setOnDoubleClickStickerListener(OnDoubleClickStickerListener l) {
-        mStickerEvent.setOnDoubleClickStickerListener(l);
+        mEventHandle.setOnDoubleClickStickerListener(l);
     }
 
     /**
@@ -855,7 +855,7 @@ public class StickerPlayerView extends View {
      * @param l 回调
      */
     public void setOnLongClickStickerListener(OnLongClickStickerListener l) {
-        mStickerEvent.setOnLongClickStickerListener(l);
+        mEventHandle.setOnLongClickStickerListener(l);
     }
 
     /**
@@ -864,7 +864,7 @@ public class StickerPlayerView extends View {
      * @param l 回调
      */
     public void setOnSelectedListener(OnSelectedListener l) {
-        mStickerEvent.setOnSelectedListener(l);
+        mEventHandle.setOnSelectedListener(l);
     }
 
     /**
@@ -873,12 +873,12 @@ public class StickerPlayerView extends View {
      * @param l 回调
      */
     public void setOnUnselectedListener(OnUnselectedListener l) {
-        mStickerEvent.setOnUnselectedListener(l);
+        mEventHandle.setOnUnselectedListener(l);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        mStickerEvent.onDetached();
+        mEventHandle.onDetached();
     }
 }

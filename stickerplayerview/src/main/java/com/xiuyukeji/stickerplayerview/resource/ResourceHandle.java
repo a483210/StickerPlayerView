@@ -159,6 +159,9 @@ public class ResourceHandle {
                 String cacheIndex = getCacheIndex(index, i);
                 mBitmapCache.remove(cacheIndex);
             }
+            if (mResources.isEmpty()) {
+                mBitmapCache.clear();
+            }
         }
     }
 }

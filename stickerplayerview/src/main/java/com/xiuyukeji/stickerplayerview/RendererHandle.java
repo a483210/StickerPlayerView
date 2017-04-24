@@ -20,7 +20,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.PAINT_FLAG;
  *
  * @author Created by jz on 2017/4/11 17:16
  */
-public class StickerRenderer {
+public class RendererHandle {
 
     private final Paint mPaint;
     private final TextPaint mTextPaint;
@@ -35,7 +35,7 @@ public class StickerRenderer {
 
     private float[] mSidePoint;
 
-    public StickerRenderer() {
+    public RendererHandle() {
         mPaint = new Paint(PAINT_FLAG);
         mTextPaint = new TextPaint(PAINT_FLAG);
         mSidePaint = new Paint(PAINT_FLAG);

@@ -6,8 +6,6 @@ import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 import com.xiuyukeji.stickerplayerview.resource.DynamicResource;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 
-import java.util.ArrayList;
-
 /**
  * 贴纸操作
  *
@@ -91,49 +89,12 @@ public class StickerOperate {
     }
 
     /**
-     * 查找开始帧位置
-     *
-     * @param stickers  数组
-     * @param fromFrame 开始帧
-     */
-    public static int searchStickerLocation(ArrayList<StickerBean> stickers, int fromFrame) {
-        int count = stickers.size();
-
-        int low = 0;
-        int high = count - 1;
-        int index = -1;
-        while (low < high) {
-            int mid = (low + high) / 2;
-            int temp = stickers.get(mid).getFromFrame();
-            if (temp < fromFrame)
-                low = mid + 1;
-            else if (temp > fromFrame)
-                high = mid - 1;
-            else {
-                index = mid;
-                break;
-            }
-        }
-        if (index == -1) {
-            index = low;
-        }
-        for (int i = index; i < count; i++) {
-            index = i + 1;
-            if (stickers.get(i).getFromFrame() > fromFrame) {
-                break;
-            }
-        }
-
-        return index;
-    }
-
-    /**
      * 判断是否设置帧率
      *
-     * @param frameRate 帧率
+     * @param delayTimeMs 间隔
      */
-    public static void checkFrameRateNull(float frameRate) {
-        if (frameRate == 0) {
+    public static void checkFrameRateNull(float delayTimeMs) {
+        if (delayTimeMs == 0) {
             throw new StickerException("必须先设置帧率(frameRate)！");
         }
     }
@@ -141,9 +102,10 @@ public class StickerOperate {
     /**
      * 判断帧率是否符合
      *
-     * @param frameRate 帧率
+     * @param delayTimeMs 间隔
      */
-    public static void checkFrameRateRange(float frameRate) {
+    public static void checkFrameRateRange(float delayTimeMs) {
+        int frameRate = (int) (1000 / delayTimeMs);
         if (frameRate < 1 || frameRate > 60) {
             throw new StickerException("帧率(frameRate)只能在1到60之间！");
         }
@@ -152,13 +114,13 @@ public class StickerOperate {
     /**
      * 添加动态贴纸判断是否已经设置帧率
      *
-     * @param resource  资源
-     * @param frameRate 帧率
+     * @param resource    资源
+     * @param delayTimeMs 间隔
      */
-    public static void checkDynamicAndFrameRate(Resource resource, float frameRate) {
+    public static void checkDynamicAndFrameRate(Resource resource, float delayTimeMs) {
         if (resource instanceof DynamicResource) {
-            checkFrameRateNull(frameRate);
-            checkFrameRateRange(frameRate);
+            checkFrameRateNull(delayTimeMs);
+            checkFrameRateRange(delayTimeMs);
         }
     }
 }

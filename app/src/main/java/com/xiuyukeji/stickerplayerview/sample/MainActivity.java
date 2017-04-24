@@ -86,12 +86,12 @@ public class MainActivity extends AppCompatActivity {
         nDeleteView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                mStickerPlayerView.deleteSticker();
-                if (mStickerPlayerView.getCurrentFrame() >= 60) {
-                    mStickerPlayerView.setCurrentFrame(0);
-                } else {
-                    mStickerPlayerView.setCurrentFrame(mStickerPlayerView.getCurrentFrame() + 1);
-                }
+                mStickerPlayerView.deleteSticker();
+//                if (mStickerPlayerView.getCurrentFrame() >= 60) {
+//                    mStickerPlayerView.setCurrentFrame(0);
+//                } else {
+//                    mStickerPlayerView.setCurrentFrame(mStickerPlayerView.getCurrentFrame() + 1);
+//                }
             }
         });
         mStickerPlayerView.setOnClickStickerListener(new OnClickStickerListener() {

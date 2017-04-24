@@ -10,7 +10,7 @@ import android.view.ViewConfiguration;
  *
  * @author Created by jz on 2017/4/13 14:44
  */
-public abstract class StickerClickEvent {
+public abstract class ClickEvent {
 
     private static final int CLICK_MIN_TIME = ViewConfiguration.getTapTimeout();
     private static final int DOUBLE_TIMEOUT = ViewConfiguration.getDoubleTapTimeout();
@@ -28,7 +28,7 @@ public abstract class StickerClickEvent {
 
     private int mTouchState = UP;
 
-    StickerClickEvent() {
+    ClickEvent() {
         mHandler = new ClickHandler();
     }
 
