@@ -192,7 +192,7 @@ public class StickerCalculateUtil {
      * @param xEdge x边
      * @param yEdge y边
      */
-    public static float calculateDegrees(float xEdge, float yEdge) {
+    public static float calculateAngle(float xEdge, float yEdge) {
         return (float) Math.toDegrees(Math.atan2(yEdge, xEdge));
     }
 

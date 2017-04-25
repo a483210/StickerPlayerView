@@ -12,7 +12,7 @@ import android.graphics.Paint;
  */
 public class StickerUtil {
 
-    public static final int PAINT_FLAG = Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG;
+    public static final int PAINT_FLAG = Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG;
 
     private StickerUtil() {
     }

@@ -3,7 +3,7 @@ package com.xiuyukeji.stickerplayerview;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray;
-import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Entry;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
 
 import org.junit.After;
 import org.junit.Before;
@@ -198,7 +198,7 @@ public class LinkedSparseArrayTestCase {
 
     private void assertIterator(int[] values) {
         int i = 0;
-        Iterator<Entry<TestItem>> ite = sparseArray.iterator();
+        Iterator<Node<TestItem>> ite = sparseArray.iterator();
         while (ite.hasNext()) {
             TestItem testItem = ite.next().getValue();
 

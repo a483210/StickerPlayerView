@@ -21,7 +21,7 @@ import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 
 import java.util.ArrayList;
 
-import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateDegrees;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateAngle;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateEdge;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSelected;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMatrix;
@@ -67,8 +67,8 @@ public class EventHandle extends ClickEvent {
     private int mMoveY;
     private int mLastMoveY;
 
-    private float mLastEdge;
-    private float mLastDegrees;
+    private float mFirstEdge;
+    private float mFirstDegrees;
 
     private final int mStickerMaxSize;
     private final int mStickerMinSize;
@@ -256,11 +256,12 @@ public class EventHandle extends ClickEvent {
                 }
 
                 mAction = ACTION_TRANSLATE;
-                mLastEdge = 0;
-                mLastDegrees = 0;
+                mFirstEdge = 0;
+                mFirstDegrees = 0;
 
                 if (event.getActionIndex() != 0)
                     break;
+
                 mMoveX = (int) event.getX(1);
                 mLastMoveX = mMoveX;
                 mMoveY = (int) event.getY(1);
@@ -285,8 +286,8 @@ public class EventHandle extends ClickEvent {
                 mLastMoveY = mMoveY;
                 break;
             case MotionEvent.ACTION_UP:
-                mLastEdge = 0;
-                mLastDegrees = 0;
+                mFirstEdge = 0;
+                mFirstDegrees = 0;
 
                 mState = STATE_NORMAL;
                 mAction = STATE_NORMAL;
@@ -307,7 +308,7 @@ public class EventHandle extends ClickEvent {
         if (mStickerBean == null || mState == STATE_CANCEL) {
             return false;
         }
-        return containPoint(mStickerBean, event.getX(1), event.getY(1));
+        return containPoint(mStickerBean, event.getX(event.getActionIndex()), event.getY(event.getActionIndex()));
     }
 
     private void drag(StickerBean stickerBean) {
@@ -326,45 +327,42 @@ public class EventHandle extends ClickEvent {
         int xEdge = mMoveX - x;
         int yEdge = mMoveY - y;
 
-        float scaleDiff = calculateScaleDiff(stickerBean, calculateEdge(xEdge, yEdge));
+        float scale = calculateScale(stickerBean, calculateEdge(xEdge, yEdge));
+        float scaleDiff = scale / stickerBean.getScale();
 
         stickerBean.getMatrix().postScale(scaleDiff, scaleDiff, px, py);
-        stickerBean.setScale(stickerBean.getScale() * scaleDiff);
+        stickerBean.setScale(scale);
 
-        float degreesDiff = calculateDegreesDiff(calculateDegrees(xEdge, yEdge));
+        float degrees = calculateDegrees(stickerBean, calculateAngle(xEdge, yEdge));
+        float degreesDiff = degrees - stickerBean.getDegrees();
 
         stickerBean.getMatrix().postRotate(degreesDiff, px, py);
-        stickerBean.setDegrees(stickerBean.getDegrees() + degreesDiff);
+        stickerBean.setDegrees(degrees);
     }
 
-    private float calculateScaleDiff(StickerBean stickerBean, float edge) {
-        if (mLastEdge == 0) {
-            mLastEdge = edge;
+    private float calculateScale(StickerBean stickerBean, float edge) {
+        if (mFirstEdge == 0) {
+            mFirstEdge = edge / stickerBean.getScale();
         }
-        float scaleDiff = isBeyond(stickerBean, edge / mLastEdge);
-        mLastEdge = edge;
-        return scaleDiff;
+        return isBeyond(stickerBean, edge / mFirstEdge);
     }
 
-    public float isBeyond(StickerBean stickerBean, float scaleDiff) {
+    public float isBeyond(StickerBean stickerBean, float scale) {
         float maxScale = mStickerMaxSize / (float) stickerBean.getWidth();
         float minScale = mStickerMinSize / (float) stickerBean.getWidth();
-        float scale = stickerBean.getScale() * scaleDiff;
         if (scale > maxScale) {// 缩放大小限制
-            return maxScale / stickerBean.getScale();
+            scale = maxScale;
         } else if (scale < minScale) {
-            return minScale / stickerBean.getScale();
+            scale = minScale;
         }
-        return scaleDiff;
+        return scale;
     }
 
-    private float calculateDegreesDiff(float degrees) {
-        if (mLastDegrees == 0) {
-            mLastDegrees = degrees;
+    private float calculateDegrees(StickerBean stickerBean, float degrees) {
+        if (mFirstDegrees == 0) {
+            mFirstDegrees = degrees - stickerBean.getDegrees();
         }
-        float degreesDiff = degrees - mLastDegrees;
-        mLastDegrees = degrees;
-        return degreesDiff;
+        return degrees - mFirstDegrees;
     }
 
     private void translate(StickerBean stickerBean) {

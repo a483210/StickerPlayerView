@@ -15,6 +15,7 @@ import android.view.View;
 
 import com.xiuyukeji.stickerplayerview.annotations.FrameRange;
 import com.xiuyukeji.stickerplayerview.annotations.PaddingRange;
+import com.xiuyukeji.stickerplayerview.annotations.PlayerSource;
 import com.xiuyukeji.stickerplayerview.annotations.TextSizeRange;
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
@@ -30,11 +31,13 @@ import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnSelectedListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
+import com.xiuyukeji.stickerplayerview.resource.DynamicResource;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 import com.xiuyukeji.stickerplayerview.resource.ResourceHandle;
 
 import java.util.Iterator;
 
+import static com.xiuyukeji.stickerplayerview.annotations.PlayerSource.EDIT;
 import static com.xiuyukeji.stickerplayerview.event.EventHandle.STATE_NORMAL;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkDynamicAndFrameRate;
@@ -53,8 +56,6 @@ public class StickerPlayerView extends View {
 
     public static final String TAG = "StickerPlayerView";
 
-    private static final int EDIT = 0, PLAYER = 1;
-
     private boolean mIsRandomLocation;
 
     private final ResourceHandle mResourceHandle;
@@ -65,8 +66,6 @@ public class StickerPlayerView extends View {
     private final PlayerHandle mPlayerHandle;
 
     private int mFrameIndex = 0;//当前帧
-    private long mFrameTimeMs = 0;//当前时间
-    private float mDelayTimeMs = 0;//帧间隔时间
 
     private int mState = EDIT;
 
@@ -88,7 +87,7 @@ public class StickerPlayerView extends View {
 
         mRendererHandle = new RendererHandle();
         mEventHandle = new EventHandle(this, mDataHandle);
-        mPlayerHandle = new PlayerHandle();
+        mPlayerHandle = new PlayerHandle(this);
 
         initAttrs(attrs);
         initView();
@@ -159,9 +158,9 @@ public class StickerPlayerView extends View {
 
         mIsRandomLocation = typedArray.getBoolean(R.styleable.StickerPlayerView_randomLocation, false);
 
-        mDelayTimeMs = typedArray.getInteger(R.styleable.StickerPlayerView_frameRate, 0);
-        if (mDelayTimeMs != 0) {
-            mDelayTimeMs = 1000 / mDelayTimeMs;
+        int frameRate = typedArray.getInteger(R.styleable.StickerPlayerView_frameRate, 0);
+        if (frameRate != 0) {
+            mPlayerHandle.setDelayTime(1000 / (double) frameRate);
         }
 
         typedArray.recycle();
@@ -183,6 +182,9 @@ public class StickerPlayerView extends View {
                 mResourceHandle.decrementUseCount(stickerBean.getIndex());
                 if (mOnDeleteListener != null) {
                     mOnDeleteListener.onDelete(stickerBean);
+                }
+                if (mResourceHandle.getDynamicCount() == 0) {
+                    mPlayerHandle.stop();
                 }
             }
         });
@@ -208,7 +210,10 @@ public class StickerPlayerView extends View {
             return STATE_NORMAL;
         }
 
-        checkDynamicAndFrameRate(resource, 1000 / mDelayTimeMs);
+        if (resource instanceof DynamicResource) {
+            checkDynamicAndFrameRate(resource, mPlayerHandle.getDelayTime());
+            mPlayerHandle.start();
+        }
 
         StickerBean stickerBean = new StickerBean(resource.getIndex(),
                 fromFrame, toFrame,
@@ -309,7 +314,10 @@ public class StickerPlayerView extends View {
                 return STATE_NORMAL;
             }
 
-            checkDynamicAndFrameRate(resource, 1000 / mDelayTimeMs);
+            if (resource instanceof DynamicResource) {
+                checkDynamicAndFrameRate(resource, mPlayerHandle.getDelayTime());
+                mPlayerHandle.start();
+            }
 
             textStickerBean = new TextStickerBean(resource.getIndex(),
                     resource.getWidth(), resource.getHeight(),
@@ -410,6 +418,13 @@ public class StickerPlayerView extends View {
             resource = mResourceHandle.initResource(resource);
             if (resource == null) {
                 return;
+            }
+
+            if (resource instanceof DynamicResource) {
+                checkDynamicAndFrameRate(resource, mPlayerHandle.getDelayTime());
+                mPlayerHandle.start();
+            } else if (mResourceHandle.getDynamicCount() == 0) {
+                mPlayerHandle.stop();
             }
 
             newStickerBean = copyStickerBean(stickerBean, resource.getIndex(),
@@ -515,8 +530,10 @@ public class StickerPlayerView extends View {
     public void clearAllSticker() {
         Iterator<Node<StickerBean>> iterator = mDataHandle.getStickers();
         while (iterator.hasNext()) {
-            mEventHandle.delete(iterator.next().getKey());
+            int position = iterator.next().getKey();
+            mEventHandle.delete(position);
         }
+        mPlayerHandle.stop();
         invalidate();
     }
 
@@ -696,10 +713,10 @@ public class StickerPlayerView extends View {
      * @param timeMs 时间，单位毫秒
      */
     public void setCurrentTime(@IntRange(from = 0) int timeMs) {
-        checkFrameRateNull(mDelayTimeMs);
-        checkFrameRateRange(mDelayTimeMs);
+        checkFrameRateNull(mPlayerHandle.getDelayTime());
+        checkFrameRateRange(mPlayerHandle.getDelayTime());
 
-        setCurrentFrame(Math.round(timeMs / mDelayTimeMs));
+        setCurrentFrame((int) Math.round(timeMs / mPlayerHandle.getDelayTime()));
     }
 
     /**
@@ -712,6 +729,7 @@ public class StickerPlayerView extends View {
             return;
         }
         this.mFrameIndex = frameIndex;
+
         mDataHandle.setFrameIndex(frameIndex);
 
         invalidate();
@@ -723,7 +741,7 @@ public class StickerPlayerView extends View {
      * @param frameRate 帧率
      */
     public void setFrameRate(@IntRange(from = 1, to = 60) int frameRate) {
-        this.mDelayTimeMs = 1000 / (float) frameRate;
+        mPlayerHandle.setDelayTime(1000 / (double) frameRate);
 
         invalidate();
     }
@@ -731,6 +749,20 @@ public class StickerPlayerView extends View {
     @Override
     public void setEnabled(boolean enabled) {
         mEventHandle.setEnabled(enabled);
+    }
+
+    /**
+     * 设置播放器状态，编辑或者播放
+     *
+     * @param state {@link PlayerSource#EDIT} and {@link PlayerSource#PLAYER}
+     */
+    public void setPlayerState(@PlayerSource int state) {
+        this.mState = state;
+        if (state == EDIT) {
+            mPlayerHandle.start();
+        } else {
+            mPlayerHandle.stop();
+        }
     }
 
     /**
@@ -744,10 +776,11 @@ public class StickerPlayerView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        int count = mDataHandle.size();
-        if (count == 0) {
+        if (mDataHandle.size() == 0) {
             return;
         }
+
+//        Log.i("Tool", mPlayerHandle.getCurrentUptime() + " uptime");
         int selectedPosition = mEventHandle.getSelectedPosition();
         for (Node<StickerBean> node : mDataHandle.getCurrentStickers()) {
             StickerBean stickerBean = node.getValue();
@@ -879,6 +912,8 @@ public class StickerPlayerView extends View {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        clearAllSticker();
+        mPlayerHandle.stop();
         mEventHandle.onDetached();
     }
 }

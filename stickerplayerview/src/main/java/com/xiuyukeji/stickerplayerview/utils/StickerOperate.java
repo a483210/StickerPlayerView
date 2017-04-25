@@ -3,7 +3,6 @@ package com.xiuyukeji.stickerplayerview.utils;
 import com.xiuyukeji.stickerplayerview.StickerException;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
-import com.xiuyukeji.stickerplayerview.resource.DynamicResource;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 
 /**
@@ -93,7 +92,7 @@ public class StickerOperate {
      *
      * @param delayTimeMs 间隔
      */
-    public static void checkFrameRateNull(float delayTimeMs) {
+    public static void checkFrameRateNull(double delayTimeMs) {
         if (delayTimeMs == 0) {
             throw new StickerException("必须先设置帧率(frameRate)！");
         }
@@ -104,7 +103,7 @@ public class StickerOperate {
      *
      * @param delayTimeMs 间隔
      */
-    public static void checkFrameRateRange(float delayTimeMs) {
+    public static void checkFrameRateRange(double delayTimeMs) {
         int frameRate = (int) (1000 / delayTimeMs);
         if (frameRate < 1 || frameRate > 60) {
             throw new StickerException("帧率(frameRate)只能在1到60之间！");
@@ -117,10 +116,8 @@ public class StickerOperate {
      * @param resource    资源
      * @param delayTimeMs 间隔
      */
-    public static void checkDynamicAndFrameRate(Resource resource, float delayTimeMs) {
-        if (resource instanceof DynamicResource) {
-            checkFrameRateNull(delayTimeMs);
-            checkFrameRateRange(delayTimeMs);
-        }
+    public static void checkDynamicAndFrameRate(Resource resource, double delayTimeMs) {
+        checkFrameRateNull(delayTimeMs);
+        checkFrameRateRange(delayTimeMs);
     }
 }

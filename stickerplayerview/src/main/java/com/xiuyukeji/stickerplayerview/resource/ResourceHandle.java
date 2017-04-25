@@ -23,6 +23,8 @@ public class ResourceHandle {
     private MemoryCache mBitmapCache;
     private MemoryReusable mMemoryReusable;
 
+    private int mDynamicCount;
+
     public ResourceHandle() {
         mResources = new HashMap<>();
 
@@ -67,6 +69,7 @@ public class ResourceHandle {
         return getCacheBitmap(resource, cacheIndex, frameIndex);
     }
 
+    //从缓存中获取图像
     private Bitmap getCacheBitmap(Resource resource, String cacheIndex, int frameIndex) {
         Bitmap bitmap = mBitmapCache.get(cacheIndex);
         if (bitmap == null) {
@@ -112,6 +115,9 @@ public class ResourceHandle {
         } else {
             mResources.put(index, resource);
             bitmap = resource.init();
+            if (resource instanceof DynamicResource) {
+                mDynamicCount++;
+            }
         }
 
         if (bitmap == null) {
@@ -154,6 +160,7 @@ public class ResourceHandle {
             if (resource instanceof DynamicResource) {
                 DynamicResource dynamicResource = (DynamicResource) resource;
                 count = dynamicResource.getFrameCount();
+                mDynamicCount--;
             }
             for (int i = 0; i < count; i++) {
                 String cacheIndex = getCacheIndex(index, i);
@@ -163,5 +170,12 @@ public class ResourceHandle {
                 mBitmapCache.clear();
             }
         }
+    }
+
+    /**
+     * 获得动态资源统计
+     */
+    public int getDynamicCount() {
+        return mDynamicCount;
     }
 }

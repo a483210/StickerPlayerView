@@ -8,7 +8,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Consumer;
 
 /**
  * 双向链表稀缺数组
@@ -82,27 +81,27 @@ public class LinkedSparseArray<E> {
             }
 
             Node<E> searchNode;
-            if (fromNode != null) {//从开始2边找
-                searchNode = searchLastNode(node, fromNode);
-                if (searchNode != null) {
-                    insertNode(node, searchNode.last, searchNode);
-                    return;
-                }
-                searchNode = searchNextNode(node, fromNode);
+            if (toNode != null) {//从结束2边找
+                searchNode = searchNextNode(node, toNode);
                 if (searchNode != null) {
                     insertNode(node, searchNode, searchNode.next);
                     return;
                 }
-            }
-            if (toNode != null) {//从结束2边找
                 searchNode = searchLastNode(node, toNode);
                 if (searchNode != null) {
                     insertNode(node, searchNode.last, searchNode);
                     return;
                 }
-                searchNode = searchNextNode(node, toNode);
+            }
+            if (fromNode != null) {//从开始2边找
+                searchNode = searchNextNode(node, fromNode);
                 if (searchNode != null) {
                     insertNode(node, searchNode, searchNode.next);
+                    return;
+                }
+                searchNode = searchLastNode(node, fromNode);
+                if (searchNode != null) {
+                    insertNode(node, searchNode.last, searchNode);
                     return;
                 }
             }
@@ -202,16 +201,16 @@ public class LinkedSparseArray<E> {
 
     //重新排序
     private void order(Node<E> node) {
-        Node<E> searchNode = searchLastNode(node, node.last);
-        if (searchNode != null) {//如果找到比小的
-            removeNode(node);
-            insertNode(node, searchNode.last, searchNode);
-            return;
-        }
-        searchNode = searchNextNode(node, node.next);
+        Node<E> searchNode = searchNextNode(node, node.next);
         if (searchNode != null) {//如果找到比大的
             removeNode(node);
             insertNode(node, searchNode, searchNode.next);
+            return;
+        }
+        searchNode = searchLastNode(node, node.last);
+        if (searchNode != null) {//如果找到比小的
+            removeNode(node);
+            insertNode(node, searchNode.last, searchNode);
         }
         //没有找到，不动
     }
@@ -255,9 +254,8 @@ public class LinkedSparseArray<E> {
 
         @Override
         public Node<E> next() {
-            Node<E> entry = new Node<>(node.key, node.value);
             node = node.next;
-            return entry;
+            return node.last;
         }
     }
 
@@ -294,7 +292,7 @@ public class LinkedSparseArray<E> {
             return searchNode;
         }
         int rel = comparator.compare(node.value, comparatorNode.value);
-        if (rel < 0) {
+        if (rel <= 0) {
             return searchNextNode(node, comparatorNode.next, comparatorNode);
         } else {
             return searchNode;

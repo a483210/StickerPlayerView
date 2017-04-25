@@ -117,8 +117,8 @@ public class DataHandle {
 
         Iterator<Node<StickerBean>> iterator = mStickers.iterator();
         while (iterator.hasNext()) {
-            Node<StickerBean> entry = iterator.next();
-            StickerBean stickerBean = entry.getValue();
+            Node<StickerBean> node = iterator.next();
+            StickerBean stickerBean = node.getValue();
 
             if (mFrameIndex < stickerBean.getFromFrame()) {
                 continue;
@@ -126,7 +126,8 @@ public class DataHandle {
             if (mFrameIndex > stickerBean.getToFrame()) {
                 break;
             }
-            mCacheStickers.add(entry);
+
+            mCacheStickers.add(node);
         }
 
         int size = mCacheStickers.size();
@@ -154,7 +155,7 @@ public class DataHandle {
         return mStickers.size();
     }
 
-    private void clearCache() {
+    private void clearCache() {//todo 需要优化
         mCacheStickers.clear();
         mCacheFromKey = 0;
         mCacheToKey = 0;
