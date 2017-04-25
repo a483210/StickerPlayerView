@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 import com.xiuyukeji.stickerplayerview.StickerException;
+import com.xiuyukeji.stickerplayerview.bean.BitmapFrameInfo;
 import com.xiuyukeji.stickerplayerview.cache.MemoryCache;
 import com.xiuyukeji.stickerplayerview.cache.MemoryReusable;
 import com.xiuyukeji.stickerplayerview.cache.impl.UsingFreqMemoryCache;
@@ -50,13 +51,14 @@ public class ResourceHandle {
      * @param index    索引
      * @param uptimeMs 时间
      */
-    public Bitmap getBitmap(String index, long uptimeMs) {
+    public void loadBitmap(String index, long uptimeMs, BitmapFrameInfo bitmapFrameInfo) {
         Resource resource = mResources.get(index);
         if (resource == null) {
-            return null;
+            bitmapFrameInfo.reset(null, 0);
+            return;
         }
 
-        int frameIndex = 0;
+        int frameIndex;
 
         if (resource instanceof DynamicResource) {
             DynamicResource dynamic = (DynamicResource) resource;
@@ -64,11 +66,13 @@ public class ResourceHandle {
             uptimeMs %= dynamic.getDuration();
 
             frameIndex = Math.round(uptimeMs / dynamic.getDelayTime());
+        } else {
+            frameIndex = 0;
         }
 
         String cacheIndex = getCacheIndex(index, frameIndex);
 
-        return getCacheBitmap(resource, cacheIndex, frameIndex);
+        bitmapFrameInfo.reset(getCacheBitmap(resource, cacheIndex, frameIndex), frameIndex);
     }
 
     //从缓存中获取图像

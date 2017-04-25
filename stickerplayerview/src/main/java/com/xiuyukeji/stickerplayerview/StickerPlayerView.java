@@ -11,7 +11,6 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -19,6 +18,7 @@ import com.xiuyukeji.stickerplayerview.annotations.FrameRange;
 import com.xiuyukeji.stickerplayerview.annotations.PaddingRange;
 import com.xiuyukeji.stickerplayerview.annotations.PlayerSource;
 import com.xiuyukeji.stickerplayerview.annotations.TextSizeRange;
+import com.xiuyukeji.stickerplayerview.bean.BitmapFrameInfo;
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
@@ -66,6 +66,8 @@ public class StickerPlayerView extends View {
     private final EventHandle mEventHandle;
     private final PlayerHandle mPlayerHandle;
 
+    private final BitmapFrameInfo mCacheBitmapFrameInfo;
+
     private int mFrameIndex = 0;//当前帧
 
     private int mState = EDIT;
@@ -89,6 +91,8 @@ public class StickerPlayerView extends View {
         mRendererHandle = new RendererHandle();
         mEventHandle = new EventHandle(this, mDataHandle);
         mPlayerHandle = new PlayerHandle(this);
+
+        mCacheBitmapFrameInfo = new BitmapFrameInfo();
 
         initAttrs(attrs);
         initView();
@@ -260,7 +264,7 @@ public class StickerPlayerView extends View {
                               @PaddingRange int rightPadding,
                               @PaddingRange int bottomPadding) {
         return addTextSticker(fromFrame, toFrame, null,
-                text, textColor, textSize,
+                text, textColor, textSize, 0,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -277,8 +281,7 @@ public class StickerPlayerView extends View {
     public int addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame, Resource resource,
                               String text, @ColorInt int textColor, @TextSizeRange int textSize) {
         return addTextSticker(fromFrame, toFrame, resource,
-                text, textColor, textSize,
-                0, 0, 0, 0);
+                text, textColor, textSize, 0, 0, 0, 0, 0);
     }
 
     /**
@@ -302,12 +305,40 @@ public class StickerPlayerView extends View {
                               @PaddingRange int topPadding,
                               @PaddingRange int rightPadding,
                               @PaddingRange int bottomPadding) {
+        return addTextSticker(fromFrame, toFrame, resource,
+                text, textColor, textSize, 0,
+                leftPadding, topPadding, rightPadding, bottomPadding);
+    }
+
+    /**
+     * 添加文字贴纸从from到to帧
+     *
+     * @param fromFrame     开始帧
+     * @param toFrame       结束帧
+     * @param resource      资源
+     * @param text          文字
+     * @param textColor     文字颜色
+     * @param textSize      文字大小
+     * @param delayFrame    延迟帧数显示
+     * @param leftPadding   左边距
+     * @param topPadding    上边距
+     * @param rightPadding  右边距
+     * @param bottomPadding 下边距
+     */
+    public int addTextSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
+                              Resource resource,
+                              String text, @ColorInt int textColor, @TextSizeRange int textSize,
+                              @FrameRange int delayFrame,
+                              @PaddingRange int leftPadding,
+                              @PaddingRange int topPadding,
+                              @PaddingRange int rightPadding,
+                              @PaddingRange int bottomPadding) {
         TextStickerBean textStickerBean;
 
         if (resource == null) {//todo 这里的width和height需要调整
             textStickerBean = new TextStickerBean(null, getWidth(), getHeight(),
                     fromFrame, toFrame,
-                    text, textColor, textSize,
+                    text, textColor, textSize, 0,
                     leftPadding, topPadding, rightPadding, bottomPadding);
         } else {
             resource = mResourceHandle.initResource(resource);
@@ -318,12 +349,14 @@ public class StickerPlayerView extends View {
             if (resource instanceof DynamicResource) {
                 checkDynamicAndFrameRate(resource, mPlayerHandle.getDelayTime());
                 mPlayerHandle.start();
+            } else {
+                delayFrame = 0;
             }
 
             textStickerBean = new TextStickerBean(resource.getIndex(),
                     resource.getWidth(), resource.getHeight(),
                     fromFrame, toFrame,
-                    text, textColor, textSize,
+                    text, textColor, textSize, delayFrame,
                     leftPadding, topPadding, rightPadding, bottomPadding);
         }
 
@@ -352,7 +385,7 @@ public class StickerPlayerView extends View {
      */
     public void replaceSticker(Resource resource, @FrameRange int position) {
         replaceSticker(getSticker(position), resource, position,
-                -1, -1, -1, -1);
+                -1, -1, -1, -1, -1);
     }
 
     /**
@@ -369,10 +402,11 @@ public class StickerPlayerView extends View {
                                    @PaddingRange int topPadding,
                                    @PaddingRange int rightPadding,
                                    @PaddingRange int bottomPadding) {
-        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+        int position = mEventHandle.getSelectedPosition();
+        if (position == STATE_NORMAL) {
             return;
         }
-        replaceTextSticker(resource, mEventHandle.getSelectedPosition(),
+        replaceSticker(getTextSticker(position), resource, position, -1,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -391,12 +425,33 @@ public class StickerPlayerView extends View {
                                    @PaddingRange int topPadding,
                                    @PaddingRange int rightPadding,
                                    @PaddingRange int bottomPadding) {
-        replaceSticker(getTextSticker(position), resource, position,
+        replaceSticker(getTextSticker(position), resource, position, -1,
+                leftPadding, topPadding, rightPadding, bottomPadding);
+    }
+
+    /**
+     * 替换当前帧指定文字贴纸的背景
+     *
+     * @param resource      资源
+     * @param position      索引
+     * @param delayFrame    延迟帧数显示
+     * @param leftPadding   左边距
+     * @param topPadding    上边距
+     * @param rightPadding  右边距
+     * @param bottomPadding 下边距
+     */
+    public void replaceTextSticker(Resource resource, @FrameRange int position,
+                                   @FrameRange int delayFrame,
+                                   @PaddingRange int leftPadding,
+                                   @PaddingRange int topPadding,
+                                   @PaddingRange int rightPadding,
+                                   @PaddingRange int bottomPadding) {
+        replaceSticker(getTextSticker(position), resource, position, delayFrame,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
     //替换贴纸背景
-    private void replaceSticker(StickerBean stickerBean, Resource resource, int position,
+    private void replaceSticker(StickerBean stickerBean, Resource resource, int position, int delayFrame,
                                 int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
         if (stickerBean == null) {
             return;
@@ -424,8 +479,11 @@ public class StickerPlayerView extends View {
             if (resource instanceof DynamicResource) {
                 checkDynamicAndFrameRate(resource, mPlayerHandle.getDelayTime());
                 mPlayerHandle.start();
-            } else if (mResourceHandle.getDynamicCount() == 0) {
-                mPlayerHandle.stop();
+            } else {
+                delayFrame = -1;
+                if (mResourceHandle.getDynamicCount() == 0) {
+                    mPlayerHandle.stop();
+                }
             }
 
             newStickerBean = copyStickerBean(stickerBean, resource.getIndex(),
@@ -433,10 +491,14 @@ public class StickerPlayerView extends View {
 
             newStickerBean.setScale(newStickerBean.getScale() * mEventHandle.isBeyond(newStickerBean, 1f));
         }
-        if (leftPadding != -1
-                && stickerBean instanceof TextStickerBean) {
+        if (stickerBean instanceof TextStickerBean) {
             TextStickerBean textStickerBean = (TextStickerBean) newStickerBean;
-            textStickerBean.setPadding(leftPadding, topPadding, rightPadding, bottomPadding);
+            if (leftPadding != -1) {
+                textStickerBean.setPadding(leftPadding, topPadding, rightPadding, bottomPadding);
+            }
+            if (delayFrame != -1) {
+                textStickerBean.setDelayTime(delayFrame);
+            }
         }
 
         calculateSticker(newStickerBean);
@@ -446,6 +508,16 @@ public class StickerPlayerView extends View {
         mEventHandle.updateSelected(position);
 
         invalidate(newStickerBean);
+    }
+
+    /**
+     * 复制当前选中贴纸到当前帧
+     */
+    public void copySticker() {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        copySticker(mEventHandle.getSelectedPosition(), mFrameIndex, mFrameIndex);
     }
 
     /**
@@ -793,12 +865,13 @@ public class StickerPlayerView extends View {
                         + mFrameIndex * mPlayerHandle.getDelayTime());
             }
 
-            Log.i("Tool", uptimeMs + " uptimeMs");
+            mResourceHandle.loadBitmap(stickerBean.getIndex(), uptimeMs, mCacheBitmapFrameInfo);
 
-            Bitmap bitmap = mResourceHandle.getBitmap(stickerBean.getIndex(), uptimeMs);
+            Bitmap bitmap = mCacheBitmapFrameInfo.getBitmap();
+            int frame = mCacheBitmapFrameInfo.getFrame();
 
             if (stickerBean instanceof TextStickerBean) {
-                mRendererHandle.drawTextSticker(canvas, (TextStickerBean) stickerBean, bitmap);
+                mRendererHandle.drawTextSticker(canvas, (TextStickerBean) stickerBean, bitmap, frame);
             } else {
                 mRendererHandle.drawSticker(canvas, stickerBean, bitmap);
             }

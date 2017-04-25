@@ -66,8 +66,12 @@ public class RendererHandle {
     }
 
     //绘制文字贴纸
-    public void drawTextSticker(Canvas canvas, TextStickerBean textStickerBean, Bitmap bitmap) {
+    public void drawTextSticker(Canvas canvas, TextStickerBean textStickerBean, Bitmap bitmap, int frame) {
         drawSticker(canvas, textStickerBean, bitmap);
+
+        if (frame < textStickerBean.getDelayTime()) {
+            return;
+        }
 
         mTextPaint.setTextSize(textStickerBean.getCurTextSize());
         mTextPaint.setColor(textStickerBean.getTextColor());

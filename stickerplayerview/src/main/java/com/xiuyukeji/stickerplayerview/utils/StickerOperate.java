@@ -77,6 +77,7 @@ public class StickerOperate {
                 fromFrame, toFrame,
                 src.getText(), src.getTextColor(), src.getTextSize(),
                 src.isBold(), src.isItalic(), src.isUnderline(),
+                src.getDelayTime(),
                 src.getLeftPadding(), src.getTopPadding(),
                 src.getRightPadding(), src.getBottomPadding());
         dst.setDx(src.getDx());

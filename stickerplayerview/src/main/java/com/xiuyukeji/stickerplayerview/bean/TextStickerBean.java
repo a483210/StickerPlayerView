@@ -21,7 +21,7 @@ public class TextStickerBean extends StickerBean {
     private boolean isItalic;
     private boolean isUnderline;
 
-    private int delayFrame;//延迟帧数显示，动态图片才有效
+    private int delayTime;//延迟帧数显示
 
     private int leftPadding;
     private int topPadding;
@@ -30,19 +30,19 @@ public class TextStickerBean extends StickerBean {
 
     public TextStickerBean(String index, int width, int height,
                            int fromFrame, int toFrame,
-                           String text, int textColor, int textSize,
+                           String text, int textColor, int textSize, int delayTime,
                            int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
         this(index, width, height,
                 fromFrame, toFrame,
                 text, textColor, textSize,
-                false, false, false,
+                false, false, false, delayTime,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
     public TextStickerBean(String index, int width, int height,
                            int fromFrame, int toFrame,
                            String text, int textColor, int textSize,
-                           boolean isBold, boolean isItalic, boolean isUnderline,
+                           boolean isBold, boolean isItalic, boolean isUnderline, int delayTime,
                            int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
         super(index, width, height, fromFrame, toFrame);
         this.text = text;
@@ -52,6 +52,7 @@ public class TextStickerBean extends StickerBean {
         this.isBold = isBold;
         this.isItalic = isItalic;
         this.isUnderline = isUnderline;
+        this.delayTime = delayTime;
         setPadding(leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -125,6 +126,14 @@ public class TextStickerBean extends StickerBean {
 
     public void setUnderline(boolean underline) {
         isUnderline = underline;
+    }
+
+    public int getDelayTime() {
+        return delayTime;
+    }
+
+    public void setDelayTime(int delayTime) {
+        this.delayTime = delayTime;
     }
 
     public int getLeftPadding() {

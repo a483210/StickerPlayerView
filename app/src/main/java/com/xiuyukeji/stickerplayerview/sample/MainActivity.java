@@ -64,15 +64,15 @@ public class MainActivity extends AppCompatActivity {
 //                        "testText", 0xff000000, StickerUtil.dpToPx(MainActivity.this, 18),
 //                        176, 80, 74, 97);
                 mStickerPlayerView.addTextSticker(0, 60,
-                        createAssetsResource(MainActivity.this, "dynamic.gif"),
+                        createAssetsResource(MainActivity.this, "tuzi.gif"),
                         "testText", 0xff000000, StickerUtil.dpToPx(MainActivity.this, 18),
-                        0, 0, 0, 0);
+                        5, 54, 113, 47, 118);
             }
         });
         nCopyView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mStickerPlayerView.copySticker(0);
+                mStickerPlayerView.copySticker();
             }
         });
         nReplaceView.setOnClickListener(new View.OnClickListener() {
