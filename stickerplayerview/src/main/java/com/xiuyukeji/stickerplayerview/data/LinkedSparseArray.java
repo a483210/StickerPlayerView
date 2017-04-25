@@ -7,7 +7,6 @@ import android.util.SparseArray;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Comparator;
-import java.util.Iterator;
 
 /**
  * 双向链表稀缺数组
@@ -43,6 +42,29 @@ public class LinkedSparseArray<E> {
             return null;
         }
         return node.value;
+    }
+
+    /**
+     * 获得节点
+     *
+     * @param key 键
+     */
+    public Node<E> getNode(@KeyRange int key) {
+        return sparseArray.get(key);
+    }
+
+    /**
+     * 获得第一个节点
+     */
+    public Node<E> getFirstNode() {
+        return header.next;
+    }
+
+    /**
+     * 获得最后节点
+     */
+    public Node<E> getLastNode() {
+        return header.last;
     }
 
     /**
@@ -218,7 +240,7 @@ public class LinkedSparseArray<E> {
     /**
      * 迭代，从头开始
      */
-    public LinkedSparseArrayIterator<E> iterator() {
+    public Iterator<E> iterator() {
         return iterator(0);
     }
 
@@ -227,35 +249,75 @@ public class LinkedSparseArray<E> {
      *
      * @param fromKey 开始键
      */
-    public LinkedSparseArrayIterator<E> iterator(@KeyRange int fromKey) {
+    public Iterator<E> iterator(@KeyRange int fromKey) {
         Node<E> node = null;
         if (fromKey > 0) {
             node = sparseArray.get(fromKey);
         }
         if (node != null) {
-            return new LinkedSparseArrayIterator<>(node);
+            return new Iterator<>(node);
         } else {
-            return new LinkedSparseArrayIterator<>(header.next);
+            return new Iterator<>(header.next);
         }
     }
 
-    private final static class LinkedSparseArrayIterator<E> implements Iterator<Node<E>> {
+    /**
+     * 反向迭代，从尾开始
+     */
+    public IteratorReverse<E> iteratorReverse() {
+        return iteratorReverse(0);
+    }
+
+    /**
+     * 反向迭代，从from开始
+     *
+     * @param toKey 结束键
+     */
+    public IteratorReverse<E> iteratorReverse(@KeyRange int toKey) {
+        Node<E> node = null;
+        if (toKey > 0) {
+            node = sparseArray.get(toKey);
+        }
+        if (node != null) {
+            return new IteratorReverse<>(node);
+        } else {
+            return new IteratorReverse<>(header.last);
+        }
+    }
+
+    public final static class Iterator<E> {
 
         private Node<E> node;
 
-        private LinkedSparseArrayIterator(Node<E> node) {
+        private Iterator(Node<E> node) {
             this.node = node;
         }
 
-        @Override
         public boolean hasNext() {
             return node != null && node.value != null;
         }
 
-        @Override
         public Node<E> next() {
             node = node.next;
             return node.last;
+        }
+    }
+
+    public final static class IteratorReverse<E> {
+
+        private Node<E> node;
+
+        private IteratorReverse(Node<E> node) {
+            this.node = node;
+        }
+
+        public boolean hasLast() {
+            return node != null && node.value != null;
+        }
+
+        public Node<E> last() {
+            node = node.last;
+            return node.next;
         }
     }
 

@@ -22,6 +22,7 @@ import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 import com.xiuyukeji.stickerplayerview.cache.MemoryCache;
 import com.xiuyukeji.stickerplayerview.data.DataHandle;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Iterator;
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
 import com.xiuyukeji.stickerplayerview.event.EventHandle;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
@@ -34,8 +35,6 @@ import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 import com.xiuyukeji.stickerplayerview.resource.DynamicResource;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 import com.xiuyukeji.stickerplayerview.resource.ResourceHandle;
-
-import java.util.Iterator;
 
 import static com.xiuyukeji.stickerplayerview.annotations.PlayerSource.EDIT;
 import static com.xiuyukeji.stickerplayerview.event.EventHandle.STATE_NORMAL;
@@ -528,7 +527,7 @@ public class StickerPlayerView extends View {
      * 删除全部贴纸
      */
     public void clearAllSticker() {
-        Iterator<Node<StickerBean>> iterator = mDataHandle.getStickers();
+        Iterator<StickerBean> iterator = mDataHandle.getStickers();
         while (iterator.hasNext()) {
             int position = iterator.next().getKey();
             mEventHandle.delete(position);

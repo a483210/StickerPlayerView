@@ -3,7 +3,7 @@ package com.xiuyukeji.stickerplayerview;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray;
-import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Iterator;
 
 import org.junit.After;
 import org.junit.Before;
@@ -11,9 +11,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Comparator;
-import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -101,6 +101,40 @@ public class LinkedSparseArrayTestCase {
         assertEquals(sparseArray.get(1).value, "1");
 
         assertNull(sparseArray.get(2));
+    }
+
+    @Test
+    public void testGetNode() throws Exception {
+        addItem(2);
+
+        assertEquals(2, sparseArray.size());
+
+        assertEquals(sparseArray.getNode(1).getValue().value, "1");
+        assertEquals(sparseArray.getNode(1).getKey(), 1);
+
+        assertNull(sparseArray.getNode(2));
+    }
+
+    @Test
+    public void testGetFirstNode() throws Exception {
+        assertNull(sparseArray.getFirstNode());
+
+        addItem(2);
+
+        assertEquals(2, sparseArray.size());
+        assertNotNull(sparseArray.getFirstNode());
+        assertEquals(sparseArray.getFirstNode().getKey(), 0);
+    }
+
+    @Test
+    public void testGetLastNode() throws Exception {
+        assertNull(sparseArray.getLastNode());
+
+        addItem(2);
+
+        assertEquals(2, sparseArray.size());
+        assertNotNull(sparseArray.getLastNode());
+        assertEquals(sparseArray.getLastNode().getKey(), 1);
     }
 
     @Test
@@ -198,9 +232,9 @@ public class LinkedSparseArrayTestCase {
 
     private void assertIterator(int[] values) {
         int i = 0;
-        Iterator<Node<TestItem>> ite = sparseArray.iterator();
-        while (ite.hasNext()) {
-            TestItem testItem = ite.next().getValue();
+        Iterator<TestItem> iterator = sparseArray.iterator();
+        while (iterator.hasNext()) {
+            TestItem testItem = iterator.next().getValue();
 
             assertEquals(testItem.frame, values[i]);
             i++;

@@ -1,11 +1,13 @@
 package com.xiuyukeji.stickerplayerview.data;
 
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Iterator;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.IteratorReverse;
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 
 /**
  * 数据管理
@@ -19,14 +21,16 @@ public class DataHandle {
 
     private int mFrameIndex;
 
-    private int mCacheFromKey;
-    private int mCacheToKey;
+    private int mCacheFromPosition;
+    private int mCacheToPosition;
+
+    private final FrameNodeComparator mFrameNodeComparator;
 
     public DataHandle() {
         mStickers = new LinkedSparseArray<>(new FrameComparator());
         mCacheStickers = new ArrayList<>();
 
-        clearCache();
+        mFrameNodeComparator = new FrameNodeComparator();
     }
 
     /**
@@ -39,8 +43,11 @@ public class DataHandle {
             return;
         }
 
-        clearCache();
-        mFrameIndex = frameIndex;
+        //设置帧后重新取得缓存
+        mCacheStickers.clear();
+        resetCurrentStickers(frameIndex);
+
+        this.mFrameIndex = frameIndex;
     }
 
     /**
@@ -52,9 +59,14 @@ public class DataHandle {
         if (mCacheStickers.isEmpty()) {
             mStickers.put(mArrayCount, stickerBean);
         } else {
-            mStickers.put(mArrayCount, stickerBean, mCacheFromKey, mCacheToKey);
+            mStickers.put(mArrayCount, stickerBean, mCacheFromPosition, mCacheToPosition);
         }
-        clearCache();
+
+        if (isFrameInside(mFrameIndex, stickerBean)) {//如果在当前帧内将其加入
+            mCacheStickers.add(mStickers.getNode(mArrayCount));
+            Collections.sort(mCacheStickers, mFrameNodeComparator);//重新排序
+        }
+
         return mArrayCount++;
     }
 
@@ -73,8 +85,11 @@ public class DataHandle {
      * @param position 索引
      */
     public StickerBean removeSticker(int position) {
-        clearCache();
-        return mStickers.remove(position);
+        StickerBean stickerBean = mStickers.remove(position);
+        if (isFrameInside(mFrameIndex, stickerBean)) {//如果在当前帧内将其删除
+            removeCache(position);
+        }
+        return stickerBean;
     }
 
     /**
@@ -97,6 +112,7 @@ public class DataHandle {
     public void swapFrameSticker(int position, int fromFrame, int toFrame) {
         StickerBean stickerBean = mStickers.get(position);
         int oldFromFrame = stickerBean.getFromFrame();
+        int oldToFrame = stickerBean.getToFrame();
         stickerBean.setFromFrame(fromFrame);
         stickerBean.setToFrame(toFrame);
 
@@ -104,38 +120,88 @@ public class DataHandle {
             mStickers.order(position);
         }
 
-        clearCache();
+        boolean oldIsFrameInside = isFrameInside(mFrameIndex, oldFromFrame, oldToFrame);//之前是否在帧内
+        boolean isFrameInside = isFrameInside(mFrameIndex, stickerBean.getFromFrame(),
+                stickerBean.getToFrame());//现在是否在帧内
+
+        if (oldIsFrameInside) {
+            if (isFrameInside) {//如果都在帧内
+                Collections.sort(mCacheStickers, mFrameNodeComparator);//重新排序
+            } else {//如果现在不在删除
+                removeCache(position);
+            }
+        } else {
+            if (isFrameInside) {//如果现在在添加
+                mCacheStickers.add(mStickers.getNode(position));
+                Collections.sort(mCacheStickers, mFrameNodeComparator);//重新排序
+            }
+        }
     }
 
     /**
      * 获得当前帧的贴纸
      */
     public ArrayList<Node<StickerBean>> getCurrentStickers() {
-        if (!mCacheStickers.isEmpty()) {//缓存防止重复遍历
+        //缓存防止重复遍历
+        if (!mCacheStickers.isEmpty()) {
+            return mCacheStickers;
+        } else {
+            return resetCurrentStickers(mFrameIndex);
+        }
+    }
+
+    //重新获取当前帧贴纸
+    private ArrayList<Node<StickerBean>> resetCurrentStickers(int frameIndex) {
+        mCacheStickers.clear();
+
+        if (mStickers.size() == 0) {
             return mCacheStickers;
         }
 
-        Iterator<Node<StickerBean>> iterator = mStickers.iterator();
-        while (iterator.hasNext()) {
-            Node<StickerBean> node = iterator.next();
-            StickerBean stickerBean = node.getValue();
-
-            if (mFrameIndex < stickerBean.getFromFrame()) {
-                continue;
+        if (frameIndex >= mFrameIndex) {
+            Iterator<StickerBean> iterator;
+            if (frameIndex == mFrameIndex) {//只有初始化调用
+                iterator = mStickers.iterator();
+            } else {//如果大于
+                iterator = mStickers.iterator(mCacheToPosition);
             }
-            if (mFrameIndex > stickerBean.getToFrame()) {
-                break;
-            }
+            while (iterator.hasNext()) {
+                Node<StickerBean> node = iterator.next();
+                StickerBean stickerBean = node.getValue();
 
-            mCacheStickers.add(node);
+                if (mFrameIndex < stickerBean.getFromFrame()) {
+                    continue;
+                }
+                if (mFrameIndex > stickerBean.getToFrame()) {
+                    break;
+                }
+
+                mCacheStickers.add(node);
+            }
+        } else {//如果小于
+            IteratorReverse<StickerBean> iterator = mStickers.iteratorReverse(mCacheFromPosition);
+            while (iterator.hasLast()) {
+                Node<StickerBean> node = iterator.last();
+                StickerBean stickerBean = node.getValue();
+
+                if (mFrameIndex > stickerBean.getToFrame()) {
+                    continue;
+                }
+                if (mFrameIndex < stickerBean.getFromFrame()) {
+                    break;
+                }
+
+                mCacheStickers.add(0, node);
+            }
         }
 
         int size = mCacheStickers.size();
         if (size >= 1) {
-            mCacheFromKey = mCacheStickers.get(0).getKey();
-            if (size >= 2) {
-                mCacheToKey = mCacheStickers.get(size - 1).getKey();
-            }
+            mCacheFromPosition = mCacheStickers.get(0).getKey();
+            mCacheToPosition = mCacheStickers.get(size - 1).getKey();
+        } else {
+            mCacheFromPosition = 0;
+            mCacheToPosition = 0;
         }
 
         return mCacheStickers;
@@ -144,7 +210,7 @@ public class DataHandle {
     /**
      * 获得全部贴纸
      */
-    public Iterator<Node<StickerBean>> getStickers() {
+    public Iterator<StickerBean> getStickers() {
         return mStickers.iterator();
     }
 
@@ -155,10 +221,24 @@ public class DataHandle {
         return mStickers.size();
     }
 
-    private void clearCache() {//todo 需要优化
-        mCacheStickers.clear();
-        mCacheFromKey = 0;
-        mCacheToKey = 0;
+    private boolean isFrameInside(int frameIndex, StickerBean stickerBean) {
+        return isFrameInside(frameIndex, stickerBean.getFromFrame(), stickerBean.getToFrame());
+    }
+
+    //是否在帧内
+    private boolean isFrameInside(int frameIndex, int fromFrame, int toFrame) {
+        return frameIndex >= fromFrame && frameIndex <= toFrame;
+    }
+
+    //根据索引删除缓存
+    private void removeCache(int position) {
+        int count = mCacheStickers.size();
+        for (int i = 0; i < count; i++) {
+            Node<StickerBean> node = mCacheStickers.get(i);
+            if (node.getKey() == position) {
+                mCacheStickers.remove(i);
+            }
+        }
     }
 
     //根据fromFrame排序
@@ -168,6 +248,19 @@ public class DataHandle {
             if (last.getFromFrame() < next.getFromFrame()) {
                 return 1;
             } else if (last.getFromFrame() > next.getFromFrame()) {
+                return -1;
+            }
+            return 0;
+        }
+    }
+
+    //根据fromFrame排序
+    private static class FrameNodeComparator implements Comparator<Node<StickerBean>> {
+        @Override
+        public int compare(Node<StickerBean> last, Node<StickerBean> next) {
+            if (last.getValue().getFromFrame() < next.getValue().getFromFrame()) {
+                return 1;
+            } else if (last.getValue().getFromFrame() > next.getValue().getFromFrame()) {
                 return -1;
             }
             return 0;
