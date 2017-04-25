@@ -19,7 +19,7 @@ public class PlayerHandle {
     private final View mView;
 
     private final FrameHandler mHandler;
-    private double mCurrentUptimeMs;
+    private long mCurrentUptimeMs;
     private double mDelayTime;
 
     private int mState = STOP;
@@ -49,7 +49,7 @@ public class PlayerHandle {
     /**
      * 获得当前时间
      */
-    public double getCurrentUptime() {
+    public long getCurrentUptime() {
         return mCurrentUptimeMs;
     }
 
@@ -87,13 +87,13 @@ public class PlayerHandle {
 
     //播放
     private void play() {
-        mHandler.sendMessageAtTime(mHandler.obtainMessage(MSG_FRAME), (long) mCurrentUptimeMs);
+        mHandler.sendMessageAtTime(mHandler.obtainMessage(MSG_FRAME), mCurrentUptimeMs);
     }
 
     //下一帧
     private void nextFrame() {
         mCurrentUptimeMs += mDelayTime;
-        mHandler.sendMessageAtTime(mHandler.obtainMessage(MSG_FRAME), (long) mCurrentUptimeMs);
+        mHandler.sendMessageAtTime(mHandler.obtainMessage(MSG_FRAME), mCurrentUptimeMs);
     }
 
     //handler

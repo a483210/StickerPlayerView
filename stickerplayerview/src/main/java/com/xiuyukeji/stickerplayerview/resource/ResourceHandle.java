@@ -47,21 +47,23 @@ public class ResourceHandle {
     /**
      * 返回图像
      *
-     * @param index      索引
-     * @param frameIndex 帧
+     * @param index    索引
+     * @param uptimeMs 时间
      */
-    public Bitmap getBitmap(String index, int frameIndex) {
+    public Bitmap getBitmap(String index, long uptimeMs) {
         Resource resource = mResources.get(index);
         if (resource == null) {
             return null;
         }
 
-        if (resource instanceof DynamicResource) {
-            DynamicResource dynamicResource = (DynamicResource) resource;
+        int frameIndex = 0;
 
-            frameIndex %= dynamicResource.getFrameCount();
-        } else {
-            frameIndex = 0;
+        if (resource instanceof DynamicResource) {
+            DynamicResource dynamic = (DynamicResource) resource;
+
+            uptimeMs %= dynamic.getDuration();
+
+            frameIndex = Math.round(uptimeMs / dynamic.getDelayTime());
         }
 
         String cacheIndex = getCacheIndex(index, frameIndex);

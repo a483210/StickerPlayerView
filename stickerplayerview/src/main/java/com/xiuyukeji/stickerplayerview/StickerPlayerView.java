@@ -5,11 +5,13 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -779,12 +781,21 @@ public class StickerPlayerView extends View {
             return;
         }
 
-//        Log.i("Tool", mPlayerHandle.getCurrentUptime() + " uptime");
         int selectedPosition = mEventHandle.getSelectedPosition();
         for (Node<StickerBean> node : mDataHandle.getCurrentStickers()) {
             StickerBean stickerBean = node.getValue();
 
-            Bitmap bitmap = mResourceHandle.getBitmap(stickerBean.getIndex(), mFrameIndex);
+            long uptimeMs;
+            if (mState == EDIT) {
+                uptimeMs = mPlayerHandle.getCurrentUptime();
+            } else {
+                uptimeMs = (long) (SystemClock.uptimeMillis()
+                        + mFrameIndex * mPlayerHandle.getDelayTime());
+            }
+
+            Log.i("Tool", uptimeMs + " uptimeMs");
+
+            Bitmap bitmap = mResourceHandle.getBitmap(stickerBean.getIndex(), uptimeMs);
 
             if (stickerBean instanceof TextStickerBean) {
                 mRendererHandle.drawTextSticker(canvas, (TextStickerBean) stickerBean, bitmap);

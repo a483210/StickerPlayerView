@@ -18,4 +18,9 @@ public interface DynamicResource {
      * 返回总时间
      */
     int getDuration();
+
+    /**
+     * 获得间隔
+     */
+    float getDelayTime();
 }

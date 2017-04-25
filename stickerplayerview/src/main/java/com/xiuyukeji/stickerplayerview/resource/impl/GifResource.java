@@ -25,6 +25,7 @@ public class GifResource extends BaseResource implements DynamicResource, Bitmap
     private int mHeight;
     private int mFrameCount;
     private int mDuration;
+    private float mDelayTime;
 
     public GifResource(@NonNull Context context, @NonNull String path, @ResourceSource int source) {
         super(context, path, source);
@@ -42,6 +43,7 @@ public class GifResource extends BaseResource implements DynamicResource, Bitmap
         mHeight = mGifDecoder.getHeight();
         mFrameCount = mGifDecoder.getNumberOfFrames();
         mDuration = mGifDecoder.getDuration();
+        mDelayTime = mDuration / (float) mFrameCount;
 
         return getBitmap(0);
     }
@@ -73,6 +75,11 @@ public class GifResource extends BaseResource implements DynamicResource, Bitmap
     @Override
     public int getDuration() {
         return mDuration;
+    }
+
+    @Override
+    public float getDelayTime() {
+        return mDelayTime;
     }
 
     @Override
