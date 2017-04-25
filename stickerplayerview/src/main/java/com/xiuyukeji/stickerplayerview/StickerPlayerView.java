@@ -45,6 +45,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkDynamicA
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateNull;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateRange;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.copyStickerBean;
+import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.isFrameInside;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.attachBackground;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.dpToPx;
 
@@ -120,15 +121,15 @@ public class StickerPlayerView extends View {
         Bitmap dragBitmap = BitmapFactory.decodeResource(getResources(), dragResId);
         Bitmap flipBitmap = BitmapFactory.decodeResource(getResources(), flipResId);
 
-        int color = 0xfffa3d5f;
-        int padding = dpToPx(getContext(), 3);
-
         if (delBitmap == null
                 || copyBitmap == null
                 || dragBitmap == null
                 || flipBitmap == null) {
             throw new RuntimeException("图标不能为空！");
         }
+
+        int color = 0xfffa3d5f;
+        int padding = dpToPx(getContext(), 3);
 
         if (delResId == R.drawable.ic_close_white_18dp) {
             delBitmap = attachBackground(delBitmap, color, padding);
@@ -178,7 +179,7 @@ public class StickerPlayerView extends View {
         mEventHandle.setOnCopyListener(new OnCopyListener() {
             @Override
             public void onCopy(StickerBean stickerBean) {
-                copySticker(stickerBean, stickerBean.getFromFrame(), stickerBean.getToFrame());
+                copySticker(stickerBean, 20, 20, stickerBean.getFromFrame(), stickerBean.getToFrame());
             }
         });
         mEventHandle.setOnDeleteListener(new OnDeleteListener() {
@@ -501,6 +502,10 @@ public class StickerPlayerView extends View {
             }
         }
 
+        //重新计算大小，防止超出大小
+        newStickerBean.setScale(mEventHandle.isBeyond(newStickerBean,
+                newStickerBean.getScale()));
+
         calculateSticker(newStickerBean);
 
         mDataHandle.replaceSticker(position, newStickerBean);
@@ -539,7 +544,7 @@ public class StickerPlayerView extends View {
         if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
             return;
         }
-        copySticker(mEventHandle.getSelectedPosition(), fromFrame, toFrame);
+        copySticker(mEventHandle.getSelectedPosition(), 0, 0, fromFrame, toFrame);
     }
 
     /**
@@ -551,22 +556,38 @@ public class StickerPlayerView extends View {
      */
     public void copySticker(@FrameRange int position,
                             @FrameRange int fromFrame, @FrameRange int toFrame) {
+        copySticker(position, 0, 0, fromFrame, toFrame);
+    }
 
-        if (position >= mDataHandle.size()
-                || toFrame > fromFrame) {
+    /**
+     * 复制指定贴纸，从fromFrame到toFrame
+     *
+     * @param position  索引
+     * @param dx        平移x
+     * @param dy        平移y
+     * @param fromFrame 开始帧
+     * @param toFrame   结束帧
+     */
+    public void copySticker(@FrameRange int position, int dx, int dy,
+                            @FrameRange int fromFrame, @FrameRange int toFrame) {
+
+        if (toFrame > fromFrame) {
             return;
         }
 
-        copySticker(mDataHandle.getSticker(position), fromFrame, toFrame);
+        copySticker(mDataHandle.getSticker(position), dx, dy, fromFrame, toFrame);
     }
 
     //复制贴纸
-    private void copySticker(StickerBean stickerBean, int fromFrame, int toFrame) {
+    private void copySticker(StickerBean stickerBean, int dx, int dy, int fromFrame, int toFrame) {
         if (stickerBean == null) {
             return;
         }
 
         StickerBean newStickerBean = copyStickerBean(stickerBean, fromFrame, toFrame);
+
+        newStickerBean.setDx(newStickerBean.getDx() + dx);
+        newStickerBean.setDy(newStickerBean.getDy() + dy);
 
         calculateSticker(newStickerBean);
 
@@ -591,7 +612,7 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void deleteSticker(@FrameRange int position) {
-        if (position >= mDataHandle.size()) {
+        if (!mDataHandle.containsSticker(position)) {
             return;
         }
         mEventHandle.delete(position);
@@ -885,14 +906,10 @@ public class StickerPlayerView extends View {
 
     //如果在当前帧内则刷新
     private void invalidate(StickerBean stickerBean) {
-        if (isFrameRange(stickerBean)) {
+        if (isFrameInside(mFrameIndex,
+                stickerBean.getFromFrame(), stickerBean.getToFrame())) {
             invalidate();
         }
-    }
-
-    private boolean isFrameRange(StickerBean stickerBean) {
-        return mFrameIndex >= stickerBean.getFromFrame()
-                && mFrameIndex <= stickerBean.getToFrame();
     }
 
     //初始化贴图位置
@@ -915,7 +932,8 @@ public class StickerPlayerView extends View {
     private int addSticker(StickerBean stickerBean) {
         int position = mDataHandle.addSticker(stickerBean);
 
-        if (isFrameRange(stickerBean)) {
+        if (isFrameInside(mFrameIndex,
+                stickerBean.getFromFrame(), stickerBean.getToFrame())) {
             mEventHandle.selectPosition(position);
             invalidate();
         }

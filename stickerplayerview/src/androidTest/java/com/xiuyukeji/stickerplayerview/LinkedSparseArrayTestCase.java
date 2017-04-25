@@ -13,8 +13,10 @@ import org.junit.runner.RunWith;
 import java.util.Comparator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * 测试LinkedSparseArray
@@ -161,6 +163,22 @@ public class LinkedSparseArrayTestCase {
         sparseArray.clear();
 
         assertEquals(0, sparseArray.size());
+    }
+
+    @Test
+    public void testContainsKey() throws Exception {
+        addItem(10);
+
+        assertEquals(10, sparseArray.size());
+
+        assertTrue(sparseArray.containsKey(0));
+        assertTrue(sparseArray.containsKey(5));
+        assertFalse(sparseArray.containsKey(10));
+
+        sparseArray.clear();
+
+        assertFalse(sparseArray.containsKey(0));
+        assertFalse(sparseArray.containsKey(5));
     }
 
     @Test

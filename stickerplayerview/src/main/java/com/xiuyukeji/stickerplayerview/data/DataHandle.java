@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.isFrameInside;
+
 /**
  * 数据管理
  *
@@ -62,7 +64,8 @@ public class DataHandle {
             mStickers.put(mArrayCount, stickerBean, mCacheFromPosition, mCacheToPosition);
         }
 
-        if (isFrameInside(mFrameIndex, stickerBean)) {//如果在当前帧内将其加入
+        if (isFrameInside(mFrameIndex,
+                stickerBean.getFromFrame(), stickerBean.getToFrame())) {//如果在当前帧内将其加入
             mCacheStickers.add(mStickers.getNode(mArrayCount));
             Collections.sort(mCacheStickers, mFrameNodeComparator);//重新排序
         }
@@ -80,13 +83,23 @@ public class DataHandle {
     }
 
     /**
+     * 是否包含索引
+     *
+     * @param position 索引
+     */
+    public boolean containsSticker(int position) {
+        return mStickers.containsKey(position);
+    }
+
+    /**
      * 删除贴纸
      *
      * @param position 索引
      */
     public StickerBean removeSticker(int position) {
         StickerBean stickerBean = mStickers.remove(position);
-        if (isFrameInside(mFrameIndex, stickerBean)) {//如果在当前帧内将其删除
+        if (isFrameInside(mFrameIndex,
+                stickerBean.getFromFrame(), stickerBean.getToFrame())) {//如果在当前帧内将其删除
             removeCache(position);
         }
         return stickerBean;
@@ -221,15 +234,6 @@ public class DataHandle {
         return mStickers.size();
     }
 
-    private boolean isFrameInside(int frameIndex, StickerBean stickerBean) {
-        return isFrameInside(frameIndex, stickerBean.getFromFrame(), stickerBean.getToFrame());
-    }
-
-    //是否在帧内
-    private boolean isFrameInside(int frameIndex, int fromFrame, int toFrame) {
-        return frameIndex >= fromFrame && frameIndex <= toFrame;
-    }
-
     //根据索引删除缓存
     private void removeCache(int position) {
         int count = mCacheStickers.size();
@@ -237,6 +241,7 @@ public class DataHandle {
             Node<StickerBean> node = mCacheStickers.get(i);
             if (node.getKey() == position) {
                 mCacheStickers.remove(i);
+                break;
             }
         }
     }

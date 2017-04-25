@@ -176,6 +176,15 @@ public class LinkedSparseArray<E> {
     }
 
     /**
+     * 是否包含键
+     *
+     * @param key 键
+     */
+    public boolean containsKey(@KeyRange int key) {
+        return sparseArray.indexOfKey(key) >= 0;
+    }
+
+    /**
      * 替换某个值
      * 必须保证要替换的数据与顺序无关，否则顺序会被打乱
      * 如果有关顺序请用{@link #order(int)}

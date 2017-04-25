@@ -121,4 +121,15 @@ public class StickerOperate {
         checkFrameRateNull(delayTimeMs);
         checkFrameRateRange(delayTimeMs);
     }
+
+    /**
+     * 是否在帧内
+     *
+     * @param frameIndex 帧
+     * @param fromFrame  开始帧
+     * @param toFrame    结束帧
+     */
+    public static boolean isFrameInside(int frameIndex, int fromFrame, int toFrame) {
+        return frameIndex >= fromFrame && frameIndex <= toFrame;
+    }
 }
