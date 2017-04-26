@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setListener() {
+        final int fromFrame = 5 * 10 * -1;
         nAddedView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 mStickerPlayerView.replaceTextSticker(
                         createAssetsResource(MainActivity.this, "text2.png"),
+                        mStickerPlayerView.getCurrentPosition(), 0,
                         175, 123, 188, 152);
             }
         });
@@ -130,5 +132,17 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mStickerPlayerView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mStickerPlayerView.resume();
     }
 }

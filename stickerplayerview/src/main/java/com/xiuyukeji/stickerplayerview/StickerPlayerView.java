@@ -45,9 +45,9 @@ import static com.xiuyukeji.stickerplayerview.event.EventHandle.STATE_NORMAL;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipHorizontalMatrix;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipVerticalMatrix;
-import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkDynamicAndFrameRate;
-import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateNull;
-import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateRange;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkDynamicAndFrameRate;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkFrameRateNull;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkFrameRateRange;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.copyStickerBean;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.isFrameInside;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.attachBackground;
@@ -116,14 +116,10 @@ public class StickerPlayerView extends View {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs,
                 R.styleable.StickerPlayerView, defStyleAttr, defStyleRes);
 
-        Log.i("Tool", "number = " + typedArray.getIndexCount());
-
         int leftTopResId = typedArray.getResourceId(R.styleable.StickerPlayerView_leftTopSrc, 0);
         int rightTopResId = typedArray.getResourceId(R.styleable.StickerPlayerView_rightTopSrc, 0);
         int dragResId = typedArray.getResourceId(R.styleable.StickerPlayerView_dragSrc, 0);
         int leftBottomResId = typedArray.getResourceId(R.styleable.StickerPlayerView_leftBottomSrc, 0);
-
-        Log.i("Tool", leftTopResId + " ; " + rightTopResId + " ; " + leftBottomResId);
 
         Bitmap leftTopBitmap = BitmapFactory.decodeResource(getResources(), leftTopResId);
         Bitmap rightTopBitmap = BitmapFactory.decodeResource(getResources(), rightTopResId);
@@ -217,7 +213,7 @@ public class StickerPlayerView extends View {
             @Override
             public void onRightTop() {
                 int position = mEventHandle.getSelectedPosition();
-                if (position == STATE_NORMAL) {
+                if (position <= STATE_NORMAL) {
                     return;
                 }
                 StickerBean stickerBean = mDataHandle.getSticker(position);
@@ -247,6 +243,10 @@ public class StickerPlayerView extends View {
      */
     public int addSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
                           @NonNull Resource resource) {
+
+        if (fromFrame < 0 || toFrame < 0 || fromFrame > toFrame) {
+
+        }
 
         resource = mResourceHandle.initResource(resource);
         if (resource == null) {
@@ -669,6 +669,17 @@ public class StickerPlayerView extends View {
     }
 
     /**
+     * 获得当前选中贴纸索引
+     */
+    public int getCurrentPosition() {
+        return mEventHandle.getSelectedPosition();
+    }
+
+    public void swapFrameSticker(int position, int fromFrame, int toFrame) {
+
+    }
+
+    /**
      * 水平翻转当前选中贴纸
      */
     public void flipHorizontal() {
@@ -958,8 +969,25 @@ public class StickerPlayerView extends View {
         mResourceHandle.setMemoryCache(memoryCache);
     }
 
+    /**
+     * 暂停播放，在{@link PlayerSource#EDIT}下有效
+     */
+    public void pause() {
+        mPlayerHandle.pause();
+    }
+
+    /**
+     * 恢复播放，在{@link PlayerSource#EDIT}下有效
+     */
+    public void resume() {
+        mPlayerHandle.resume();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
+        Log.i("Tool", "draw");
+
+        mPlayerHandle.cancel();
         if (mDataHandle.size() == 0) {
             return;
         }
@@ -990,7 +1018,6 @@ public class StickerPlayerView extends View {
                 mRendererHandle.drawSelected(canvas, stickerBean);
             }
         }
-        mPlayerHandle.cancel();
         mPlayerHandle.nextFrame();
     }
 

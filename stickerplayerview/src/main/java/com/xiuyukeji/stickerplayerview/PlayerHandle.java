@@ -14,7 +14,7 @@ public class PlayerHandle {
 
     private static final int MSG_FRAME = 0;
 
-    private static final int STOP = 0, START = 1;
+    private static final int STOP = 0, START = 1, PAUSE = 2;
 
     private final View mView;
 
@@ -24,6 +24,7 @@ public class PlayerHandle {
     private double mDelayTime;
 
     private int mState = STOP;
+    private boolean mIsSendMessage;
 
     public PlayerHandle(View view) {
         this.mView = view;
@@ -69,6 +70,30 @@ public class PlayerHandle {
     }
 
     /**
+     * 暂停播放
+     */
+    public void pause() {
+        if (mState != START) {
+            return;
+        }
+        mState = PAUSE;
+
+        cancel();
+    }
+
+    /**
+     * 恢复播放
+     */
+    public void resume() {
+        if (mState != PAUSE) {
+            return;
+        }
+        mState = START;
+
+        nextFrame();
+    }
+
+    /**
      * 停止播放
      */
     public void stop() {
@@ -85,6 +110,9 @@ public class PlayerHandle {
      * 下一帧
      */
     public void nextFrame() {
+        if (mState != START) {
+            return;
+        }
         long uptimeMs = SystemClock.uptimeMillis();
         while (mCurrentUptimeMs <= uptimeMs) {//计算下一个时间，用于跳帧
             mCurrentUptimeMs += mDelayTime;
@@ -94,13 +122,21 @@ public class PlayerHandle {
 
     //播放
     private void play() {
+        if (mIsSendMessage) {
+            return;
+        }
         mHandler.sendMessageAtTime(mHandler.obtainMessage(MSG_FRAME), mCurrentUptimeMs);
+        mIsSendMessage = true;
     }
 
     /**
      * 取消帧
      */
     public void cancel() {
+        if (!mIsSendMessage) {
+            return;
+        }
+        mIsSendMessage = false;
         mHandler.removeMessages(MSG_FRAME);
     }
 
