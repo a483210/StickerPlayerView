@@ -28,7 +28,7 @@ public abstract class ClickEvent {
 
     private int mTouchState = UP;
 
-    ClickEvent() {
+    public ClickEvent() {
         mHandler = new ClickHandler();
     }
 
@@ -62,9 +62,8 @@ public abstract class ClickEvent {
     }
 
     private void postLong() {
-        Message message = Message.obtain();
-        message.what = MESSAGE_CLICK;
-        mHandler.sendMessageAtTime(message, SystemClock.uptimeMillis() + LONG_ClICK_TIMEOUT);
+        mHandler.sendMessageAtTime(mHandler.obtainMessage(MESSAGE_CLICK),
+                SystemClock.uptimeMillis() + LONG_ClICK_TIMEOUT);
     }
 
     protected void cancelLong() {
@@ -80,13 +79,14 @@ public abstract class ClickEvent {
     private class ClickHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-            super.handleMessage(msg);
             switch (msg.what) {
                 case MESSAGE_CLICK:
                     if (mTouchState == DOWN) {
                         mTouchState = UP;
                         longClick();
                     }
+                    break;
+                default:
                     break;
             }
         }

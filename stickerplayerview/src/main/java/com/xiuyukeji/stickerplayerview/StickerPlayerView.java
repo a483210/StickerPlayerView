@@ -5,7 +5,6 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
@@ -873,7 +872,6 @@ public class StickerPlayerView extends View {
         if (mDataHandle.size() == 0) {
             return;
         }
-
         int selectedPosition = mEventHandle.getSelectedPosition();
         for (Node<StickerBean> node : mDataHandle.getCurrentStickers()) {
             StickerBean stickerBean = node.getValue();
@@ -882,8 +880,7 @@ public class StickerPlayerView extends View {
             if (mState == EDIT) {
                 uptimeMs = mPlayerHandle.getCurrentUptime();
             } else {
-                uptimeMs = (long) (SystemClock.uptimeMillis()
-                        + mFrameIndex * mPlayerHandle.getDelayTime());
+                uptimeMs = Math.round(mFrameIndex * mPlayerHandle.getDelayTime());
             }
 
             mResourceHandle.loadBitmap(stickerBean.getIndex(), uptimeMs, mCacheBitmapFrameInfo);
@@ -902,6 +899,8 @@ public class StickerPlayerView extends View {
                 mRendererHandle.drawSelected(canvas, stickerBean);
             }
         }
+        mPlayerHandle.cancel();
+        mPlayerHandle.nextFrame();
     }
 
     //如果在当前帧内则刷新

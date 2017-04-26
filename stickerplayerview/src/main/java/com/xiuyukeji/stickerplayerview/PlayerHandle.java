@@ -19,6 +19,7 @@ public class PlayerHandle {
     private final View mView;
 
     private final FrameHandler mHandler;
+    private long mStartUptimeMs;
     private long mCurrentUptimeMs;
     private double mDelayTime;
 
@@ -50,19 +51,20 @@ public class PlayerHandle {
      * 获得当前时间
      */
     public long getCurrentUptime() {
-        return mCurrentUptimeMs;
+        return mCurrentUptimeMs - mStartUptimeMs;
     }
 
     /**
      * 开始播放
      */
     public void start() {
-        if (isPlaying()) {
+        if (mState == START) {
             return;
         }
         mState = START;
 
-        mCurrentUptimeMs = SystemClock.uptimeMillis();
+        mStartUptimeMs = SystemClock.uptimeMillis();
+        mCurrentUptimeMs = mStartUptimeMs;
         play();
     }
 
@@ -70,19 +72,24 @@ public class PlayerHandle {
      * 停止播放
      */
     public void stop() {
-        if (!isPlaying()) {
+        if (mState == STOP) {
             return;
         }
-        mHandler.removeMessages(MSG_FRAME);
+        cancel();
 
         mState = STOP;
     }
 
+
     /**
-     * 是否播放中
+     * 下一帧
      */
-    public boolean isPlaying() {
-        return mState == START;
+    public void nextFrame() {
+        long uptimeMs = SystemClock.uptimeMillis();
+        while (mCurrentUptimeMs <= uptimeMs) {//计算下一个时间，用于跳帧
+            mCurrentUptimeMs += mDelayTime;
+        }
+        play();
     }
 
     //播放
@@ -90,10 +97,11 @@ public class PlayerHandle {
         mHandler.sendMessageAtTime(mHandler.obtainMessage(MSG_FRAME), mCurrentUptimeMs);
     }
 
-    //下一帧
-    private void nextFrame() {
-        mCurrentUptimeMs += mDelayTime;
-        mHandler.sendMessageAtTime(mHandler.obtainMessage(MSG_FRAME), mCurrentUptimeMs);
+    /**
+     * 取消帧
+     */
+    public void cancel() {
+        mHandler.removeMessages(MSG_FRAME);
     }
 
     //handler
@@ -104,7 +112,8 @@ public class PlayerHandle {
             switch (msg.what) {
                 case MSG_FRAME:
                     mView.invalidate();
-                    nextFrame();
+                    break;
+                default:
                     break;
             }
         }

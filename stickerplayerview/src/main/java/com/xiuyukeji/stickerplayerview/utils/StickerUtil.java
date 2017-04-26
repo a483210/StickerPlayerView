@@ -35,7 +35,7 @@ public class StickerUtil {
      * @param padding   边距
      */
     public static Bitmap attachBackground(Bitmap srcBitmap, int color, int padding) {
-        if (srcBitmap == null) {
+        if (srcBitmap == null || srcBitmap.isRecycled()) {
             return null;
         }
         Paint paint = new Paint(PAINT_FLAG);
