@@ -11,8 +11,10 @@ import com.xiuyukeji.stickerplayerview.bean.MatrixBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.data.DataHandle;
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
+import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftBottomListener;
+import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftTopListener;
+import com.xiuyukeji.stickerplayerview.event.intefaces.OnRightTopListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
-import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
@@ -24,7 +26,7 @@ import java.util.ArrayList;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateAngle;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateEdge;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSelected;
-import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMatrix;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipHorizontalMatrix;
 
 /**
  * 贴纸帮助类
@@ -34,7 +36,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipMat
 public class EventHandle extends ClickEvent {
 
     public final static int STATE_CANCEL = -2, STATE_NORMAL = -1;
-    private final static int STATE_DELETE = 0, STATE_COPY = 1, STATE_DRAG = 2, STATE_FLIP = 3, STATE_TRANSLATE = 4;
+    private final static int STATE_LEFT_TOP = 0, STATE_RIGHT_TOP = 1, STATE_RIGHT_BOTTOM = 2, STATE_LEFT_BOTTOM = 3, STATE_TRANSLATE = 4;
 
     private final static int SCROLL_START = 0, SCROLL_STOP = 1;
     private final static int ACTION_TRANSLATE = 0, ACTION_DRAG = 1, ACTION_DRAG_SECOND = 2;
@@ -48,10 +50,10 @@ public class EventHandle extends ClickEvent {
     private float[] mSidePoint;
     private int mSidePadding;
 
-    private IconBean mDelIconBean;
-    private IconBean mCopyIconBean;
+    private IconBean mLeftTopIconBean;
+    private IconBean mRightTopIconBean;
     private IconBean mDragIconBean;
-    private IconBean mFlipIconBean;
+    private IconBean mLeftBottomIconBean;
 
     private final DataHandle mDataHandle;
     private StickerBean mStickerBean;
@@ -80,8 +82,11 @@ public class EventHandle extends ClickEvent {
 
     private boolean mIsEnabled = true;//是否可用
 
+    private OnLeftTopListener mOnLeftTopListener;
+    private OnRightTopListener mOnRightTopListener;
+    private OnLeftBottomListener mOnLeftBottomListener;
+
     private OnDeleteListener mOnDeleteListener;
-    private OnCopyListener mOnCopyListener;
 
     private OnClickStickerListener mOnClickStickerListener;
     private OnDoubleClickStickerListener mOnDoubleClickStickerListener;
@@ -109,12 +114,13 @@ public class EventHandle extends ClickEvent {
     }
 
     //初始化设置图标数据
-    public void setIcon(IconBean delIconBean, IconBean copyIconBean, IconBean dragIconBean, IconBean flipIconBean,
+    public void setIcon(IconBean leftTopIconBean, IconBean rightTopIconBean,
+                        IconBean dragIconBean, IconBean leftBottomIconBean,
                         float[] sidePoint, int sidePadding) {
-        this.mDelIconBean = delIconBean;
-        this.mCopyIconBean = copyIconBean;
+        this.mLeftTopIconBean = leftTopIconBean;
+        this.mRightTopIconBean = rightTopIconBean;
         this.mDragIconBean = dragIconBean;
-        this.mFlipIconBean = flipIconBean;
+        this.mLeftBottomIconBean = leftBottomIconBean;
         this.mSidePoint = sidePoint;
         this.mSidePadding = sidePadding;
     }
@@ -146,17 +152,17 @@ public class EventHandle extends ClickEvent {
                 mDownX = (int) event.getX();
                 mDownY = (int) event.getY();
                 if (mSelectedPosition != STATE_NORMAL) {//判断点击上是否为图标
-                    if (containPoint(mDelIconBean)) {
-                        mState = STATE_DELETE;
+                    if (containPoint(mLeftTopIconBean)) {
+                        mState = STATE_LEFT_TOP;
                         break;
-                    } else if (containPoint(mCopyIconBean)) {
-                        mState = STATE_COPY;
+                    } else if (containPoint(mRightTopIconBean)) {
+                        mState = STATE_RIGHT_TOP;
                         break;
                     } else if (containPoint(mDragIconBean)) {
-                        mState = STATE_DRAG;
+                        mState = STATE_RIGHT_BOTTOM;
                         break;
-                    } else if (containPoint(mFlipIconBean)) {
-                        mState = STATE_FLIP;
+                    } else if (containPoint(mLeftBottomIconBean)) {
+                        mState = STATE_LEFT_BOTTOM;
                         break;
                     }
                 }
@@ -195,7 +201,7 @@ public class EventHandle extends ClickEvent {
                 mLastMoveX = mMoveX;
                 mLastMoveY = mMoveY;
 
-                if (mState == STATE_DRAG) {
+                if (mState == STATE_RIGHT_BOTTOM) {
                     startScroll();
                     mAction = ACTION_DRAG;
                     return onTouchEvent(event);
@@ -215,15 +221,21 @@ public class EventHandle extends ClickEvent {
                 float upX = event.getX(0);
                 float upY = event.getY(0);
 
-                if (mState == STATE_DELETE
-                        && containPoint(mDelIconBean, upX, upY)) {
-                    delete();
-                } else if (mState == STATE_COPY
-                        && containPoint(mCopyIconBean, upX, upY)) {
-                    copy();
-                } else if (mState == STATE_FLIP
-                        && containPoint(mFlipIconBean, upX, upY)) {
-                    flip();
+                if (mState == STATE_LEFT_TOP
+                        && containPoint(mLeftTopIconBean, upX, upY)) {
+                    if (mOnLeftTopListener != null) {
+                        mOnLeftTopListener.onLeftTop();
+                    }
+                } else if (mState == STATE_RIGHT_TOP
+                        && containPoint(mRightTopIconBean, upX, upY)) {
+                    if (mOnRightTopListener != null) {
+                        mOnRightTopListener.onRightTop();
+                    }
+                } else if (mState == STATE_LEFT_BOTTOM
+                        && containPoint(mLeftBottomIconBean, upX, upY)) {
+                    if (mOnLeftBottomListener != null) {
+                        mOnLeftBottomListener.onLeftBottom();
+                    }
                 } else if (mState == STATE_TRANSLATE &&
                         mScrollState == SCROLL_STOP) {
                     clickUp();
@@ -400,14 +412,11 @@ public class EventHandle extends ClickEvent {
         return dy;
     }
 
-    private void delete() {
-        if (mStickerBean == null) {
-            return;
-        }
-        delete(mSelectedPosition);
-    }
-
-    //外部调用删除
+    /**
+     * 删除某个贴纸
+     *
+     * @param position 索引
+     */
     public void delete(int position) {
         StickerBean stickerBean = mDataHandle.removeSticker(position);
         if (position == mSelectedPosition) {
@@ -419,26 +428,12 @@ public class EventHandle extends ClickEvent {
         }
     }
 
-    private void copy() {
-        if (mStickerBean == null) {
-            return;
-        }
-        if (mOnCopyListener != null) {
-            mOnCopyListener.onCopy(mStickerBean);
-        }
-    }
-
-    private void flip() {
-        if (mStickerBean == null) {
-            return;
-        }
-
-        mStickerBean.setFlip(!mStickerBean.isFlip());
-
-        flipMatrix(mStickerBean);
-        flipMatrix(mFlipIconBean);
-
-        mView.invalidate();
+    /**
+     * 水平翻转左下图标
+     */
+    public void fliHorizontalLeftBottom() {
+        mLeftBottomIconBean.setFlipHorizontal(!mLeftBottomIconBean.isFlipHorizontal());
+        flipHorizontalMatrix(mLeftBottomIconBean);
     }
 
     @Override
@@ -466,7 +461,11 @@ public class EventHandle extends ClickEvent {
         }
     }
 
-    //替换背景刷新
+    /**
+     * 替换背景刷新
+     *
+     * @param position 索引
+     */
     public void updateSelected(int position) {
         if (mSelectedPosition != position) {
             return;
@@ -479,6 +478,10 @@ public class EventHandle extends ClickEvent {
         unselected();
 
         mSelectedPosition = position;
+        if (position == STATE_NORMAL) {
+            return;
+        }
+
         mStickerBean = mDataHandle.getSticker(mSelectedPosition);
 
         invalidateSelected();
@@ -510,11 +513,14 @@ public class EventHandle extends ClickEvent {
         }
 
         calculateSelected(mStickerBean,
-                mDelIconBean, mCopyIconBean, mDragIconBean, mFlipIconBean,
+                mLeftTopIconBean, mRightTopIconBean, mDragIconBean, mLeftBottomIconBean,
                 mSidePoint, mSidePadding);
     }
 
     private boolean containPoint(MatrixBean iconBean) {
+        if (iconBean == null) {
+            return false;
+        }
         return containPoint(iconBean.getMatrix(), iconBean.getWidth(), iconBean.getHeight(), mDownX, mDownY);
     }
 
@@ -538,12 +544,20 @@ public class EventHandle extends ClickEvent {
         return mRect.contains((int) x, (int) y);
     }
 
-    public void setOnDeleteListener(OnDeleteListener l) {
-        this.mOnDeleteListener = l;
+    public void setOnLeftTopListener(OnLeftTopListener l) {
+        this.mOnLeftTopListener = l;
     }
 
-    public void setOnCopyListener(OnCopyListener l) {
-        this.mOnCopyListener = l;
+    public void setOnRightTopListener(OnRightTopListener l) {
+        this.mOnRightTopListener = l;
+    }
+
+    public void setOnLeftBottomListener(OnLeftBottomListener l) {
+        this.mOnLeftBottomListener = l;
+    }
+
+    public void setOnDeleteListener(OnDeleteListener l) {
+        this.mOnDeleteListener = l;
     }
 
     public void setOnClickStickerListener(OnClickStickerListener l) {

@@ -63,7 +63,7 @@ public class StickerOperate {
             dst.setDy(src.getDy());
             dst.setDegrees(src.getDegrees());
             dst.setScale(src.getScale());
-            dst.setFlip(src.isFlip());
+            dst.setFlipHorizontal(src.isFlipHorizontal());
             return dst;
         }
     }
@@ -84,7 +84,7 @@ public class StickerOperate {
         dst.setDy(src.getDy());
         dst.setDegrees(src.getDegrees());
         dst.setScale(src.getScale());
-        dst.setFlip(src.isFlip());
+        dst.setFlipHorizontal(src.isFlipHorizontal());
         return dst;
     }
 

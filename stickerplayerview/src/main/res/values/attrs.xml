@@ -3,10 +3,10 @@
     <declare-styleable name="StickerPlayerView">
         <attr name="frameRate" format="integer" />
         <attr name="randomLocation" format="boolean" />
-        <attr name="delSrc" format="reference" />
-        <attr name="copySrc" format="reference" />
+        <attr name="leftTopSrc" format="reference" />
+        <attr name="rightTopSrc" format="reference" />
         <attr name="dragSrc" format="reference" />
-        <attr name="flipSrc" format="reference" />
+        <attr name="leftBottomSrc" format="reference" />
         <attr name="sideColor" format="color" />
         <attr name="sideWidth" format="dimension" />
         <attr name="sidePadding" format="dimension" />

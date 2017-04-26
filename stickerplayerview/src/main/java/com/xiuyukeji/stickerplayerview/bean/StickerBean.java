@@ -13,8 +13,6 @@ public class StickerBean extends FrameBean {
     private float degrees;
     private float scale;
 
-    private boolean isFlip;
-
     public StickerBean(String index, int width, int height, int fromFrame, int toFrame) {
         super(width, height, fromFrame, toFrame);
         this.index = index;
@@ -57,14 +55,6 @@ public class StickerBean extends FrameBean {
         this.scale = scale;
     }
 
-    public boolean isFlip() {
-        return isFlip;
-    }
-
-    public void setFlip(boolean flip) {
-        this.isFlip = flip;
-    }
-
     @Override
     public String toString() {
         return "StickerBean{" +
@@ -73,7 +63,6 @@ public class StickerBean extends FrameBean {
                 ", dy=" + dy +
                 ", degrees=" + degrees +
                 ", scale=" + scale +
-                ", isFlip=" + isFlip +
                 "} " + super.toString();
     }
 }

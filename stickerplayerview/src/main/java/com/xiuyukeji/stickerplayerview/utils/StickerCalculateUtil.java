@@ -60,8 +60,8 @@ public class StickerCalculateUtil {
         matrix.postScale(stickerBean.getScale(), stickerBean.getScale(), px, py);
         matrix.postTranslate(stickerBean.getDx(), stickerBean.getDy());
 
-        if (stickerBean.isFlip()) {//反转
-            flipMatrix(stickerBean);
+        if (stickerBean.isFlipHorizontal()) {//反转
+            flipHorizontalMatrix(stickerBean);
         }
     }
 
@@ -98,24 +98,24 @@ public class StickerCalculateUtil {
         stickerBean.getMatrix().postScale(scale, scale, px, py);
         stickerBean.getMatrix().postTranslate(dx, dy);
 
-        if (stickerBean.isFlip()) {
-            flipMatrix(stickerBean);
+        if (stickerBean.isFlipHorizontal()) {
+            flipHorizontalMatrix(stickerBean);
         }
     }
 
     /**
      * 重新计算边框位置
      *
-     * @param stickerBean  贴纸数据
-     * @param delIconBean  删除图标数据
-     * @param copyIconBean 复制图标数据
-     * @param dragIconBean 移动图标数据
-     * @param flipIconBean 反转图标数据
-     * @param sidePoint    边框坐标
-     * @param sidePadding  边框间距
+     * @param stickerBean        贴纸数据
+     * @param leftTopIconBean    删除图标数据
+     * @param rightTopIconBean   复制图标数据
+     * @param dragIconBean       移动图标数据
+     * @param leftBottomIconBean 反转图标数据
+     * @param sidePoint          边框坐标
+     * @param sidePadding        边框间距
      */
     public static void calculateSelected(StickerBean stickerBean,
-                                         IconBean delIconBean, IconBean copyIconBean, IconBean dragIconBean, IconBean flipIconBean,
+                                         IconBean leftTopIconBean, IconBean rightTopIconBean, IconBean dragIconBean, IconBean leftBottomIconBean,
                                          float[] sidePoint, int sidePadding) {
         float scaleWidth = (stickerBean.getScale() - 1) * stickerBean.getWidth();
         float scaleHeight = (stickerBean.getScale() - 1) * stickerBean.getHeight();
@@ -129,24 +129,26 @@ public class StickerCalculateUtil {
 
         calculateSide(stickerBean, sidePoint, sidePadding);
 
-        calculateIcon(delIconBean, stickerBean.getDegrees(),
-                dx, dy,
-                pointX, pointY);
+        if (leftTopIconBean != null) {
+            calculateIcon(leftTopIconBean, stickerBean.getDegrees(),
+                    dx, dy,
+                    pointX, pointY);
+        }
 
-        calculateIcon(copyIconBean, stickerBean.getDegrees(),
-                dx + width, dy,
-                pointX, pointY);
+        if (rightTopIconBean != null) {
+            calculateIcon(rightTopIconBean, stickerBean.getDegrees(),
+                    dx + width, dy,
+                    pointX, pointY);
+        }
 
         calculateIcon(dragIconBean, stickerBean.getDegrees(),
                 dx + width, dy + height,
                 pointX, pointY);
 
-        calculateIcon(flipIconBean, stickerBean.getDegrees(),
-                dx, dy + height,
-                pointX, pointY);
-
-        if (stickerBean.isFlip()) {
-            flipMatrix(flipIconBean);
+        if (leftBottomIconBean != null) {
+            calculateIcon(leftBottomIconBean, stickerBean.getDegrees(),
+                    dx, dy + height,
+                    pointX, pointY);
         }
     }
 
@@ -158,6 +160,14 @@ public class StickerCalculateUtil {
         matrix.setTranslate(dx - iconBean.getWidth() / 2,
                 dy - iconBean.getHeight() / 2);
         matrix.postRotate(degrees, pointX, pointY);
+
+        if (iconBean.isFlipHorizontal()) {
+            flipHorizontalMatrix(iconBean);
+        }
+
+        if (iconBean.isFlipVertical()) {
+            flipVerticalMatrix(iconBean);
+        }
     }
 
     //设置边框矩阵
@@ -197,14 +207,26 @@ public class StickerCalculateUtil {
     }
 
     /**
-     * 反转矩阵
+     * 水平翻转矩阵
      *
      * @param matrixBean 矩阵数据
      */
-    public static void flipMatrix(MatrixBean matrixBean) {
+    public static void flipHorizontalMatrix(MatrixBean matrixBean) {
         float px = matrixBean.getWidth() / 2f;
         float py = matrixBean.getHeight() / 2f;
 
         matrixBean.getMatrix().preScale(-1, 1, px, py);
+    }
+
+    /**
+     * 垂直翻转矩阵
+     *
+     * @param matrixBean 矩阵数据
+     */
+    public static void flipVerticalMatrix(MatrixBean matrixBean) {
+        float px = matrixBean.getWidth() / 2f;
+        float py = matrixBean.getHeight() / 2f;
+
+        matrixBean.getMatrix().preScale(1, -1, px, py);
     }
 }

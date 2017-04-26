@@ -11,6 +11,8 @@ public abstract class MatrixBean {
     private final Matrix matrix;
     private final int width;
     private final int height;
+    private boolean isFlipHorizontal;
+    private boolean isFlipVertical;
 
     public MatrixBean(int width, int height) {
         this.matrix = new Matrix();
@@ -30,12 +32,30 @@ public abstract class MatrixBean {
         return height;
     }
 
+    public boolean isFlipHorizontal() {
+        return isFlipHorizontal;
+    }
+
+    public void setFlipHorizontal(boolean flipHorizontal) {
+        this.isFlipHorizontal = flipHorizontal;
+    }
+
+    public boolean isFlipVertical() {
+        return isFlipVertical;
+    }
+
+    public void setFlipVertical(boolean flipVertical) {
+        isFlipVertical = flipVertical;
+    }
+
     @Override
     public String toString() {
         return "MatrixBean{" +
                 "matrix=" + matrix.toString() +
                 ", width=" + width +
                 ", height=" + height +
+                ", isFlipHorizontal=" + isFlipHorizontal +
+                ", isFlipVertical=" + isFlipVertical +
                 '}';
     }
 }

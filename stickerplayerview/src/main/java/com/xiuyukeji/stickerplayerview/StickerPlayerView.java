@@ -10,6 +10,7 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -26,8 +27,10 @@ import com.xiuyukeji.stickerplayerview.data.DataHandle;
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Iterator;
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Node;
 import com.xiuyukeji.stickerplayerview.event.EventHandle;
+import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftBottomListener;
+import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftTopListener;
+import com.xiuyukeji.stickerplayerview.event.intefaces.OnRightTopListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
-import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
@@ -40,6 +43,8 @@ import com.xiuyukeji.stickerplayerview.resource.ResourceHandle;
 import static com.xiuyukeji.stickerplayerview.annotations.PlayerSource.EDIT;
 import static com.xiuyukeji.stickerplayerview.event.EventHandle.STATE_NORMAL;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateSticker;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipHorizontalMatrix;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipVerticalMatrix;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkDynamicAndFrameRate;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateNull;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.checkFrameRateRange;
@@ -66,7 +71,7 @@ public class StickerPlayerView extends View {
     private final EventHandle mEventHandle;
     private final PlayerHandle mPlayerHandle;
 
-    private final BitmapFrameInfo mCacheBitmapFrameInfo;
+    private final BitmapFrameInfo mBitmapFrameInfo;
 
     private int mFrameIndex = 0;//当前帧
 
@@ -75,14 +80,18 @@ public class StickerPlayerView extends View {
     private OnDeleteListener mOnDeleteListener;
 
     public StickerPlayerView(Context context) {
-        this(context, null);
+        this(context, null, 0, R.style.SickerPlayerViewStyle);
     }
 
     public StickerPlayerView(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
+        this(context, attrs, 0, R.style.SickerPlayerViewStyle);
     }
 
     public StickerPlayerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        this(context, attrs, defStyleAttr, R.style.SickerPlayerViewStyle);
+    }
+
+    public StickerPlayerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr);
 
         mResourceHandle = new ResourceHandle();
@@ -92,55 +101,53 @@ public class StickerPlayerView extends View {
         mEventHandle = new EventHandle(this, mDataHandle);
         mPlayerHandle = new PlayerHandle(this);
 
-        mCacheBitmapFrameInfo = new BitmapFrameInfo();
+        mBitmapFrameInfo = new BitmapFrameInfo();
 
-        initAttrs(attrs);
+        initAttrs(attrs, defStyleAttr, defStyleRes);
         initView();
         setListener();
     }
 
     //初始化属性
-    private void initAttrs(AttributeSet attrs) {
+    private void initAttrs(AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         if (attrs == null) {
             return;
         }
-        TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.StickerPlayerView);
+        TypedArray typedArray = getContext().obtainStyledAttributes(attrs,
+                R.styleable.StickerPlayerView, defStyleAttr, defStyleRes);
 
-        int delResId = typedArray.getResourceId(R.styleable.StickerPlayerView_delSrc,
-                R.drawable.ic_close_white_18dp);
-        int copyResId = typedArray.getResourceId(R.styleable.StickerPlayerView_copySrc,
-                R.drawable.ic_content_copy_white_18dp);
-        int dragResId = typedArray.getResourceId(R.styleable.StickerPlayerView_dragSrc,
-                R.drawable.ic_zoom_out_map_white_18dp);
-        int flipResId = typedArray.getResourceId(R.styleable.StickerPlayerView_flipSrc,
-                R.drawable.ic_flip_white_18dp);
+        Log.i("Tool", "number = " + typedArray.getIndexCount());
 
-        Bitmap delBitmap = BitmapFactory.decodeResource(getResources(), delResId);
-        Bitmap copyBitmap = BitmapFactory.decodeResource(getResources(), copyResId);
+        int leftTopResId = typedArray.getResourceId(R.styleable.StickerPlayerView_leftTopSrc, 0);
+        int rightTopResId = typedArray.getResourceId(R.styleable.StickerPlayerView_rightTopSrc, 0);
+        int dragResId = typedArray.getResourceId(R.styleable.StickerPlayerView_dragSrc, 0);
+        int leftBottomResId = typedArray.getResourceId(R.styleable.StickerPlayerView_leftBottomSrc, 0);
+
+        Log.i("Tool", leftTopResId + " ; " + rightTopResId + " ; " + leftBottomResId);
+
+        Bitmap leftTopBitmap = BitmapFactory.decodeResource(getResources(), leftTopResId);
+        Bitmap rightTopBitmap = BitmapFactory.decodeResource(getResources(), rightTopResId);
         Bitmap dragBitmap = BitmapFactory.decodeResource(getResources(), dragResId);
-        Bitmap flipBitmap = BitmapFactory.decodeResource(getResources(), flipResId);
+        Bitmap leftBottomBitmap = BitmapFactory.decodeResource(getResources(), leftBottomResId);
 
-        if (delBitmap == null
-                || copyBitmap == null
-                || dragBitmap == null
-                || flipBitmap == null) {
-            throw new RuntimeException("图标不能为空！");
+        if (dragBitmap == null) {
+            throw new StickerException("拖动图标必须存在！");
         }
 
         int color = 0xfffa3d5f;
         int padding = dpToPx(getContext(), 3);
 
-        if (delResId == R.drawable.ic_close_white_18dp) {
-            delBitmap = attachBackground(delBitmap, color, padding);
+        if (leftTopResId == R.drawable.ic_close_white_18dp) {
+            leftTopBitmap = attachBackground(leftTopBitmap, color, padding);
         }
-        if (copyResId == R.drawable.ic_content_copy_white_18dp) {
-            copyBitmap = attachBackground(copyBitmap, color, padding);
+        if (rightTopResId == R.drawable.ic_content_copy_white_18dp) {
+            rightTopBitmap = attachBackground(rightTopBitmap, color, padding);
         }
         if (dragResId == R.drawable.ic_zoom_out_map_white_18dp) {
             dragBitmap = attachBackground(dragBitmap, color, padding);
         }
-        if (flipResId == R.drawable.ic_flip_white_18dp) {
-            flipBitmap = attachBackground(flipBitmap, color, padding);
+        if (leftBottomResId == R.drawable.ic_flip_white_18dp) {
+            leftBottomBitmap = attachBackground(leftBottomBitmap, color, padding);
         }
 
         int sideColor = typedArray.getColor(R.styleable.StickerPlayerView_sideColor, 0xffffffff);
@@ -149,16 +156,29 @@ public class StickerPlayerView extends View {
         int sidePadding = (int) typedArray.getDimension(R.styleable.StickerPlayerView_sidePadding,
                 dpToPx(getContext(), 4));
 
-        IconBean delIconBean = new IconBean(delBitmap);
-        IconBean copyIconBean = new IconBean(copyBitmap);
+        IconBean leftTopIconBean = null;
+        if (leftTopBitmap != null) {
+            leftTopIconBean = new IconBean(leftTopBitmap);
+        }
+
+        IconBean rightTopIconBean = null;
+        if (rightTopBitmap != null) {
+            rightTopIconBean = new IconBean(rightTopBitmap);
+        }
+
         IconBean dragIconBean = new IconBean(dragBitmap);
-        IconBean flipIconBean = new IconBean(flipBitmap);
+
+        IconBean leftBottomIconBean = null;
+        if (leftBottomBitmap != null) {
+            leftBottomIconBean = new IconBean(leftBottomBitmap);
+        }
+
         float[] sidePoint = new float[8];
 
-        mRendererHandle.setSelectedStyle(delIconBean, copyIconBean, dragIconBean, flipIconBean,
+        mRendererHandle.setSelectedStyle(leftTopIconBean, rightTopIconBean, dragIconBean, leftBottomIconBean,
                 sidePoint, sideColor, sideWidth);
 
-        mEventHandle.setIcon(delIconBean, copyIconBean, dragIconBean, flipIconBean,
+        mEventHandle.setIcon(leftTopIconBean, rightTopIconBean, dragIconBean, leftBottomIconBean,
                 sidePoint, sidePadding);
 
         mIsRandomLocation = typedArray.getBoolean(R.styleable.StickerPlayerView_randomLocation, false);
@@ -175,12 +195,6 @@ public class StickerPlayerView extends View {
     }
 
     private void setListener() {
-        mEventHandle.setOnCopyListener(new OnCopyListener() {
-            @Override
-            public void onCopy(StickerBean stickerBean) {
-                copySticker(stickerBean, 20, 20, stickerBean.getFromFrame(), stickerBean.getToFrame());
-            }
-        });
         mEventHandle.setOnDeleteListener(new OnDeleteListener() {
             @Override
             public void onDelete(StickerBean stickerBean) {
@@ -191,6 +205,30 @@ public class StickerPlayerView extends View {
                 if (mResourceHandle.getDynamicCount() == 0) {
                     mPlayerHandle.stop();
                 }
+            }
+        });
+        mEventHandle.setOnLeftTopListener(new OnLeftTopListener() {
+            @Override
+            public void onLeftTop() {
+                deleteSticker();
+            }
+        });
+        mEventHandle.setOnRightTopListener(new OnRightTopListener() {
+            @Override
+            public void onRightTop() {
+                int position = mEventHandle.getSelectedPosition();
+                if (position == STATE_NORMAL) {
+                    return;
+                }
+                StickerBean stickerBean = mDataHandle.getSticker(position);
+                copySticker(position, 20, 20, stickerBean.getFromFrame(), stickerBean.getToFrame());
+            }
+        });
+        mEventHandle.setOnLeftBottomListener(new OnLeftBottomListener() {
+            @Override
+            public void onLeftBottom() {
+                mEventHandle.fliHorizontalLeftBottom();
+                flipHorizontal();
             }
         });
     }
@@ -570,7 +608,7 @@ public class StickerPlayerView extends View {
     public void copySticker(@FrameRange int position, int dx, int dy,
                             @FrameRange int fromFrame, @FrameRange int toFrame) {
 
-        if (toFrame > fromFrame) {
+        if (toFrame < fromFrame) {
             return;
         }
 
@@ -628,6 +666,58 @@ public class StickerPlayerView extends View {
         }
         mPlayerHandle.stop();
         invalidate();
+    }
+
+    /**
+     * 水平翻转当前选中贴纸
+     */
+    public void flipHorizontal() {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        flipHorizontal(mEventHandle.getSelectedPosition());
+    }
+
+    /**
+     * 水平翻转指定贴纸
+     *
+     * @param position 索引
+     */
+    public void flipHorizontal(@FrameRange int position) {
+        StickerBean stickerBean = mDataHandle.getSticker(position);
+        if (stickerBean == null) {
+            return;
+        }
+        stickerBean.setFlipHorizontal(!stickerBean.isFlipHorizontal());
+        flipHorizontalMatrix(stickerBean);
+
+        invalidate(stickerBean);
+    }
+
+    /**
+     * 垂直翻转当前选中贴纸
+     */
+    public void flipVertical() {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        flipVertical(mEventHandle.getSelectedPosition());
+    }
+
+    /**
+     * 垂直翻转指定贴纸
+     *
+     * @param position 索引
+     */
+    public void flipVertical(@FrameRange int position) {
+        StickerBean stickerBean = mDataHandle.getSticker(position);
+        if (stickerBean == null) {
+            return;
+        }
+        stickerBean.setFlipVertical(!stickerBean.isFlipVertical());
+        flipVerticalMatrix(stickerBean);
+
+        invalidate(stickerBean);
     }
 
     /**
@@ -824,6 +914,7 @@ public class StickerPlayerView extends View {
         this.mFrameIndex = frameIndex;
 
         mDataHandle.setFrameIndex(frameIndex);
+        mEventHandle.selectPosition(STATE_NORMAL);
 
         invalidate();
     }
@@ -883,10 +974,10 @@ public class StickerPlayerView extends View {
                 uptimeMs = Math.round(mFrameIndex * mPlayerHandle.getDelayTime());
             }
 
-            mResourceHandle.loadBitmap(stickerBean.getIndex(), uptimeMs, mCacheBitmapFrameInfo);
+            mResourceHandle.loadBitmap(stickerBean.getIndex(), uptimeMs, mBitmapFrameInfo);
 
-            Bitmap bitmap = mCacheBitmapFrameInfo.getBitmap();
-            int frame = mCacheBitmapFrameInfo.getFrame();
+            Bitmap bitmap = mBitmapFrameInfo.getBitmap();
+            int frame = mBitmapFrameInfo.getFrame();
 
             if (stickerBean instanceof TextStickerBean) {
                 mRendererHandle.drawTextSticker(canvas, (TextStickerBean) stickerBean, bitmap, frame);
@@ -953,6 +1044,33 @@ public class StickerPlayerView extends View {
     //获得贴纸
     private StickerBean getSticker(int position) {
         return mDataHandle.getSticker(position);
+    }
+
+    /**
+     * 左上按钮回调
+     *
+     * @param l 回调
+     */
+    public void setOnLeftTopListener(OnLeftTopListener l) {
+        mEventHandle.setOnLeftTopListener(l);
+    }
+
+    /**
+     * 右上按钮回调
+     *
+     * @param l 回调
+     */
+    public void setOnRightTopListener(OnRightTopListener l) {
+        mEventHandle.setOnRightTopListener(l);
+    }
+
+    /**
+     * 左下按钮回调
+     *
+     * @param l 回调
+     */
+    public void setOnLeftBottomListener(OnLeftBottomListener l) {
+        mEventHandle.setOnLeftBottomListener(l);
     }
 
     /**

@@ -1,0 +1,10 @@
+<resources>
+
+    <style name="SickerPlayerViewStyle">
+        <item name="leftBottomSrc">@drawable/ic_flip_white_18dp</item>
+        <item name="leftTopSrc">@drawable/ic_close_white_18dp</item>
+        <item name="dragSrc">@drawable/ic_zoom_out_map_white_18dp</item>
+        <item name="rightTopSrc">@drawable/ic_content_copy_white_18dp</item>
+    </style>
+
+</resources>

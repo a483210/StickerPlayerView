@@ -28,10 +28,10 @@ public class RendererHandle {
 
     private final float[] mTextPoint;
 
-    private IconBean mDelIconBean;
-    private IconBean mCopyIconBean;
+    private IconBean mLeftTopIconBean;
+    private IconBean mRightTopIconBean;
     private IconBean mDragIconBean;
-    private IconBean mFlipIconBean;
+    private IconBean mLeftBottomIconBean;
 
     private float[] mSidePoint;
 
@@ -44,13 +44,13 @@ public class RendererHandle {
     }
 
     //设置边框属性
-    public void setSelectedStyle(IconBean delIconBean, IconBean copyIconBean,
-                                 IconBean dragIconBean, IconBean flipIconBean,
+    public void setSelectedStyle(IconBean leftTopIconBean, IconBean rightTopIconBean,
+                                 IconBean dragIconBean, IconBean leftBottomIconBean,
                                  float[] sidePoint, int sideColor, int sideWidth) {
-        this.mDelIconBean = delIconBean;
-        this.mCopyIconBean = copyIconBean;
+        this.mLeftTopIconBean = leftTopIconBean;
+        this.mRightTopIconBean = rightTopIconBean;
         this.mDragIconBean = dragIconBean;
-        this.mFlipIconBean = flipIconBean;
+        this.mLeftBottomIconBean = leftBottomIconBean;
 
         this.mSidePoint = sidePoint;
         this.mSidePaint.setColor(sideColor);
@@ -111,10 +111,16 @@ public class RendererHandle {
 
         drawSide(canvas);
 
-        canvas.drawBitmap(mDelIconBean.getBitmap(), mDelIconBean.getMatrix(), mPaint);
-        canvas.drawBitmap(mCopyIconBean.getBitmap(), mCopyIconBean.getMatrix(), mPaint);
+        if (mLeftTopIconBean != null) {
+            canvas.drawBitmap(mLeftTopIconBean.getBitmap(), mLeftTopIconBean.getMatrix(), mPaint);
+        }
+        if (mRightTopIconBean != null) {
+            canvas.drawBitmap(mRightTopIconBean.getBitmap(), mRightTopIconBean.getMatrix(), mPaint);
+        }
         canvas.drawBitmap(mDragIconBean.getBitmap(), mDragIconBean.getMatrix(), mPaint);
-        canvas.drawBitmap(mFlipIconBean.getBitmap(), mFlipIconBean.getMatrix(), mPaint);
+        if (mLeftBottomIconBean != null) {
+            canvas.drawBitmap(mLeftBottomIconBean.getBitmap(), mLeftBottomIconBean.getMatrix(), mPaint);
+        }
     }
 
     //绘制边框
