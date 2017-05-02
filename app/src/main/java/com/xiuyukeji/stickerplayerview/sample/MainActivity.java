@@ -56,7 +56,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setListener() {
-        final int fromFrame = 5 * 10 * -1;
+
+        final int color = 5 * 50 * -1;
+        mStickerPlayerView.setTextSize(color);
+
         nAddedView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

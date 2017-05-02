@@ -113,10 +113,12 @@ public class PlayerHandle {
         if (mState != START) {
             return;
         }
+
         long uptimeMs = SystemClock.uptimeMillis();
-        while (mCurrentUptimeMs <= uptimeMs) {//计算下一个时间，用于跳帧
-            mCurrentUptimeMs += mDelayTime;
+        if (mCurrentUptimeMs <= uptimeMs) {//计算下一个时间，用于跳帧
+            mCurrentUptimeMs = (long) (uptimeMs + mDelayTime);
         }
+
         play();
     }
 

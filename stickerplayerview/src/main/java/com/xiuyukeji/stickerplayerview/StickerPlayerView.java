@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
@@ -15,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.xiuyukeji.stickerplayerview.annotations.FrameRange;
+import com.xiuyukeji.stickerplayerview.annotations.FrameRateRange;
 import com.xiuyukeji.stickerplayerview.annotations.PaddingRange;
 import com.xiuyukeji.stickerplayerview.annotations.PlayerSource;
 import com.xiuyukeji.stickerplayerview.annotations.TextSizeRange;
@@ -791,7 +793,7 @@ public class StickerPlayerView extends View {
      * @param size 文字大小
      */
     public void setTextSize(@TextSizeRange int size) {
-        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+        if (mEventHandle.getSelectedPosition() <= STATE_NORMAL) {
             return;
         }
         setTextSize(size, mEventHandle.getSelectedPosition());
@@ -935,7 +937,7 @@ public class StickerPlayerView extends View {
      *
      * @param frameRate 帧率
      */
-    public void setFrameRate(@IntRange(from = 1, to = 60) int frameRate) {
+    public void setFrameRate(@FrameRateRange int frameRate) {
         mPlayerHandle.setDelayTime(1000 / (double) frameRate);
 
         invalidate();

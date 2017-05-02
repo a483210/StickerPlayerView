@@ -1,7 +1,14 @@
 package com.xiuyukeji.stickerplayerview.utils;
 
 import com.xiuyukeji.stickerplayerview.StickerException;
+import com.xiuyukeji.stickerplayerview.annotations.FrameRange;
+import com.xiuyukeji.stickerplayerview.annotations.FrameRateRange;
+import com.xiuyukeji.stickerplayerview.annotations.PaddingRange;
+import com.xiuyukeji.stickerplayerview.annotations.PositionRange;
+import com.xiuyukeji.stickerplayerview.annotations.TextSizeRange;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
+
+import java.util.Locale;
 
 /**
  * 贴纸检测
@@ -10,6 +17,54 @@ import com.xiuyukeji.stickerplayerview.resource.Resource;
  */
 public class StickerCheck {
     private StickerCheck() {
+    }
+
+    /**
+     * 检查文本大小
+     *
+     * @param textSize 文本大小
+     */
+    public static void checkTextSize(int textSize) {
+        if (textSize < TextSizeRange.TEXT_SIZE_FROM || textSize > TextSizeRange.TEXT_SIZE_TO) {
+            throw new StickerException(String.format(Locale.getDefault(), "文本大小(textSize)必须在[%d-%d]之间！",
+                    TextSizeRange.TEXT_SIZE_FROM, TextSizeRange.TEXT_SIZE_TO));
+        }
+    }
+
+    /**
+     * 检查索引
+     *
+     * @param position 索引
+     */
+    public static void checkPosition(int position) {
+        if (position < PositionRange.POSITION_FROM) {
+            throw new StickerException(String.format(Locale.getDefault(), "索引(position)必须大于%d！",
+                    PositionRange.POSITION_FROM));
+        }
+    }
+
+    /**
+     * 检查帧序列
+     *
+     * @param frameIndex 帧序列
+     */
+    public static void checkFrame(int frameIndex) {
+        if (frameIndex < FrameRange.FRAME_FROM) {
+            throw new StickerException(String.format(Locale.getDefault(), "帧序列(frameIndex)必须大于%d！",
+                    FrameRange.FRAME_FROM));
+        }
+    }
+
+    /**
+     * 检查边距
+     *
+     * @param padding 边距
+     */
+    public static void checkPadding(int padding) {
+        if (padding < PaddingRange.PADDING_FROM) {
+            throw new StickerException(String.format(Locale.getDefault(), "边距(padding)必须大于%d！",
+                    PaddingRange.PADDING_FROM));
+        }
     }
 
     /**
@@ -30,8 +85,9 @@ public class StickerCheck {
      */
     public static void checkFrameRateRange(double delayTimeMs) {
         int frameRate = (int) (1000 / delayTimeMs);
-        if (frameRate < 1 || frameRate > 60) {
-            throw new StickerException("帧率(frameRate)只能在1到60之间！");
+        if (frameRate < FrameRateRange.FRAME_RATE_FROM || frameRate > FrameRateRange.FRAME_RATE_TO) {
+            throw new StickerException(String.format(Locale.getDefault(), "帧率(frameRate)必须在[%d-%d]之间！",
+                    FrameRateRange.FRAME_RATE_FROM, FrameRateRange.FRAME_RATE_TO));
         }
     }
 
