@@ -61,7 +61,7 @@ public class UsingFreqMemoryCacheTestCase {
 
         assertEquals(1, mMemoryCache.size());
         assertNotNull(mMemoryCache.get(mDefaultKey));
-        assertEquals(100, mMemoryCache.get(mDefaultKey).getByteCount());
+        assertEquals(4, mMemoryCache.get(mDefaultKey).getByteCount());
 
         assertNull(mMemoryCache.get(mDefaultKey + 1));
     }
