@@ -5,7 +5,6 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
@@ -48,8 +47,13 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calcula
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipHorizontalMatrix;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.flipVerticalMatrix;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkDynamicAndFrameRate;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkFrame;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkFrameRateNull;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkFrameRateRange;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkPadding;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkPosition;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkResourceNotNull;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkTextSize;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.copyStickerBean;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.isFrameInside;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.attachBackground;
@@ -245,10 +249,8 @@ public class StickerPlayerView extends View {
      */
     public int addSticker(@FrameRange int fromFrame, @FrameRange int toFrame,
                           @NonNull Resource resource) {
-
-        if (fromFrame < 0 || toFrame < 0 || fromFrame > toFrame) {
-
-        }
+        checkResourceNotNull(resource);
+        checkFrame(fromFrame, toFrame);
 
         resource = mResourceHandle.initResource(resource);
         if (resource == null) {
@@ -373,6 +375,14 @@ public class StickerPlayerView extends View {
                               @PaddingRange int topPadding,
                               @PaddingRange int rightPadding,
                               @PaddingRange int bottomPadding) {
+        checkFrame(fromFrame, toFrame);
+        checkFrame(delayFrame);
+        checkTextSize(textSize);
+        checkPadding(leftPadding);
+        checkPadding(topPadding);
+        checkPadding(rightPadding);
+        checkPadding(bottomPadding);
+
         TextStickerBean textStickerBean;
 
         if (resource == null) {//todo 这里的width和height需要调整
@@ -424,6 +434,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void replaceSticker(Resource resource, @FrameRange int position) {
+        checkPosition(position);
+
         replaceSticker(getSticker(position), resource, position,
                 -1, -1, -1, -1, -1);
     }
@@ -465,6 +477,8 @@ public class StickerPlayerView extends View {
                                    @PaddingRange int topPadding,
                                    @PaddingRange int rightPadding,
                                    @PaddingRange int bottomPadding) {
+        checkPosition(position);
+
         replaceSticker(getTextSticker(position), resource, position, -1,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
@@ -486,6 +500,8 @@ public class StickerPlayerView extends View {
                                    @PaddingRange int topPadding,
                                    @PaddingRange int rightPadding,
                                    @PaddingRange int bottomPadding) {
+        checkPosition(position);
+
         replaceSticker(getTextSticker(position), resource, position, delayFrame,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
@@ -493,6 +509,12 @@ public class StickerPlayerView extends View {
     //替换贴纸背景
     private void replaceSticker(StickerBean stickerBean, Resource resource, int position, int delayFrame,
                                 int leftPadding, int topPadding, int rightPadding, int bottomPadding) {
+        checkFrame(delayFrame);
+        checkPadding(leftPadding);
+        checkPadding(topPadding);
+        checkPadding(rightPadding);
+        checkPadding(bottomPadding);
+
         if (stickerBean == null) {
             return;
         }
@@ -609,10 +631,8 @@ public class StickerPlayerView extends View {
      */
     public void copySticker(@FrameRange int position, int dx, int dy,
                             @FrameRange int fromFrame, @FrameRange int toFrame) {
-
-        if (toFrame < fromFrame) {
-            return;
-        }
+        checkPosition(position);
+        checkFrame(fromFrame, toFrame);
 
         copySticker(mDataHandle.getSticker(position), dx, dy, fromFrame, toFrame);
     }
@@ -651,6 +671,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void deleteSticker(@FrameRange int position) {
+        checkPosition(position);
+
         if (!mDataHandle.containsSticker(position)) {
             return;
         }
@@ -697,6 +719,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void flipHorizontal(@FrameRange int position) {
+        checkPosition(position);
+
         StickerBean stickerBean = mDataHandle.getSticker(position);
         if (stickerBean == null) {
             return;
@@ -723,6 +747,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void flipVertical(@FrameRange int position) {
+        checkPosition(position);
+
         StickerBean stickerBean = mDataHandle.getSticker(position);
         if (stickerBean == null) {
             return;
@@ -752,6 +778,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void setText(String text, @FrameRange int position) {
+        checkPosition(position);
+
         TextStickerBean textStickerBean = getTextSticker(position);
         if (textStickerBean == null) {
             return;
@@ -779,6 +807,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void setTextColor(@ColorInt int color, @FrameRange int position) {
+        checkPosition(position);
+
         TextStickerBean textStickerBean = getTextSticker(position);
         if (textStickerBean == null) {
             return;
@@ -806,6 +836,9 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void setTextSize(@TextSizeRange int size, @FrameRange int position) {
+        checkTextSize(size);
+        checkPosition(position);
+
         TextStickerBean textStickerBean = getTextSticker(position);
         if (textStickerBean == null) {
             return;
@@ -834,6 +867,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void setBold(boolean isBold, @FrameRange int position) {
+        checkPosition(position);
+
         TextStickerBean textStickerBean = getTextSticker(position);
         if (textStickerBean == null) {
             return;
@@ -861,6 +896,8 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public void setItalic(boolean isItalic, @FrameRange int position) {
+        checkPosition(position);
+
         TextStickerBean textStickerBean = getTextSticker(position);
         if (textStickerBean == null) {
             return;
@@ -888,6 +925,8 @@ public class StickerPlayerView extends View {
      * @param position    索引
      */
     public void setUnderline(boolean isUnderline, @FrameRange int position) {
+        checkPosition(position);
+
         TextStickerBean textStickerBean = getTextSticker(position);
         if (textStickerBean == null) {
             return;
@@ -921,6 +960,8 @@ public class StickerPlayerView extends View {
      * @param frameIndex 帧
      */
     public void setCurrentFrame(@FrameRange int frameIndex) {
+        checkFrame(frameIndex);
+
         if (frameIndex == mFrameIndex) {
             return;
         }
@@ -938,7 +979,12 @@ public class StickerPlayerView extends View {
      * @param frameRate 帧率
      */
     public void setFrameRate(@FrameRateRange int frameRate) {
-        mPlayerHandle.setDelayTime(1000 / (double) frameRate);
+        double delayTime = 1000 / (double) frameRate;
+
+        checkFrameRateNull(delayTime);
+        checkFrameRateRange(delayTime);
+
+        mPlayerHandle.setDelayTime(delayTime);
 
         invalidate();
     }
@@ -987,8 +1033,6 @@ public class StickerPlayerView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.i("Tool", "draw");
-
         mPlayerHandle.cancel();
         if (mDataHandle.size() == 0) {
             return;

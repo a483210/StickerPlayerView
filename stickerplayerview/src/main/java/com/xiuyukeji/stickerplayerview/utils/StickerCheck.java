@@ -46,6 +46,20 @@ public class StickerCheck {
     /**
      * 检查帧序列
      *
+     * @param fromFrame 开始帧序列
+     * @param toFrame   结束帧序列
+     */
+    public static void checkFrame(int fromFrame, int toFrame) {
+        checkFrame(fromFrame);
+        checkFrame(toFrame);
+        if (toFrame < fromFrame) {
+            throw new StickerException("开始帧序列(fromFrame)必须小于结束帧序列(toFrame)！");
+        }
+    }
+
+    /**
+     * 检查帧序列
+     *
      * @param frameIndex 帧序列
      */
     public static void checkFrame(int frameIndex) {
@@ -88,6 +102,17 @@ public class StickerCheck {
         if (frameRate < FrameRateRange.FRAME_RATE_FROM || frameRate > FrameRateRange.FRAME_RATE_TO) {
             throw new StickerException(String.format(Locale.getDefault(), "帧率(frameRate)必须在[%d-%d]之间！",
                     FrameRateRange.FRAME_RATE_FROM, FrameRateRange.FRAME_RATE_TO));
+        }
+    }
+
+    /**
+     * 判断资源是否为空
+     *
+     * @param resource 资源
+     */
+    public static void checkResourceNotNull(Resource resource) {
+        if (resource == null) {
+            throw new StickerException("资源(resource)不允许为空！");
         }
     }
 
