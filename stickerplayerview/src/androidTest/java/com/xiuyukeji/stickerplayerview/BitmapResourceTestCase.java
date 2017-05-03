@@ -12,6 +12,8 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -22,9 +24,33 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class BitmapResourceTestCase extends BaseResourceTestCase<BitmapResource> {
 
+    private static final String PATH_PNG = "text.png", PATH_JPG = "text.jpg";
+
+    @Test
+    public void testCreateAssetsPng() {
+        Bitmap bitmap = initResource(createResource(PATH_PNG));
+
+        assertNotNull(bitmap);
+
+        bitmap = initResource(createResource(1 + PATH_PNG));
+
+        assertNull(bitmap);
+    }
+
+    @Test
+    public void testCreateAssetsJpg() {
+        Bitmap bitmap = initResource(createResource(PATH_JPG));
+
+        assertNotNull(bitmap);
+
+        bitmap = initResource(createResource(1 + PATH_JPG));
+
+        assertNull(bitmap);
+    }
+
     @Test
     public void testReusable() {
-        BitmapResource resource = createAndInitResource(PATH_PNG);
+        BitmapResource resource = createAndInitResource(getDefaultPath());
 
         Bitmap bitmap = Bitmap.createBitmap(resource.getWidth(), resource.getHeight(),
                 Bitmap.Config.ARGB_8888);
@@ -40,7 +66,7 @@ public class BitmapResourceTestCase extends BaseResourceTestCase<BitmapResource>
 
     @Test
     public void testGetReusableBitmap() {
-        BitmapResource resource = createAndInitResource(PATH_PNG);
+        BitmapResource resource = createAndInitResource(getDefaultPath());
 
         Bitmap bitmap = Bitmap.createBitmap(resource.getWidth(), resource.getHeight(),
                 Bitmap.Config.ARGB_8888);
@@ -56,5 +82,10 @@ public class BitmapResourceTestCase extends BaseResourceTestCase<BitmapResource>
     @Override
     protected BitmapResource createResource(String path) {
         return new BitmapResource(mContext, path, Resource.ASSETS);
+    }
+
+    @Override
+    protected String getDefaultPath() {
+        return PATH_PNG;
     }
 }

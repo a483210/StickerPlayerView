@@ -57,14 +57,19 @@ public class GifResource extends BaseResource implements DynamicResource, Bitmap
 
     @Override
     public boolean isReusable(Bitmap bitmap) {
-        return bitmap.getWidth() == mWidth
+        return bitmap != null
+                && bitmap.getWidth() == mWidth
                 && bitmap.getHeight() == mHeight
                 && bitmap.getConfig() == Bitmap.Config.ARGB_8888;
     }
 
     @Override
     public Bitmap getBitmap(Bitmap bitmap, int frameIndex) {
-        mGifDecoder.seekToFrame(frameIndex, bitmap);
+        if (bitmap == null) {
+            bitmap = getBitmap(frameIndex);
+        } else {
+            mGifDecoder.seekToFrame(frameIndex, bitmap);
+        }
         return bitmap;
     }
 

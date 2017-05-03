@@ -13,7 +13,6 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -24,8 +23,6 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public abstract class BaseResourceTestCase<R extends Resource> {
 
-    public static final String PATH_PNG = "text.png", PATH_JPG = "text.jpg";
-
     protected Context mContext;
 
     @Before
@@ -34,30 +31,8 @@ public abstract class BaseResourceTestCase<R extends Resource> {
     }
 
     @Test
-    public void testCreateAssetsPng() {
-        Bitmap bitmap = initResource(createResource(PATH_PNG));
-
-        assertNotNull(bitmap);
-
-        bitmap = initResource(createResource(1 + PATH_PNG));
-
-        assertNull(bitmap);
-    }
-
-    @Test
-    public void testCreateAssetsJpg() {
-        Bitmap bitmap = initResource(createResource(PATH_JPG));
-
-        assertNotNull(bitmap);
-
-        bitmap = initResource(createResource(1 + PATH_JPG));
-
-        assertNull(bitmap);
-    }
-
-    @Test
     public void testWidthAndHeight() {
-        R resource = createAndInitResource(PATH_PNG);
+        R resource = createAndInitResource(getDefaultPath());
 
         assertTrue(resource.getWidth() > 0);
         assertTrue(resource.getHeight() > 0);
@@ -65,14 +40,14 @@ public abstract class BaseResourceTestCase<R extends Resource> {
 
     @Test
     public void testGetIndex() {
-        R resource = createAndInitResource(PATH_PNG);
+        R resource = createAndInitResource(getDefaultPath());
 
-        assertEquals(resource.getIndex(), PATH_PNG);
+        assertEquals(resource.getIndex(), getDefaultPath());
     }
 
     @Test
     public void testGetBitmap() {
-        R resource = createAndInitResource(PATH_PNG);
+        R resource = createAndInitResource(getDefaultPath());
 
         Bitmap bitmap = resource.getBitmap(0);
 
@@ -85,9 +60,11 @@ public abstract class BaseResourceTestCase<R extends Resource> {
         return resource;
     }
 
-    private Bitmap initResource(R resource) {
+    protected Bitmap initResource(R resource) {
         return resource.init();
     }
 
     protected abstract R createResource(String path);
+
+    protected abstract String getDefaultPath();
 }
