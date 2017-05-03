@@ -27,7 +27,8 @@ public abstract class BaseMemoryCache implements MemoryCache {
     @Override
     public void put(String index, Bitmap bitmap, int weight) {
         int size = bitmap.getByteCount();
-        while (mLimitedHelper.getSize() + size > mLimitedHelper.getMaxSize()) {
+        while (mBitmapCaches.size() > 0
+                && mLimitedHelper.getByteCount() + size > mLimitedHelper.getMaxSize()) {
             remove(removeNext());
         }
         mBitmapCaches.put(index, bitmap);
@@ -40,13 +41,12 @@ public abstract class BaseMemoryCache implements MemoryCache {
     }
 
     @Override
-    public Bitmap remove(String index) {
+    public void remove(String index) {
         Bitmap bitmap = mBitmapCaches.remove(index);
         if (bitmap == null) {
-            return null;
+            return;
         }
         mLimitedHelper.amendSize(-bitmap.getByteCount());
-        return bitmap;
     }
 
     @Override

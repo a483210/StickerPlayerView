@@ -34,7 +34,7 @@ public class LimitedMemoryHelper {
     /**
      * 获得当前总大小
      */
-    public int getSize() {
+    public int getByteCount() {
         return mSize;
     }
 

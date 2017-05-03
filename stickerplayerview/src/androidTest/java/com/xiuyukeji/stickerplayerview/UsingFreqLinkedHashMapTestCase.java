@@ -15,7 +15,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * 测试UsingFreqLinkedHashMapTestCase
+ * 测试UsingFreqLinkedHashMap
  *
  * @author Created by jz on 2017/4/20 13:54
  */

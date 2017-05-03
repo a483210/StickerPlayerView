@@ -27,11 +27,11 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class LinkedSparseArrayTestCase {
 
-    private LinkedSparseArray<TestItem> sparseArray;
+    private LinkedSparseArray<TestItem> mSparseArray;
 
     @Before
     public void setUp() throws Exception {
-        sparseArray = new LinkedSparseArray<>(new Comparator<TestItem>() {
+        mSparseArray = new LinkedSparseArray<>(new Comparator<TestItem>() {
             @Override
             public int compare(TestItem last, TestItem next) {
                 if (last.frame < next.frame) {
@@ -46,52 +46,52 @@ public class LinkedSparseArrayTestCase {
 
     @After
     public void tearDown() throws Exception {
-        sparseArray = null;
+        mSparseArray = null;
     }
 
     @Test
     public void testPut() throws Exception {
         addItem(3);
 
-        assertEquals(3, sparseArray.size());
+        assertEquals(3, mSparseArray.size());
     }
 
     @Test
     public void testRepeatPut() throws Exception {
-        sparseArray.put(0, new TestItem(0, "0"));
+        mSparseArray.put(0, new TestItem(0, "0"));
 
-        assertEquals(1, sparseArray.size());
-        assertEquals(0, sparseArray.get(0).frame);
+        assertEquals(1, mSparseArray.size());
+        assertEquals(0, mSparseArray.get(0).frame);
 
-        sparseArray.put(0, new TestItem(3, "3"));
+        mSparseArray.put(0, new TestItem(3, "3"));
 
-        assertEquals(1, sparseArray.size());
-        assertEquals(3, sparseArray.get(0).frame);
+        assertEquals(1, mSparseArray.size());
+        assertEquals(3, mSparseArray.get(0).frame);
     }
 
     @Test
     public void testPutAndFromToKey() throws Exception {
-        sparseArray.put(0, new TestItem(0, "0"));
-        sparseArray.put(1, new TestItem(1, "1"));
-        sparseArray.put(2, new TestItem(3, "3"));
-        sparseArray.put(3, new TestItem(4, "4"));
-        sparseArray.put(4, new TestItem(5, "5"));
+        mSparseArray.put(0, new TestItem(0, "0"));
+        mSparseArray.put(1, new TestItem(1, "1"));
+        mSparseArray.put(2, new TestItem(3, "3"));
+        mSparseArray.put(3, new TestItem(4, "4"));
+        mSparseArray.put(4, new TestItem(5, "5"));
 
-        assertEquals(5, sparseArray.size());
+        assertEquals(5, mSparseArray.size());
 
-        sparseArray.put(5, new TestItem(2, "2"), 1, 2);
+        mSparseArray.put(5, new TestItem(2, "2"), 1, 2);
 
-        assertEquals(6, sparseArray.size());
+        assertEquals(6, mSparseArray.size());
         assertIterator(6);
 
-        sparseArray.put(6, new TestItem(2, "2"), 2, 4);
+        mSparseArray.put(6, new TestItem(2, "2"), 2, 4);
 
-        assertEquals(7, sparseArray.size());
+        assertEquals(7, mSparseArray.size());
         assertIterator(new int[]{0, 1, 2, 2, 3, 4, 5});
 
-        sparseArray.put(7, new TestItem(-1, "2"), 7, 4);
+        mSparseArray.put(7, new TestItem(-1, "2"), 7, 4);
 
-        assertEquals(8, sparseArray.size());
+        assertEquals(8, mSparseArray.size());
         assertIterator(new int[]{-1, 0, 1, 2, 2, 3, 4, 5});
     }
 
@@ -99,94 +99,94 @@ public class LinkedSparseArrayTestCase {
     public void testGet() throws Exception {
         addItem(2);
 
-        assertEquals(2, sparseArray.size());
+        assertEquals(2, mSparseArray.size());
 
-        assertEquals(sparseArray.get(1).value, "1");
+        assertEquals(mSparseArray.get(1).value, "1");
 
-        assertNull(sparseArray.get(2));
+        assertNull(mSparseArray.get(2));
     }
 
     @Test
     public void testGetNode() throws Exception {
         addItem(2);
 
-        assertEquals(2, sparseArray.size());
+        assertEquals(2, mSparseArray.size());
 
-        assertEquals(sparseArray.getNode(1).getValue().value, "1");
-        assertEquals(sparseArray.getNode(1).getKey(), 1);
+        assertEquals(mSparseArray.getNode(1).getValue().value, "1");
+        assertEquals(mSparseArray.getNode(1).getKey(), 1);
 
-        assertNull(sparseArray.getNode(2));
+        assertNull(mSparseArray.getNode(2));
     }
 
     @Test
     public void testGetFirstNode() throws Exception {
-        assertNull(sparseArray.getFirstNode());
+        assertNull(mSparseArray.getFirstNode());
 
         addItem(2);
 
-        assertEquals(2, sparseArray.size());
-        assertNotNull(sparseArray.getFirstNode());
-        assertEquals(sparseArray.getFirstNode().getKey(), 0);
+        assertEquals(2, mSparseArray.size());
+        assertNotNull(mSparseArray.getFirstNode());
+        assertEquals(mSparseArray.getFirstNode().getKey(), 0);
     }
 
     @Test
     public void testGetLastNode() throws Exception {
-        assertNull(sparseArray.getLastNode());
+        assertNull(mSparseArray.getLastNode());
 
         addItem(2);
 
-        assertEquals(2, sparseArray.size());
-        assertNotNull(sparseArray.getLastNode());
-        assertEquals(sparseArray.getLastNode().getKey(), 1);
+        assertEquals(2, mSparseArray.size());
+        assertNotNull(mSparseArray.getLastNode());
+        assertEquals(mSparseArray.getLastNode().getKey(), 1);
     }
 
     @Test
     public void testRemove() throws Exception {
         addItem(2);
 
-        assertEquals(2, sparseArray.size());
+        assertEquals(2, mSparseArray.size());
 
-        sparseArray.remove(0);
+        mSparseArray.remove(0);
 
-        assertEquals(1, sparseArray.size());
+        assertEquals(1, mSparseArray.size());
 
-        sparseArray.remove(0);
+        mSparseArray.remove(0);
 
-        assertEquals(1, sparseArray.size());
+        assertEquals(1, mSparseArray.size());
     }
 
     @Test
     public void testClear() throws Exception {
         addItem(10);
 
-        assertEquals(10, sparseArray.size());
+        assertEquals(10, mSparseArray.size());
 
-        sparseArray.clear();
+        mSparseArray.clear();
 
-        assertEquals(0, sparseArray.size());
+        assertEquals(0, mSparseArray.size());
     }
 
     @Test
     public void testContainsKey() throws Exception {
         addItem(10);
 
-        assertEquals(10, sparseArray.size());
+        assertEquals(10, mSparseArray.size());
 
-        assertTrue(sparseArray.containsKey(0));
-        assertTrue(sparseArray.containsKey(5));
-        assertFalse(sparseArray.containsKey(10));
+        assertTrue(mSparseArray.containsKey(0));
+        assertTrue(mSparseArray.containsKey(5));
+        assertFalse(mSparseArray.containsKey(10));
 
-        sparseArray.clear();
+        mSparseArray.clear();
 
-        assertFalse(sparseArray.containsKey(0));
-        assertFalse(sparseArray.containsKey(5));
+        assertFalse(mSparseArray.containsKey(0));
+        assertFalse(mSparseArray.containsKey(5));
     }
 
     @Test
     public void testOrderAddAndIterator() throws Exception {
         addItem(10);
 
-        assertEquals(10, sparseArray.size());
+        assertEquals(10, mSparseArray.size());
 
         assertIterator(10);
     }
@@ -195,7 +195,7 @@ public class LinkedSparseArrayTestCase {
     public void testReverseAddAndIterator() throws Exception {
         reverseAddItem(10);
 
-        assertEquals(10, sparseArray.size());
+        assertEquals(10, mSparseArray.size());
 
         assertIterator(10);
     }
@@ -204,7 +204,7 @@ public class LinkedSparseArrayTestCase {
     public void testPositionIterator() throws Exception {
         addItem(10);
 
-        assertEquals(10, sparseArray.size());
+        assertEquals(10, mSparseArray.size());
 
         assertIterator(5, new int[]{5, 6, 7, 8, 9});
     }
@@ -213,7 +213,7 @@ public class LinkedSparseArrayTestCase {
     public void testReverseIterator() throws Exception {
         addItem(10);
 
-        assertEquals(10, sparseArray.size());
+        assertEquals(10, mSparseArray.size());
 
         assertReverseIterator(0, 10);
     }
@@ -222,7 +222,7 @@ public class LinkedSparseArrayTestCase {
     public void testPositionReverseIterator() throws Exception {
         addItem(10);
 
-        assertEquals(10, sparseArray.size());
+        assertEquals(10, mSparseArray.size());
 
         assertReverseIterator(5, new int[]{5, 4, 3, 2, 1, 0});
     }
@@ -231,41 +231,41 @@ public class LinkedSparseArrayTestCase {
     public void testReplace() throws Exception {
         addItem(3);
 
-        assertEquals(3, sparseArray.size());
-        assertEquals("0", sparseArray.get(0).value);
+        assertEquals(3, mSparseArray.size());
+        assertEquals("0", mSparseArray.get(0).value);
 
-        sparseArray.replace(0, new TestItem(0, "1"));
+        mSparseArray.replace(0, new TestItem(0, "1"));
 
-        assertEquals(3, sparseArray.size());
-        assertEquals("1", sparseArray.get(0).value);
+        assertEquals(3, mSparseArray.size());
+        assertEquals("1", mSparseArray.get(0).value);
     }
 
     @Test
     public void testOrder() throws Exception {
         addItem(3);
 
-        assertEquals(3, sparseArray.size());
+        assertEquals(3, mSparseArray.size());
         assertIterator(3);
 
-        TestItem testItem = sparseArray.get(0);
+        TestItem testItem = mSparseArray.get(0);
         testItem.frame = 3;
-        sparseArray.order(0);
+        mSparseArray.order(0);
 
-        assertEquals(3, sparseArray.size());
+        assertEquals(3, mSparseArray.size());
         assertIterator(new int[]{1, 2, 3});
-        assertEquals(3, sparseArray.get(0).frame);
+        assertEquals(3, mSparseArray.get(0).frame);
 
-        sparseArray.order(2, new TestItem(0, "0"));
+        mSparseArray.order(2, new TestItem(0, "0"));
 
-        assertEquals(3, sparseArray.size());
+        assertEquals(3, mSparseArray.size());
         assertIterator(new int[]{0, 1, 3});
-        assertEquals(0, sparseArray.get(2).frame);
+        assertEquals(0, mSparseArray.get(2).frame);
 
-        sparseArray.order(2, new TestItem(1, "1"));
+        mSparseArray.order(2, new TestItem(1, "1"));
 
-        assertEquals(3, sparseArray.size());
+        assertEquals(3, mSparseArray.size());
         assertIterator(new int[]{1, 1, 3});
-        assertEquals(1, sparseArray.get(2).frame);
+        assertEquals(1, mSparseArray.get(2).frame);
     }
 
     private void assertIterator(int count) {
@@ -286,7 +286,7 @@ public class LinkedSparseArrayTestCase {
 
     private void assertIterator(int position, int[] values) {
         int i = 0;
-        Iterator<TestItem> iterator = sparseArray.iterator(position);
+        Iterator<TestItem> iterator = mSparseArray.iterator(position);
         while (iterator.hasNext()) {
             TestItem testItem = iterator.next().getValue();
 
@@ -308,7 +308,7 @@ public class LinkedSparseArrayTestCase {
 
     private void assertReverseIterator(int position, int[] values) {
         int i = 0;
-        IteratorReverse<TestItem> iterator = sparseArray.iteratorReverse(position);
+        IteratorReverse<TestItem> iterator = mSparseArray.iteratorReverse(position);
         while (iterator.hasLast()) {
             TestItem testItem = iterator.last().getValue();
 
@@ -321,13 +321,13 @@ public class LinkedSparseArrayTestCase {
 
     private void addItem(int count) {
         for (int i = 0; i < count; i++) {
-            sparseArray.put(i, new TestItem(i, String.valueOf(i)));
+            mSparseArray.put(i, new TestItem(i, String.valueOf(i)));
         }
     }
 
     private void reverseAddItem(int count) {
         for (int i = count - 1; i >= 0; i--) {
-            sparseArray.put(i, new TestItem(i, String.valueOf(i)));
+            mSparseArray.put(i, new TestItem(i, String.valueOf(i)));
         }
     }
 

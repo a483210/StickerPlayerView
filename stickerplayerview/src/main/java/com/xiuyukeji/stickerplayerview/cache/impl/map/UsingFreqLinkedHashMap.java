@@ -3,6 +3,7 @@ package com.xiuyukeji.stickerplayerview.cache.impl.map;
 import android.util.SparseArray;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 /**
  * 双向环形链表
@@ -243,7 +244,10 @@ public class UsingFreqLinkedHashMap<K, V> {
         int count = map.size();
         for (int i = 0; i < count; i++) {
             logNode = logNode.next;
-            builder.append(String.valueOf(logNode.key));
+            builder.append(String.format(Locale.getDefault(),
+                    "<key=%s, value=%s>",
+                    logNode.key,
+                    logNode.value.toString()));
             if (i + 1 < count) {
                 builder.append(", ");
             }

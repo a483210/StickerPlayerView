@@ -20,129 +20,129 @@ import static org.junit.Assert.assertTrue;
 /**
  * 测试DataHandle
  *
- * @author Created by jz on 2017/4/24 10:16
+ * @author Created by jz on 2017/5/3 14:21
  */
 @RunWith(AndroidJUnit4.class)
 public class DataHandleTestCase {
 
-    private DataHandle dataHandle;
+    private DataHandle mDataHandle;
 
     @Before
     public void setUp() throws Exception {
-        dataHandle = new DataHandle();
+        mDataHandle = new DataHandle();
     }
 
     @After
     public void tearDown() throws Exception {
-        dataHandle = null;
+        mDataHandle = null;
     }
 
     @Test
     public void testAdd() throws Exception {
         addItem(3);
 
-        assertEquals(3, dataHandle.size());
+        assertEquals(3, mDataHandle.size());
     }
 
     @Test
     public void testGet() throws Exception {
         addItem(3);
 
-        assertEquals(3, dataHandle.size());
-        assertEquals(0, dataHandle.getSticker(0).getFromFrame());
-        assertEquals(1, dataHandle.getSticker(1).getFromFrame());
-        assertNull(dataHandle.getSticker(3));
+        assertEquals(3, mDataHandle.size());
+        assertEquals(0, mDataHandle.getSticker(0).getFromFrame());
+        assertEquals(1, mDataHandle.getSticker(1).getFromFrame());
+        assertNull(mDataHandle.getSticker(3));
     }
 
     @Test
     public void testRemove() throws Exception {
         addItem(3);
 
-        assertEquals(3, dataHandle.size());
+        assertEquals(3, mDataHandle.size());
 
-        dataHandle.removeSticker(0);
-        dataHandle.removeSticker(1);
+        mDataHandle.removeSticker(0);
+        mDataHandle.removeSticker(1);
 
-        assertEquals(1, dataHandle.size());
+        assertEquals(1, mDataHandle.size());
 
-        dataHandle.removeSticker(3);
+        mDataHandle.removeSticker(3);
 
-        assertEquals(1, dataHandle.size());
+        assertEquals(1, mDataHandle.size());
     }
 
     @Test
     public void testContains() throws Exception {
         addItem(3);
 
-        assertEquals(3, dataHandle.size());
-        assertTrue(dataHandle.containsSticker(0));
-        assertFalse(dataHandle.containsSticker(3));
+        assertEquals(3, mDataHandle.size());
+        assertTrue(mDataHandle.containsSticker(0));
+        assertFalse(mDataHandle.containsSticker(3));
 
-        dataHandle.removeSticker(0);
+        mDataHandle.removeSticker(0);
 
-        assertFalse(dataHandle.containsSticker(0));
+        assertFalse(mDataHandle.containsSticker(0));
     }
 
     @Test
     public void testReplace() throws Exception {
         addItem(3);
 
-        assertEquals(3, dataHandle.size());
-        assertEquals(0, dataHandle.getSticker(0).getDx());
+        assertEquals(3, mDataHandle.size());
+        assertEquals(0, mDataHandle.getSticker(0).getDx());
 
-        dataHandle.replaceSticker(0, new StickerBean(null, 4, 5, 0, 0));
+        mDataHandle.replaceSticker(0, new StickerBean(null, 4, 5, 0, 0));
 
-        assertEquals(4, dataHandle.getSticker(0).getWidth());
+        assertEquals(4, mDataHandle.getSticker(0).getWidth());
     }
 
     @Test
     public void testModifyFrame() throws Exception {
         addItem(3);
 
-        assertEquals(3, dataHandle.size());
-        assertEquals(0, dataHandle.getSticker(0).getFromFrame());
+        assertEquals(3, mDataHandle.size());
+        assertEquals(0, mDataHandle.getSticker(0).getFromFrame());
 
-        dataHandle.modifyFrameSticker(0, 4, 5);
+        mDataHandle.modifyFrameSticker(0, 4, 5);
 
-        assertEquals(4, dataHandle.getSticker(0).getFromFrame());
+        assertEquals(4, mDataHandle.getSticker(0).getFromFrame());
     }
 
     @Test
     public void testGetCurrent() throws Exception {
         addItem(3);
 
-        assertEquals(3, dataHandle.size());
-        assertEquals(1, dataHandle.getCurrentStickers().size());
+        assertEquals(3, mDataHandle.size());
+        assertEquals(1, mDataHandle.getCurrentStickers().size());
 
         addItem(3);
 
-        assertEquals(6, dataHandle.size());
-        assertEquals(2, dataHandle.getCurrentStickers().size());
+        assertEquals(6, mDataHandle.size());
+        assertEquals(2, mDataHandle.getCurrentStickers().size());
 
-        dataHandle.removeSticker(0);
-        dataHandle.removeSticker(1);
+        mDataHandle.removeSticker(0);
+        mDataHandle.removeSticker(1);
 
-        assertEquals(4, dataHandle.size());
-        assertEquals(1, dataHandle.getCurrentStickers().size());
+        assertEquals(4, mDataHandle.size());
+        assertEquals(1, mDataHandle.getCurrentStickers().size());
     }
 
     @Test
     public void testIterator() throws Exception {
         addItem(10);
 
-        assertEquals(10, dataHandle.size());
+        assertEquals(10, mDataHandle.size());
         assertIterator(10);
 
-        dataHandle.removeSticker(8);
-        dataHandle.removeSticker(9);
+        mDataHandle.removeSticker(8);
+        mDataHandle.removeSticker(9);
 
-        assertEquals(8, dataHandle.size());
+        assertEquals(8, mDataHandle.size());
         assertIterator(8);
 
-        dataHandle.removeSticker(0);
-        dataHandle.removeSticker(1);
+        mDataHandle.removeSticker(0);
+        mDataHandle.removeSticker(1);
 
-        assertEquals(6, dataHandle.size());
+        assertEquals(6, mDataHandle.size());
         assertIterator(new int[]{2, 3, 4, 5, 6, 7});
     }
 
@@ -150,17 +150,17 @@ public class DataHandleTestCase {
     public void testSetFrame() throws Exception {
         testGetCurrent();
 
-        dataHandle.setFrameIndex(1);
+        mDataHandle.setFrameIndex(1);
 
-        assertEquals(1, dataHandle.getCurrentStickers().size());
+        assertEquals(1, mDataHandle.getCurrentStickers().size());
 
-        dataHandle.setFrameIndex(2);
+        mDataHandle.setFrameIndex(2);
 
-        assertEquals(2, dataHandle.getCurrentStickers().size());
+        assertEquals(2, mDataHandle.getCurrentStickers().size());
 
-        dataHandle.setFrameIndex(1);
+        mDataHandle.setFrameIndex(1);
 
-        assertEquals(1, dataHandle.getCurrentStickers().size());
+        assertEquals(1, mDataHandle.getCurrentStickers().size());
 
         assertIterator(new int[]{0, 1, 2, 2});
     }
@@ -171,13 +171,13 @@ public class DataHandleTestCase {
 
         addItem(1);
 
-        assertEquals(5, dataHandle.size());
-        assertEquals(2, dataHandle.getCurrentStickers().size());
+        assertEquals(5, mDataHandle.size());
+        assertEquals(2, mDataHandle.getCurrentStickers().size());
 
-        dataHandle.addSticker(getStickerBean(5));
+        mDataHandle.addSticker(getStickerBean(5));
 
-        assertEquals(6, dataHandle.size());
-        assertEquals(2, dataHandle.getCurrentStickers().size());
+        assertEquals(6, mDataHandle.size());
+        assertEquals(2, mDataHandle.getCurrentStickers().size());
 
         assertIterator(new int[]{0, 0, 1, 2, 2, 5});
     }
@@ -186,15 +186,15 @@ public class DataHandleTestCase {
     public void testRemoveAndGetCurrent() throws Exception {
         testAddAndGetCurrent();
 
-        dataHandle.removeSticker(3);
+        mDataHandle.removeSticker(3);
 
-        assertEquals(5, dataHandle.size());
-        assertEquals(1, dataHandle.getCurrentStickers().size());
+        assertEquals(5, mDataHandle.size());
+        assertEquals(1, mDataHandle.getCurrentStickers().size());
 
-        dataHandle.removeSticker(7);
+        mDataHandle.removeSticker(7);
 
-        assertEquals(4, dataHandle.size());
-        assertEquals(1, dataHandle.getCurrentStickers().size());
+        assertEquals(4, mDataHandle.size());
+        assertEquals(1, mDataHandle.getCurrentStickers().size());
 
         assertIterator(new int[]{0, 1, 2, 2});
     }
@@ -203,17 +203,17 @@ public class DataHandleTestCase {
     public void testModifyFrameAndGetCurrent() throws Exception {
         testGetCurrent();
 
-        dataHandle.modifyFrameSticker(2, 0, 0);
+        mDataHandle.modifyFrameSticker(2, 0, 0);
 
-        assertEquals(2, dataHandle.getCurrentStickers().size());
+        assertEquals(2, mDataHandle.getCurrentStickers().size());
 
-        dataHandle.modifyFrameSticker(2, 1, 1);
+        mDataHandle.modifyFrameSticker(2, 1, 1);
 
-        assertEquals(1, dataHandle.getCurrentStickers().size());
+        assertEquals(1, mDataHandle.getCurrentStickers().size());
 
-        dataHandle.modifyFrameSticker(3, 1, 1);
+        mDataHandle.modifyFrameSticker(3, 1, 1);
 
-        assertEquals(0, dataHandle.getCurrentStickers().size());
+        assertEquals(0, mDataHandle.getCurrentStickers().size());
 
         assertIterator(new int[]{1, 1, 1, 2});
     }
@@ -228,7 +228,7 @@ public class DataHandleTestCase {
 
     private void assertIterator(int[] values) {
         int i = 0;
-        Iterator<StickerBean> iterator = dataHandle.getStickers();
+        Iterator<StickerBean> iterator = mDataHandle.getStickers();
         while (iterator.hasNext()) {
             Node<StickerBean> node = iterator.next();
             StickerBean stickerBean = node.getValue();
@@ -242,7 +242,7 @@ public class DataHandleTestCase {
 
     private void addItem(int count) {
         for (int i = 0; i < count; i++) {
-            dataHandle.addSticker(getStickerBean(i));
+            mDataHandle.addSticker(getStickerBean(i));
         }
     }
 

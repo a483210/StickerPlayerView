@@ -7,6 +7,7 @@ import android.util.SparseArray;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * 双向链表稀缺数组
@@ -427,5 +428,25 @@ public class LinkedSparseArray<E> {
         public E getValue() {
             return value;
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        Node<E> logNode = header;
+        int count = sparseArray.size();
+        for (int i = 0; i < count; i++) {
+            logNode = logNode.next;
+            builder.append(String.format(Locale.getDefault(),
+                    "<key=%d, value=%s>",
+                    logNode.key,
+                    logNode.value.toString()));
+            if (i + 1 < count) {
+                builder.append(", ");
+            }
+        }
+        builder.append("]");
+        return builder.toString();
     }
 }

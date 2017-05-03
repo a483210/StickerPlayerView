@@ -29,7 +29,7 @@ public interface MemoryCache {
      *
      * @param index 索引
      */
-    Bitmap remove(String index);
+    void remove(String index);
 
     /**
      * 是否包含索引

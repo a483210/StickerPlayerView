@@ -26,10 +26,13 @@ public abstract class BaseReusableMemoryCache extends BaseMemoryCache implements
     }
 
     @Override
-    public Bitmap remove(String index) {
-        Bitmap bitmap = super.remove(index);
+    public void remove(String index) {
+        Bitmap bitmap = get(index);
+        if (bitmap == null) {
+            return;
+        }
+        super.remove(index);
         mReusableHelper.add(bitmap);
-        return bitmap;
     }
 
     @Override
