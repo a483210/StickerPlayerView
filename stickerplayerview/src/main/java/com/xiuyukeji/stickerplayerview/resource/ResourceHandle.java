@@ -109,6 +109,10 @@ public class ResourceHandle {
      * @return 如果初始化失败则返回null
      */
     public Resource initResource(Resource resource) {
+        if (resource == null) {
+            return null;
+        }
+
         String index = resource.getIndex();
         String cacheIndex = getCacheIndex(index, 0);
         Bitmap bitmap;
