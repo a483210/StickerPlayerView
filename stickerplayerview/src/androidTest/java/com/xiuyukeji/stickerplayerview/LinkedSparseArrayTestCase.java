@@ -4,6 +4,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray;
 import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.Iterator;
+import com.xiuyukeji.stickerplayerview.data.LinkedSparseArray.IteratorReverse;
 
 import org.junit.After;
 import org.junit.Before;
@@ -200,6 +201,33 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
+    public void testPositionIterator() throws Exception {
+        addItem(10);
+
+        assertEquals(10, sparseArray.size());
+
+        assertIterator(5, new int[]{5, 6, 7, 8, 9});
+    }
+
+    @Test
+    public void testReverseIterator() throws Exception {
+        addItem(10);
+
+        assertEquals(10, sparseArray.size());
+
+        assertReverseIterator(0, 10);
+    }
+
+    @Test
+    public void testPositionReverseIterator() throws Exception {
+        addItem(10);
+
+        assertEquals(10, sparseArray.size());
+
+        assertReverseIterator(5, new int[]{5, 4, 3, 2, 1, 0});
+    }
+
+    @Test
     public void testReplace() throws Exception {
         addItem(3);
 
@@ -241,18 +269,48 @@ public class LinkedSparseArrayTestCase {
     }
 
     private void assertIterator(int count) {
+        assertIterator(0, count);
+    }
+
+    private void assertIterator(int position, int count) {
         int[] values = new int[count];
         for (int i = 0; i < count; i++) {
             values[i] = i;
         }
-        assertIterator(values);
+        assertIterator(position, values);
     }
 
     private void assertIterator(int[] values) {
+        assertIterator(0, values);
+    }
+
+    private void assertIterator(int position, int[] values) {
         int i = 0;
-        Iterator<TestItem> iterator = sparseArray.iterator();
+        Iterator<TestItem> iterator = sparseArray.iterator(position);
         while (iterator.hasNext()) {
             TestItem testItem = iterator.next().getValue();
+
+            assertEquals(testItem.frame, values[i]);
+            i++;
+        }
+
+        assertEquals(values.length, i);
+    }
+
+    private void assertReverseIterator(int position, int count) {
+        int[] values = new int[count];
+        int value = count - 1;
+        for (int i = 0; i < count; i++) {
+            values[i] = value - i;
+        }
+        assertReverseIterator(position, values);
+    }
+
+    private void assertReverseIterator(int position, int[] values) {
+        int i = 0;
+        IteratorReverse<TestItem> iterator = sparseArray.iteratorReverse(position);
+        while (iterator.hasLast()) {
+            TestItem testItem = iterator.last().getValue();
 
             assertEquals(testItem.frame, values[i]);
             i++;

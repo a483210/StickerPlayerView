@@ -46,7 +46,6 @@ public class DataHandle {
         }
 
         //设置帧后重新取得缓存
-        mCacheStickers.clear();
         resetCurrentStickers(frameIndex);
 
         this.mFrameIndex = frameIndex;
@@ -98,7 +97,7 @@ public class DataHandle {
      */
     public StickerBean removeSticker(int position) {
         StickerBean stickerBean = mStickers.remove(position);
-        if (isFrameInside(mFrameIndex,
+        if (stickerBean != null && isFrameInside(mFrameIndex,
                 stickerBean.getFromFrame(), stickerBean.getToFrame())) {//如果在当前帧内将其删除
             removeCache(position);
         }
@@ -122,8 +121,12 @@ public class DataHandle {
      * @param fromFrame 开始帧
      * @param toFrame   结束帧
      */
-    public void swapFrameSticker(int position, int fromFrame, int toFrame) {
+    public void modifyFrameSticker(int position, int fromFrame, int toFrame) {
         StickerBean stickerBean = mStickers.get(position);
+        if (stickerBean == null) {
+            return;
+        }
+
         int oldFromFrame = stickerBean.getFromFrame();
         int oldToFrame = stickerBean.getToFrame();
         stickerBean.setFromFrame(fromFrame);
@@ -140,7 +143,7 @@ public class DataHandle {
         if (oldIsFrameInside) {
             if (isFrameInside) {//如果都在帧内
                 Collections.sort(mCacheStickers, mFrameNodeComparator);//重新排序
-            } else {//如果现在不在删除
+            } else {//如果不在删除
                 removeCache(position);
             }
         } else {
@@ -182,11 +185,13 @@ public class DataHandle {
                 Node<StickerBean> node = iterator.next();
                 StickerBean stickerBean = node.getValue();
 
-                if (mFrameIndex < stickerBean.getFromFrame()) {
-                    continue;
-                }
-                if (mFrameIndex > stickerBean.getToFrame()) {
+                if (frameIndex < stickerBean.getFromFrame()) {
                     break;
+                }
+
+                if (!isFrameInside(frameIndex,
+                        stickerBean.getFromFrame(), stickerBean.getToFrame())) {
+                    continue;
                 }
 
                 mCacheStickers.add(node);
@@ -197,11 +202,13 @@ public class DataHandle {
                 Node<StickerBean> node = iterator.last();
                 StickerBean stickerBean = node.getValue();
 
-                if (mFrameIndex > stickerBean.getToFrame()) {
-                    continue;
-                }
-                if (mFrameIndex < stickerBean.getFromFrame()) {
+                if (frameIndex > stickerBean.getFromFrame()) {
                     break;
+                }
+
+                if (!isFrameInside(frameIndex,
+                        stickerBean.getFromFrame(), stickerBean.getToFrame())) {
+                    continue;
                 }
 
                 mCacheStickers.add(0, node);

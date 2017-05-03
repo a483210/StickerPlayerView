@@ -696,8 +696,32 @@ public class StickerPlayerView extends View {
         return mEventHandle.getSelectedPosition();
     }
 
-    public void swapFrameSticker(int position, int fromFrame, int toFrame) {
+    /**
+     * 修改当前选中贴纸帧
+     *
+     * @param fromFrame 开始帧
+     * @param toFrame   结束帧
+     */
+    public void modifyFrameSticker(@FrameRange int fromFrame, @FrameRange int toFrame) {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+            return;
+        }
+        modifyFrameSticker(mEventHandle.getSelectedPosition(), fromFrame, toFrame);
+    }
 
+    /**
+     * 修改贴纸帧
+     *
+     * @param position  索引
+     * @param fromFrame 开始帧
+     * @param toFrame   结束帧
+     */
+    public void modifyFrameSticker(@FrameRange int position,
+                                   @FrameRange int fromFrame, @FrameRange int toFrame) {
+        checkPosition(position);
+        checkFrame(fromFrame, toFrame);
+
+        mDataHandle.modifyFrameSticker(position, fromFrame, toFrame);
     }
 
     /**
