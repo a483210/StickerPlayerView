@@ -31,17 +31,17 @@ public class UsingFreqMemoryCacheTestCase {
     private final String mDefaultKey = "testKey";
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         mMemoryCache = new UsingFreqMemoryCache(MAX_MEMORY_SIZE, MAX_REUSABLE_SIZE);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mMemoryCache = null;
     }
 
     @Test
-    public void testPut() throws Exception {
+    public void testPut() {
         mMemoryCache.put(mDefaultKey, getBitmap(1), 0);
 
         assertEquals(1, mMemoryCache.size());
@@ -56,7 +56,7 @@ public class UsingFreqMemoryCacheTestCase {
     }
 
     @Test
-    public void testGet() throws Exception {
+    public void testGet() {
         mMemoryCache.put(mDefaultKey, getBitmap(1), 0);
 
         assertEquals(1, mMemoryCache.size());
@@ -67,7 +67,7 @@ public class UsingFreqMemoryCacheTestCase {
     }
 
     @Test
-    public void testRemove() throws Exception {
+    public void testRemove() {
         mMemoryCache.put(mDefaultKey, getBitmap(1), 0);
 
         assertEquals(1, mMemoryCache.size());
@@ -82,7 +82,7 @@ public class UsingFreqMemoryCacheTestCase {
     }
 
     @Test
-    public void testContains() throws Exception {
+    public void testContains() {
         mMemoryCache.put(mDefaultKey, getBitmap(1), 0);
 
         assertEquals(1, mMemoryCache.size());
@@ -105,7 +105,7 @@ public class UsingFreqMemoryCacheTestCase {
     }
 
     @Test
-    public void testPutBeyondMaxSize() throws Exception {
+    public void testPutBeyondMaxSize() {
         int count = 15;
         for (int i = 0; i < count; i++) {
             mMemoryCache.put(mDefaultKey + i, getBitmap(4), 0);
@@ -127,7 +127,7 @@ public class UsingFreqMemoryCacheTestCase {
     }
 
     @Test
-    public void testReusable() throws Exception {
+    public void testReusable() {
         mMemoryCache.put(mDefaultKey, getBitmap(5), 0);
         mMemoryCache.put(mDefaultKey + 1, getBitmap(5), 0);
 

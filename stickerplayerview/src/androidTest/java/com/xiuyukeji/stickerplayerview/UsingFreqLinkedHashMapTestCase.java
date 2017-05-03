@@ -26,17 +26,17 @@ public class UsingFreqLinkedHashMapTestCase {
     private final String mDefaultKey = "testKey";
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         mMap = new UsingFreqLinkedHashMap<>();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mMap = null;
     }
 
     @Test
-    public void testPutAndSize() throws Exception {
+    public void testPutAndSize() {
         mMap.put(mDefaultKey, 0, 0);
         assertEquals(mMap.size(), 1);
 
@@ -45,14 +45,14 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testPutAndGet() throws Exception {
+    public void testPutAndGet() {
         mMap.put(mDefaultKey, 0, 0);
         assertEquals(mMap.size(), 1);
         assertEquals(get(mDefaultKey), 0);
     }
 
     @Test
-    public void testRemove() throws Exception {
+    public void testRemove() {
         mMap.put(mDefaultKey, 0, 0);
         assertEquals(mMap.size(), 1);
 
@@ -62,7 +62,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testRepeatPutAndRemove() throws Exception {
+    public void testRepeatPutAndRemove() {
         mMap.put(mDefaultKey, 0, 100);
         mMap.get(mDefaultKey + 0);
 
@@ -81,7 +81,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testContainsKey() throws Exception {
+    public void testContainsKey() {
         mMap.put(mDefaultKey, 0, 0);
 
         assertTrue(mMap.containsKey(mDefaultKey));
@@ -89,7 +89,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testClear() throws Exception {
+    public void testClear() {
         mMap.put(mDefaultKey, 0, 0);
         assertEquals(mMap.size(), 1);
 
@@ -101,7 +101,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testValues() throws Exception {
+    public void testValues() {
         int size = 1000;
         for (int i = 0; i < size; i++) {
             mMap.put(mDefaultKey + i, i, 0);
@@ -118,7 +118,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testRepeatPut() throws Exception {
+    public void testRepeatPut() {
         mMap.put(mDefaultKey, 1, 0);
         assertEquals(mMap.size(), 1);
         assertEquals(get(mDefaultKey), 1);
@@ -129,7 +129,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testMultiPut() throws Exception {
+    public void testMultiPut() {
         mMap.put(mDefaultKey, 1, 0);
         assertEquals(mMap.size(), 1);
         assertNull(mMap.get(mDefaultKey + 1));
@@ -148,7 +148,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testPutAndGetLeastKey() throws Exception {
+    public void testPutAndGetLeastKey() {
         mMap.put(mDefaultKey, 1, 100);
         String leastKey = mMap.getLastKey();
         assertEquals(leastKey, mDefaultKey);
@@ -166,7 +166,7 @@ public class UsingFreqLinkedHashMapTestCase {
     }
 
     @Test
-    public void testGetAndGetLeastKey() throws Exception {
+    public void testGetAndGetLeastKey() {
         mMap.put(mDefaultKey, 1, 100);
         mMap.put(mDefaultKey + 1, 2, 100);
         String leastKey = mMap.getLastKey();

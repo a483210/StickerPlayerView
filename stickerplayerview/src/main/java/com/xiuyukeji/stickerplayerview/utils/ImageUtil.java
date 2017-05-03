@@ -21,6 +21,9 @@ public class ImageUtil {
      * @param options 配置
      */
     public static boolean canUseForInBitmap(Bitmap bitmap, BitmapFactory.Options options) {
+        if (bitmap == null) {
+            return false;
+        }
         // 在Android4.4以后，如果要使用inBitmap的话，只需要解码的Bitmap比inBitmap设置的小就行了，对inSampleSize没有限制
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             int width = options.outWidth;

@@ -28,24 +28,24 @@ public class DataHandleTestCase {
     private DataHandle mDataHandle;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         mDataHandle = new DataHandle();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mDataHandle = null;
     }
 
     @Test
-    public void testAdd() throws Exception {
+    public void testAdd() {
         addItem(3);
 
         assertEquals(3, mDataHandle.size());
     }
 
     @Test
-    public void testGet() throws Exception {
+    public void testGet() {
         addItem(3);
 
         assertEquals(3, mDataHandle.size());
@@ -55,7 +55,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testRemove() throws Exception {
+    public void testRemove() {
         addItem(3);
 
         assertEquals(3, mDataHandle.size());
@@ -71,7 +71,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testContains() throws Exception {
+    public void testContains() {
         addItem(3);
 
         assertEquals(3, mDataHandle.size());
@@ -84,7 +84,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testReplace() throws Exception {
+    public void testReplace() {
         addItem(3);
 
         assertEquals(3, mDataHandle.size());
@@ -96,7 +96,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testModifyFrame() throws Exception {
+    public void testModifyFrame() {
         addItem(3);
 
         assertEquals(3, mDataHandle.size());
@@ -108,7 +108,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testGetCurrent() throws Exception {
+    public void testGetCurrent() {
         addItem(3);
 
         assertEquals(3, mDataHandle.size());
@@ -127,7 +127,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testIterator() throws Exception {
+    public void testIterator() {
         addItem(10);
 
         assertEquals(10, mDataHandle.size());
@@ -147,7 +147,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testSetFrame() throws Exception {
+    public void testSetFrame() {
         testGetCurrent();
 
         mDataHandle.setFrameIndex(1);
@@ -166,7 +166,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testAddAndGetCurrent() throws Exception {
+    public void testAddAndGetCurrent() {
         testGetCurrent();
 
         addItem(1);
@@ -183,7 +183,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testRemoveAndGetCurrent() throws Exception {
+    public void testRemoveAndGetCurrent() {
         testAddAndGetCurrent();
 
         mDataHandle.removeSticker(3);
@@ -200,7 +200,7 @@ public class DataHandleTestCase {
     }
 
     @Test
-    public void testModifyFrameAndGetCurrent() throws Exception {
+    public void testModifyFrameAndGetCurrent() {
         testGetCurrent();
 
         mDataHandle.modifyFrameSticker(2, 0, 0);

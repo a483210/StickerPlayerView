@@ -30,7 +30,7 @@ public class LinkedSparseArrayTestCase {
     private LinkedSparseArray<TestItem> mSparseArray;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         mSparseArray = new LinkedSparseArray<>(new Comparator<TestItem>() {
             @Override
             public int compare(TestItem last, TestItem next) {
@@ -45,19 +45,19 @@ public class LinkedSparseArrayTestCase {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mSparseArray = null;
     }
 
     @Test
-    public void testPut() throws Exception {
+    public void testPut() {
         addItem(3);
 
         assertEquals(3, mSparseArray.size());
     }
 
     @Test
-    public void testRepeatPut() throws Exception {
+    public void testRepeatPut() {
         mSparseArray.put(0, new TestItem(0, "0"));
 
         assertEquals(1, mSparseArray.size());
@@ -70,7 +70,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testPutAndFromToKey() throws Exception {
+    public void testPutAndFromToKey() {
         mSparseArray.put(0, new TestItem(0, "0"));
         mSparseArray.put(1, new TestItem(1, "1"));
         mSparseArray.put(2, new TestItem(3, "3"));
@@ -96,7 +96,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testGet() throws Exception {
+    public void testGet() {
         addItem(2);
 
         assertEquals(2, mSparseArray.size());
@@ -107,7 +107,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testGetNode() throws Exception {
+    public void testGetNode() {
         addItem(2);
 
         assertEquals(2, mSparseArray.size());
@@ -119,7 +119,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testGetFirstNode() throws Exception {
+    public void testGetFirstNode() {
         assertNull(mSparseArray.getFirstNode());
 
         addItem(2);
@@ -130,7 +130,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testGetLastNode() throws Exception {
+    public void testGetLastNode() {
         assertNull(mSparseArray.getLastNode());
 
         addItem(2);
@@ -141,7 +141,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testRemove() throws Exception {
+    public void testRemove() {
         addItem(2);
 
         assertEquals(2, mSparseArray.size());
@@ -156,7 +156,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testClear() throws Exception {
+    public void testClear() {
         addItem(10);
 
         assertEquals(10, mSparseArray.size());
@@ -167,7 +167,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testContainsKey() throws Exception {
+    public void testContainsKey() {
         addItem(10);
 
         assertEquals(10, mSparseArray.size());
@@ -183,7 +183,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testOrderAddAndIterator() throws Exception {
+    public void testOrderAddAndIterator() {
         addItem(10);
 
         assertEquals(10, mSparseArray.size());
@@ -192,7 +192,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testReverseAddAndIterator() throws Exception {
+    public void testReverseAddAndIterator() {
         reverseAddItem(10);
 
         assertEquals(10, mSparseArray.size());
@@ -201,7 +201,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testPositionIterator() throws Exception {
+    public void testPositionIterator() {
         addItem(10);
 
         assertEquals(10, mSparseArray.size());
@@ -210,7 +210,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testReverseIterator() throws Exception {
+    public void testReverseIterator() {
         addItem(10);
 
         assertEquals(10, mSparseArray.size());
@@ -219,7 +219,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testPositionReverseIterator() throws Exception {
+    public void testPositionReverseIterator() {
         addItem(10);
 
         assertEquals(10, mSparseArray.size());
@@ -228,7 +228,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testReplace() throws Exception {
+    public void testReplace() {
         addItem(3);
 
         assertEquals(3, mSparseArray.size());
@@ -241,7 +241,7 @@ public class LinkedSparseArrayTestCase {
     }
 
     @Test
-    public void testOrder() throws Exception {
+    public void testOrder() {
         addItem(3);
 
         assertEquals(3, mSparseArray.size());
