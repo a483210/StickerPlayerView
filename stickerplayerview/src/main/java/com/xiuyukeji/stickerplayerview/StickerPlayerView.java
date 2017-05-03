@@ -10,7 +10,6 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -542,7 +541,7 @@ public class StickerPlayerView extends View {
                 checkDynamicAndFrameRate(resource, mPlayerHandle.getDelayTime());
                 mPlayerHandle.start();
             } else {
-                delayFrame = -1;
+                delayFrame = 0;
                 if (mResourceHandle.getDynamicCount() == 0) {
                     mPlayerHandle.stop();
                 }
@@ -558,9 +557,7 @@ public class StickerPlayerView extends View {
             if (leftPadding != -1) {
                 textStickerBean.setPadding(leftPadding, topPadding, rightPadding, bottomPadding);
             }
-            if (delayFrame != -1) {
-                textStickerBean.setDelayTime(delayFrame);
-            }
+            textStickerBean.setDelayTime(delayFrame);
         }
 
         //重新计算大小，防止超出大小
