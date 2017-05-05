@@ -25,12 +25,13 @@ import static org.junit.Assert.assertTrue;
  * @author Created by jz on 2017/4/24 10:16
  */
 @RunWith(AndroidJUnit4.class)
-public class LinkedSparseArrayTestCase {
+public class LinkedSparseArrayTestCase extends BaseTestCase {
 
     private LinkedSparseArray<TestItem> mSparseArray;
 
     @Before
     public void setUp() {
+        super.setUp();
         mSparseArray = new LinkedSparseArray<>(new Comparator<TestItem>() {
             @Override
             public int compare(TestItem last, TestItem next) {
@@ -46,6 +47,7 @@ public class LinkedSparseArrayTestCase {
 
     @After
     public void tearDown() {
+        super.tearDown();
         mSparseArray = null;
     }
 

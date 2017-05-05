@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
  * @author Created by jz on 2017/5/3 14:20
  */
 @RunWith(AndroidJUnit4.class)
-public class UsingFreqMemoryCacheTestCase {
+public class UsingFreqMemoryCacheTestCase extends BaseTestCase {
 
     private static final int MAX_MEMORY_SIZE = 1000, MAX_REUSABLE_SIZE = 500;
 
@@ -32,11 +32,13 @@ public class UsingFreqMemoryCacheTestCase {
 
     @Before
     public void setUp() {
+        super.setUp();
         mMemoryCache = new UsingFreqMemoryCache(MAX_MEMORY_SIZE, MAX_REUSABLE_SIZE);
     }
 
     @After
     public void tearDown() {
+        super.tearDown();
         mMemoryCache = null;
     }
 

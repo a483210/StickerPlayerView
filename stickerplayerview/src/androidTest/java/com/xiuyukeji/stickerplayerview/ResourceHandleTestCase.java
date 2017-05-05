@@ -1,9 +1,7 @@
 package com.xiuyukeji.stickerplayerview;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.xiuyukeji.stickerplayerview.bean.BitmapFrameInfo;
@@ -30,19 +28,19 @@ import static org.junit.Assert.assertTrue;
  * @author Created by jz on 2017/5/3 16:48
  */
 @RunWith(AndroidJUnit4.class)
-public class ResourceHandleTestCase {
+public class ResourceHandleTestCase extends BaseTestCase {
 
-    private Context mContext;
     private ResourceHandle mResourceHandle;
 
     @Before
     public void setUp() {
-        mContext = InstrumentationRegistry.getContext();
+        super.setUp();
         mResourceHandle = new ResourceHandle();
     }
 
     @After
     public void tearDown() {
+        super.tearDown();
         mResourceHandle = null;
     }
 

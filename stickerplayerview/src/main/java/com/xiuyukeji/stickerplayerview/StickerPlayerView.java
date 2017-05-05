@@ -9,6 +9,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -63,6 +64,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.dpToPx;
  *
  * @author Created by jz on 2017/4/11 16:52
  */
+@UiThread
 public class StickerPlayerView extends View {
 
     public static final String TAG = "StickerPlayerView";

@@ -23,17 +23,19 @@ import static org.junit.Assert.assertTrue;
  * @author Created by jz on 2017/5/3 14:21
  */
 @RunWith(AndroidJUnit4.class)
-public class DataHandleTestCase {
+public class DataHandleTestCase extends BaseTestCase {
 
     private DataHandle mDataHandle;
 
     @Before
     public void setUp() {
+        super.setUp();
         mDataHandle = new DataHandle();
     }
 
     @After
     public void tearDown() {
+        super.tearDown();
         mDataHandle = null;
     }
 

@@ -59,9 +59,10 @@ public class PlayerHandle {
      * 开始播放
      */
     public void start() {
-        if (mState == START) {
+        if (mState != STOP) {
             return;
         }
+
         mState = START;
 
         mStartUptimeMs = SystemClock.uptimeMillis();

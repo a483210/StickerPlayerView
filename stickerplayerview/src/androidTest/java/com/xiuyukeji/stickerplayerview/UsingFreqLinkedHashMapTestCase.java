@@ -20,18 +20,20 @@ import static org.junit.Assert.assertTrue;
  * @author Created by jz on 2017/4/20 13:54
  */
 @RunWith(AndroidJUnit4.class)
-public class UsingFreqLinkedHashMapTestCase {
+public class UsingFreqLinkedHashMapTestCase extends BaseTestCase {
 
     private UsingFreqLinkedHashMap<String, Integer> mMap;
     private final String mDefaultKey = "testKey";
 
     @Before
     public void setUp() {
+        super.setUp();
         mMap = new UsingFreqLinkedHashMap<>();
     }
 
     @After
     public void tearDown() {
+        super.tearDown();
         mMap = null;
     }
 
