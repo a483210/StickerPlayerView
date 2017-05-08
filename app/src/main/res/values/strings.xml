@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">StickerPlayerView</string>
-    <string name="action_clear">清除贴纸</string>
+    <string name="action_video">帧轴视频演示</string>
 </resources>

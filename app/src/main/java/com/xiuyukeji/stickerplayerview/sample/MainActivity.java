@@ -1,5 +1,6 @@
 package com.xiuyukeji.stickerplayerview.sample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -10,11 +11,12 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.xiuyukeji.stickerplayerview.StickerPlayerView;
-import com.xiuyukeji.stickerplayerview.bean.StickerBean;
-import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
-import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
-import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
+import com.xiuyukeji.stickerplayerview.sample.video.VideoActivity;
 import com.xiuyukeji.stickerplayerview.utils.StickerUtil;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 import static com.xiuyukeji.stickerplayerview.resource.ResourceFactory.createAssetsResource;
 
@@ -25,12 +27,18 @@ import static com.xiuyukeji.stickerplayerview.resource.ResourceFactory.createAss
  */
 public class MainActivity extends AppCompatActivity {
 
-    private Toolbar mToolbar;
-    private StickerPlayerView mStickerPlayerView;
-    private FloatingActionButton nAddedView;
-    private FloatingActionButton nCopyView;
-    private FloatingActionButton nReplaceView;
-    private FloatingActionButton nDeleteView;
+    @BindView(R.id.toolbar)
+    Toolbar mToolbar;
+    @BindView(R.id.sticker)
+    StickerPlayerView mStickerPlayerView;
+    @BindView(R.id.added)
+    FloatingActionButton nAddedView;
+    @BindView(R.id.copy)
+    FloatingActionButton nCopyView;
+    @BindView(R.id.replace)
+    FloatingActionButton nReplaceView;
+    @BindView(R.id.delete)
+    FloatingActionButton nDeleteView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,12 +51,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void findView() {
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        mStickerPlayerView = (StickerPlayerView) findViewById(R.id.sticker);
-        nAddedView = (FloatingActionButton) findViewById(R.id.added);
-        nCopyView = (FloatingActionButton) findViewById(R.id.copy);
-        nReplaceView = (FloatingActionButton) findViewById(R.id.replace);
-        nDeleteView = (FloatingActionButton) findViewById(R.id.delete);
+        ButterKnife.bind(this);
     }
 
     private void initView() {
@@ -56,13 +59,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setListener() {
+        mStickerPlayerView.setOnClickStickerListener(stickerBean -> Log.i("Tool", "click"));
+        mStickerPlayerView.setOnDoubleClickStickerListener(stickerBean -> Log.i("Tool", "doubleClick"));
+        mStickerPlayerView.setOnLongClickStickerListener(stickerBean -> Log.i("Tool", "longClick"));
+    }
 
-        final int color = 5 * 50 * -1;
-        mStickerPlayerView.setTextSize(color);
-
-        nAddedView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+    @OnClick({R.id.added, R.id.copy, R.id.replace, R.id.delete})
+    void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.added:
 //                mStickerPlayerView.addTextSticker(mStickerPlayerView.getCurrentFrame(), mStickerPlayerView.getCurrentFrame(),
 //                        createAssetsResource(MainActivity.this, "text1.png"),
 //                        "testText", 0xff000000, StickerUtil.dpToPx(MainActivity.this, 18),
@@ -71,52 +76,25 @@ public class MainActivity extends AppCompatActivity {
                         createAssetsResource(MainActivity.this, "tuzi.gif"),
                         "testText", 0xff000000, StickerUtil.dpToPx(MainActivity.this, 18),
                         5, 54, 113, 47, 118);
-            }
-        });
-        nCopyView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+                break;
+            case R.id.copy:
                 mStickerPlayerView.copySticker();
-            }
-        });
-        nReplaceView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+                break;
+            case R.id.replace:
                 mStickerPlayerView.replaceTextSticker(
                         createAssetsResource(MainActivity.this, "text2.png"),
                         mStickerPlayerView.getCurrentPosition(), 0,
                         175, 123, 188, 152);
-            }
-        });
-        nDeleteView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+                break;
+            case R.id.delete:
                 mStickerPlayerView.deleteSticker();
 //                if (mStickerPlayerView.getCurrentFrame() >= 60) {
 //                    mStickerPlayerView.setCurrentFrame(0);
 //                } else {
 //                    mStickerPlayerView.setCurrentFrame(mStickerPlayerView.getCurrentFrame() + 1);
 //                }
-            }
-        });
-        mStickerPlayerView.setOnClickStickerListener(new OnClickStickerListener() {
-            @Override
-            public void onClick(StickerBean stickerBean) {
-                Log.i("Tool", "click");
-            }
-        });
-        mStickerPlayerView.setOnDoubleClickStickerListener(new OnDoubleClickStickerListener() {
-            @Override
-            public void onDoubleClick(StickerBean stickerBean) {
-                Log.i("Tool", "doubleClick");
-            }
-        });
-        mStickerPlayerView.setOnLongClickStickerListener(new OnLongClickStickerListener() {
-            @Override
-            public void onLongClick(StickerBean stickerBean) {
-                Log.i("Tool", "longClick");
-            }
-        });
+                break;
+        }
     }
 
     @Override
@@ -128,8 +106,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_clear:
-                mStickerPlayerView.clearAllSticker();
+            case R.id.action_video:
+                Intent intent = new Intent(this, VideoActivity.class);
+                startActivity(intent);
                 return true;
             default:
                 break;
