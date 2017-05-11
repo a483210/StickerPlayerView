@@ -1,9 +1,7 @@
 package com.xiuyukeji.stickerplayerview.sample;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -11,11 +9,11 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.xiuyukeji.stickerplayerview.StickerPlayerView;
+import com.xiuyukeji.stickerplayerview.sample.base.BaseActivity;
 import com.xiuyukeji.stickerplayerview.sample.video.VideoActivity;
 import com.xiuyukeji.stickerplayerview.utils.StickerUtil;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 import static com.xiuyukeji.stickerplayerview.resource.ResourceFactory.createAssetsResource;
@@ -25,7 +23,7 @@ import static com.xiuyukeji.stickerplayerview.resource.ResourceFactory.createAss
  *
  * @author Created by jz on 2017/4/11 16:28
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
@@ -41,24 +39,17 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton nDeleteView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        findView();
-        initView();
-        setListener();
+    protected int getLayoutId() {
+        return R.layout.activity_main;
     }
 
-    private void findView() {
-        ButterKnife.bind(this);
-    }
-
-    private void initView() {
+    @Override
+    protected void initView() {
         setSupportActionBar(mToolbar);
     }
 
-    private void setListener() {
+    @Override
+    protected void setListener() {
         mStickerPlayerView.setOnClickStickerListener(stickerBean -> Log.i("Tool", "click"));
         mStickerPlayerView.setOnDoubleClickStickerListener(stickerBean -> Log.i("Tool", "doubleClick"));
         mStickerPlayerView.setOnLongClickStickerListener(stickerBean -> Log.i("Tool", "longClick"));

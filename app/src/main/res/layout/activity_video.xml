@@ -22,22 +22,42 @@
             android:background="?attr/colorPrimary" />
     </android.support.design.widget.AppBarLayout>
 
-    <com.xiuyukeji.stickerplayerview.sample.video.MyGifImageView
-        android:id="@+id/gif"
+    <RelativeLayout
+        android:id="@+id/videoLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/barLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/barLayout">
+
+        <com.xiuyukeji.stickerplayerview.sample.widget.MyGifImageView
+            android:id="@+id/gif"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <com.xiuyukeji.stickerplayerview.StickerPlayerView
+            android:id="@+id/sticker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/gif"
+            android:layout_alignTop="@+id/gif" />
+    </RelativeLayout>
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler"
+        android:id="@+id/thumbRecycler"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/gif"
+        android:layout_height="@dimen/video_thumb_size"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gif" />
+        app:layout_constraintTop_toBottomOf="@+id/videoLayout" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/stickerRecycler"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/video_thumb_size"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/thumbRecycler" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/start"
