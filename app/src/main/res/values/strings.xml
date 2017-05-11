@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">StickerPlayerView</string>
     <string name="action_video">帧轴视频演示</string>
+    <string name="copy_sticker_one">复制到下一张</string>
+    <string name="copy_sticker_five">复制到后五张</string>
+    <string name="copy_sticker_all">复制到后全部</string>
+    <string name="copy_sticker">复制贴纸</string>
 </resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/video_color_layout_size"
+    android:layout_height="@dimen/video_color_layout_size">
+
+    <com.xiuyukeji.stickerplayerview.sample.widget.ColorMaskView
+        android:id="@+id/color"
+        android:layout_width="@dimen/video_color_size"
+        android:layout_height="@dimen/video_color_size"
+        android:layout_gravity="center" />
+</FrameLayout>

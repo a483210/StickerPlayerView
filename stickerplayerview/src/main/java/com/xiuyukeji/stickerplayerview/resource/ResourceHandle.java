@@ -106,6 +106,7 @@ public class ResourceHandle {
     /**
      * 初始化资源
      *
+     * @param resource 资源
      * @return 如果初始化失败则返回null
      */
     public Resource initResource(Resource resource) {
@@ -180,6 +181,19 @@ public class ResourceHandle {
                 mBitmapCache.clear();
             }
         }
+    }
+
+    /**
+     * 判断是否动态资源
+     *
+     * @param index 索引
+     */
+    public boolean isDynamic(String index) {
+        Resource resource = mResources.get(index);
+        if (resource == null) {
+            return false;
+        }
+        return resource instanceof DynamicResource;
     }
 
     /**

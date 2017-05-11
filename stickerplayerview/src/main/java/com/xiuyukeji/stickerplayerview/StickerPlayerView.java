@@ -959,6 +959,36 @@ public class StickerPlayerView extends View {
     }
 
     /**
+     * 当前是否选中贴纸
+     */
+    public boolean isSelectedSticker() {
+        return getCurrentPosition() != STATE_NORMAL;
+    }
+
+    /**
+     * 判断当前选中贴纸是否为动态贴纸
+     */
+    public boolean isDynamicSticker() {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+            return false;
+        }
+        return isDynamicSticker(mEventHandle.getSelectedPosition());
+    }
+
+    /**
+     * 判断指定贴纸是否为动态贴纸
+     *
+     * @param position 索引
+     */
+    public boolean isDynamicSticker(int position) {
+        StickerBean stickerBean = getSticker(position);
+        if (stickerBean == null) {
+            return false;
+        }
+        return mResourceHandle.isDynamic(stickerBean.getIndex());
+    }
+
+    /**
      * 获取当前帧
      */
     public int getCurrentFrame() {

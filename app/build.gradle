@@ -63,5 +63,7 @@ dependencies {
 
     compile 'cn.pedant.sweetalert:library:1.3'
 
+    compile 'rebus:bottom-dialog:0.0.5'
+
     compile project(':stickerplayerview')
 }

@@ -11,6 +11,11 @@
         android:layout_height="match_parent"
         android:scaleType="fitCenter" />
 
+    <com.xiuyukeji.stickerplayerview.sample.widget.StickerThumbView
+        android:id="@+id/stickerThumb"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <TextView
         android:id="@+id/number"
         android:layout_width="wrap_content"

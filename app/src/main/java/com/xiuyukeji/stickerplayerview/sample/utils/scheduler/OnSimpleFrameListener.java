@@ -1,4 +1,4 @@
-package com.xiuyukeji.stickerplayerview.sample.scheduler;
+package com.xiuyukeji.stickerplayerview.sample.utils.scheduler;
 
 /**
  * 回调

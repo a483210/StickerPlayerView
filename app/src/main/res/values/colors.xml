@@ -3,7 +3,6 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="video_thumb_selected">#FF6C7D</color>
 
     <color name="redTextColor">#e23c50</color>
     <color name="titleColor">#23232b</color>

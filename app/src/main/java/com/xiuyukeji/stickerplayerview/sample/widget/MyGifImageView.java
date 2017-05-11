@@ -13,9 +13,9 @@ import android.view.ViewGroup;
 import com.blankj.utilcode.util.ScreenUtils;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 import com.xiuyukeji.stickerplayerview.resource.impl.GifResource;
-import com.xiuyukeji.stickerplayerview.sample.scheduler.OnFrameListener;
-import com.xiuyukeji.stickerplayerview.sample.scheduler.OnFrameUpdateListener;
-import com.xiuyukeji.stickerplayerview.sample.scheduler.Scheduler;
+import com.xiuyukeji.stickerplayerview.sample.utils.scheduler.OnFrameListener;
+import com.xiuyukeji.stickerplayerview.sample.utils.scheduler.OnFrameUpdateListener;
+import com.xiuyukeji.stickerplayerview.sample.utils.scheduler.Scheduler;
 import com.xiuyukeji.stickerplayerview.utils.ImageUtil;
 import com.xiuyukeji.stickerplayerview.utils.StickerUtil;
 
@@ -118,7 +118,7 @@ public class MyGifImageView extends View {
         return mGifResource.getFrameCount();
     }
 
-    public float getDelayTime(){
+    public float getDelayTime() {
         return mGifResource.getDelayTime();
     }
 
@@ -166,7 +166,7 @@ public class MyGifImageView extends View {
             play(index);
 
             if (mOnProgressListener != null) {
-                mOnProgressListener.onProgress(index);
+                mHandler.post(() -> mOnProgressListener.onProgress(index));
             }
         }
     }

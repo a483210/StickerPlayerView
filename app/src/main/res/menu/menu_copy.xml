@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/one"
+        android:title="@string/copy_sticker_one" />
+    <item
+        android:id="@+id/five"
+        android:title="@string/copy_sticker_five" />
+    <item
+        android:id="@+id/all"
+        android:title="@string/copy_sticker_all" />
+</menu>
