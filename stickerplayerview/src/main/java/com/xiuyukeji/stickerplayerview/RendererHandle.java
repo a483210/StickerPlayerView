@@ -2,6 +2,7 @@ package com.xiuyukeji.stickerplayerview;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.text.Layout;
 import android.text.StaticLayout;
@@ -57,17 +58,26 @@ public class RendererHandle {
         this.mSidePaint.setStrokeWidth(sideWidth);
     }
 
-    //绘制贴纸
     public void drawSticker(Canvas canvas, StickerBean stickerBean, Bitmap bitmap) {
+        drawSticker(canvas, stickerBean.getMatrix(), stickerBean, bitmap);
+    }
+
+    //绘制贴纸
+    public void drawSticker(Canvas canvas, Matrix matrix, StickerBean stickerBean, Bitmap bitmap) {
         if (bitmap == null || bitmap.isRecycled()) {
             return;
         }
-        canvas.drawBitmap(bitmap, stickerBean.getMatrix(), mPaint);
+
+        canvas.drawBitmap(bitmap, matrix, mPaint);
+    }
+
+    public void drawTextSticker(Canvas canvas, TextStickerBean textStickerBean, Bitmap bitmap, int frame) {
+        drawTextSticker(canvas, textStickerBean.getMatrix(), textStickerBean, bitmap, frame);
     }
 
     //绘制文字贴纸
-    public void drawTextSticker(Canvas canvas, TextStickerBean textStickerBean, Bitmap bitmap, int frame) {
-        drawSticker(canvas, textStickerBean, bitmap);
+    public void drawTextSticker(Canvas canvas, Matrix matrix, TextStickerBean textStickerBean, Bitmap bitmap, int frame) {
+        drawSticker(canvas, matrix, textStickerBean, bitmap);
 
         if (frame < textStickerBean.getDelayTime()) {
             return;
@@ -95,7 +105,7 @@ public class RendererHandle {
 
         canvas.save();
 
-        canvas.concat(textStickerBean.getMatrix());
+        canvas.concat(matrix);
         canvas.translate(mTextPoint[0], mTextPoint[1]);
 
         staticLayout.draw(canvas);

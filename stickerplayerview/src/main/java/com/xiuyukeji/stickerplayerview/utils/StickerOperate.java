@@ -14,6 +14,16 @@ public class StickerOperate {
     }
 
     /**
+     * 完全复制贴纸数据，用于外部返回
+     *
+     * @param src 数据来源
+     */
+    public static StickerBean copyStickerBean(StickerBean src) {
+        return copyStickerBean(src, src.getIndex(), src.getWidth(), src.getHeight(),
+                src.getFromFrame(), src.getToFrame());
+    }
+
+    /**
      * 复制贴纸数据
      *
      * @param src       数据来源

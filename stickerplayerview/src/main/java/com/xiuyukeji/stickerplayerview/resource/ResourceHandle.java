@@ -12,6 +12,8 @@ import com.xiuyukeji.stickerplayerview.cache.impl.UsingFreqMemoryCache;
 import java.util.HashMap;
 import java.util.Locale;
 
+import static com.xiuyukeji.stickerplayerview.event.EventHandle.STATE_NORMAL;
+
 /**
  * 贴纸资源管理
  *
@@ -194,6 +196,24 @@ public class ResourceHandle {
             return false;
         }
         return resource instanceof DynamicResource;
+    }
+
+    /**
+     * 返回资源总帧数
+     *
+     * @param index 索引
+     */
+    public int getFrameCount(String index) {
+        Resource resource = mResources.get(index);
+        if (resource == null) {
+            return STATE_NORMAL;
+        }
+        if (resource instanceof DynamicResource) {
+            DynamicResource dynamicResource = (DynamicResource) resource;
+            return dynamicResource.getFrameCount();
+        } else {
+            return 1;
+        }
     }
 
     /**

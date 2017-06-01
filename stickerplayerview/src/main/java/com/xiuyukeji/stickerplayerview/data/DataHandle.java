@@ -170,8 +170,30 @@ public class DataHandle {
     private ArrayList<Node<StickerBean>> resetCurrentStickers(int frameIndex) {
         mCacheStickers.clear();
 
+        mCacheStickers.addAll(searchStickers(frameIndex));
+
+        int size = mCacheStickers.size();
+        if (size >= 1) {
+            mCacheFromPosition = mCacheStickers.get(0).getKey();
+            mCacheToPosition = mCacheStickers.get(size - 1).getKey();
+        } else {
+            mCacheFromPosition = 0;
+            mCacheToPosition = 0;
+        }
+
+        return mCacheStickers;
+    }
+
+    /**
+     * 根据帧序列搜索贴纸数据
+     *
+     * @param frameIndex 帧序列
+     */
+    public ArrayList<Node<StickerBean>> searchStickers(int frameIndex) {
+        ArrayList<Node<StickerBean>> list = new ArrayList<>();
+
         if (mStickers.size() == 0) {
-            return mCacheStickers;
+            return list;
         }
 
         if (frameIndex >= mFrameIndex) {
@@ -194,7 +216,7 @@ public class DataHandle {
                     continue;
                 }
 
-                mCacheStickers.add(node);
+                list.add(node);
             }
         } else {//如果小于
             IteratorReverse<StickerBean> iterator = mStickers.iteratorReverse(mCacheFromPosition);
@@ -211,20 +233,11 @@ public class DataHandle {
                     continue;
                 }
 
-                mCacheStickers.add(0, node);
+                list.add(0, node);
             }
         }
 
-        int size = mCacheStickers.size();
-        if (size >= 1) {
-            mCacheFromPosition = mCacheStickers.get(0).getKey();
-            mCacheToPosition = mCacheStickers.get(size - 1).getKey();
-        } else {
-            mCacheFromPosition = 0;
-            mCacheToPosition = 0;
-        }
-
-        return mCacheStickers;
+        return list;
     }
 
     /**

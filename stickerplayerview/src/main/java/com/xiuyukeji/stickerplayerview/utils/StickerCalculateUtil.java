@@ -72,7 +72,7 @@ public class StickerCalculateUtil {
      * @param srcWidth    来源宽度
      * @param dstWidth    目的宽度
      */
-    public static void calculateSticker(StickerBean stickerBean,
+    public static void calculateSticker(StickerBean stickerBean, Matrix matrix,
                                         int srcWidth, int dstWidth) {
         float stickerScale = stickerBean.getScale();
         float stickerWidth = stickerBean.getWidth();
@@ -94,9 +94,9 @@ public class StickerCalculateUtil {
         float px = stickerWidth / 2f;
         float py = stickerHeight / 2f;
 
-        stickerBean.getMatrix().setRotate(stickerBean.getDegrees(), px, py);
-        stickerBean.getMatrix().postScale(scale, scale, px, py);
-        stickerBean.getMatrix().postTranslate(dx, dy);
+        matrix.setRotate(stickerBean.getDegrees(), px, py);
+        matrix.postScale(scale, scale, px, py);
+        matrix.postTranslate(dx, dy);
 
         if (stickerBean.isFlipHorizontal()) {
             flipHorizontalMatrix(stickerBean);

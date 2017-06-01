@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <com.xiuyukeji.stickerplayerview.StickerPlayerView
+        <com.xiuyukeji.stickerplayerview.StickerFramePlayerView
             android:id="@+id/sticker"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

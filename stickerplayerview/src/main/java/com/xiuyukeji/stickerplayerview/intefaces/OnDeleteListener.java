@@ -8,5 +8,5 @@ import com.xiuyukeji.stickerplayerview.bean.StickerBean;
  * @author Created by jz on 2017/4/13 13:58
  */
 public interface OnDeleteListener {
-    void onDelete(StickerBean stickerBean);
+    void onDelete(StickerBean stickerBean, int position);
 }

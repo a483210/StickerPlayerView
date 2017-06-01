@@ -1,12 +1,14 @@
 package com.xiuyukeji.stickerplayerview;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.widget.FrameLayout;
 
 import com.xiuyukeji.stickerplayerview.annotations.FrameRange;
@@ -14,6 +16,8 @@ import com.xiuyukeji.stickerplayerview.annotations.FrameRateRange;
 import com.xiuyukeji.stickerplayerview.annotations.PaddingRange;
 import com.xiuyukeji.stickerplayerview.annotations.PlayerSource;
 import com.xiuyukeji.stickerplayerview.annotations.TextSizeRange;
+import com.xiuyukeji.stickerplayerview.bean.StickerBean;
+import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 import com.xiuyukeji.stickerplayerview.cache.MemoryCache;
 import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftBottomListener;
 import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftTopListener;
@@ -21,10 +25,13 @@ import com.xiuyukeji.stickerplayerview.event.intefaces.OnRightTopListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnInvalidateListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnSelectedListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
+
+import java.util.ArrayList;
 
 /**
  * 贴纸控件，以帧为单位
@@ -35,6 +42,10 @@ import com.xiuyukeji.stickerplayerview.resource.Resource;
 public class StickerFramePlayerView extends FrameLayout {
 
     private final StickerPlayerView mStickerPlayerView;
+
+    private final SparseArray<ArrayList<Integer>> mFramePositions;
+
+    private OnDeleteListener mOnDeleteListener;
 
     public StickerFramePlayerView(Context context) {
         this(context, null, 0, R.style.SickerPlayerViewStyle);
@@ -53,6 +64,61 @@ public class StickerFramePlayerView extends FrameLayout {
 
         mStickerPlayerView = new StickerPlayerView(context, attrs, defStyleAttr, defStyleRes);
         addView(mStickerPlayerView);
+
+        mFramePositions = new SparseArray<>();
+
+        initView();
+        setListener();
+    }
+
+    private void initView() {
+    }
+
+    private void setListener() {
+        mStickerPlayerView.setOnDeleteListener(new OnDeleteListener() {
+            @Override
+            public void onDelete(StickerBean stickerBean, int position) {
+                int currentPosition = mStickerPlayerView.getCurrentFrame();
+
+                ArrayList<Integer> positions = mFramePositions.get(currentPosition);
+                boolean del = positions.remove(Integer.valueOf(position));
+                if (!del) {//如果没有删除成功则需要遍历
+                    int count = mFramePositions.size();
+                    for (int i = 0; i < count; i++) {
+                        int key = mFramePositions.keyAt(i);
+                        if (key == currentPosition) {//已经删除过跳过
+                            continue;
+                        }
+                        positions = mFramePositions.get(currentPosition);
+                        if (positions.remove(Integer.valueOf(position))) {//删除成功跳出
+                            break;
+                        }
+                    }
+                }
+
+                if (mOnDeleteListener != null) {
+                    mOnDeleteListener.onDelete(stickerBean, position);
+                }
+            }
+        });
+    }
+
+    /**
+     * 通过索引获取文字贴纸数据，如果不是文字贴纸将为Null
+     *
+     * @param position 索引
+     */
+    public TextStickerBean getTextSticker(int position) {
+        return mStickerPlayerView.getTextSticker(position);
+    }
+
+    /**
+     * 通过索引获取贴纸数据
+     *
+     * @param position 索引
+     */
+    public StickerBean getSticker(int position) {
+        return mStickerPlayerView.getSticker(position);
     }
 
     /**
@@ -62,7 +128,9 @@ public class StickerFramePlayerView extends FrameLayout {
      * @param resource 资源
      */
     public int addSticker(@FrameRange int frame, @NonNull Resource resource) {
-        return mStickerPlayerView.addSticker(frame, frame, resource);
+        int position = mStickerPlayerView.addSticker(frame, frame, resource);
+        addFramePosition(frame, position);
+        return position;
     }
 
     /**
@@ -75,7 +143,7 @@ public class StickerFramePlayerView extends FrameLayout {
      */
     public int addTextSticker(@FrameRange int frame,
                               String text, @ColorInt int textColor, @TextSizeRange int textSize) {
-        return mStickerPlayerView.addTextSticker(frame, frame,
+        return addTextSticker(frame, null,
                 text, textColor, textSize);
     }
 
@@ -97,8 +165,8 @@ public class StickerFramePlayerView extends FrameLayout {
                               @PaddingRange int topPadding,
                               @PaddingRange int rightPadding,
                               @PaddingRange int bottomPadding) {
-        return mStickerPlayerView.addTextSticker(frame, frame,
-                text, textColor, textSize,
+        return addTextSticker(frame, null,
+                text, textColor, textSize, 0,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -113,8 +181,8 @@ public class StickerFramePlayerView extends FrameLayout {
      */
     public int addTextSticker(@FrameRange int frame, Resource resource,
                               String text, @ColorInt int textColor, @TextSizeRange int textSize) {
-        return mStickerPlayerView.addTextSticker(frame, frame, resource,
-                text, textColor, textSize);
+        return addTextSticker(frame, resource,
+                text, textColor, textSize, 0, 0, 0, 0, 0);
     }
 
     /**
@@ -136,8 +204,8 @@ public class StickerFramePlayerView extends FrameLayout {
                               @PaddingRange int topPadding,
                               @PaddingRange int rightPadding,
                               @PaddingRange int bottomPadding) {
-        return mStickerPlayerView.addTextSticker(frame, frame, resource,
-                text, textColor, textSize,
+        return addTextSticker(frame, resource,
+                text, textColor, textSize, 0,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -162,9 +230,11 @@ public class StickerFramePlayerView extends FrameLayout {
                               @PaddingRange int topPadding,
                               @PaddingRange int rightPadding,
                               @PaddingRange int bottomPadding) {
-        return mStickerPlayerView.addTextSticker(frame, frame, resource,
+        int position = mStickerPlayerView.addTextSticker(frame, frame, resource,
                 text, textColor, textSize, delayFrame,
                 leftPadding, topPadding, rightPadding, bottomPadding);
+        addFramePosition(frame, position);
+        return position;
     }
 
     /**
@@ -544,6 +614,40 @@ public class StickerFramePlayerView extends FrameLayout {
     }
 
     /**
+     * 绘制指定帧的贴纸到画布上
+     *
+     * @param canvas     画布
+     * @param frameIndex 帧序列
+     */
+    public void drawCanvas(Canvas canvas, @FrameRange int frameIndex) {
+        ArrayList<Integer> positions = mFramePositions.get(frameIndex);
+        if (positions == null) {
+            return;
+        }
+
+        mStickerPlayerView.drawCanvas(canvas, positions);
+    }
+
+    /**
+     * 获得全部贴纸数据
+     *
+     * @return 迭代器
+     */
+    public ArrayList<StickerBean> getStickers() {
+        return mStickerPlayerView.getStickers();
+    }
+
+    //记录frame的position，提高某些函数查找效率
+    private void addFramePosition(int frame, int position) {
+        ArrayList<Integer> positions = mFramePositions.get(frame);
+        if (positions == null) {
+            positions = new ArrayList<>();
+            mFramePositions.put(frame, positions);
+        }
+        positions.add(position);
+    }
+
+    /**
      * 左上按钮回调
      *
      * @param l 回调
@@ -576,7 +680,7 @@ public class StickerFramePlayerView extends FrameLayout {
      * @param l 回调
      */
     public void setOnDeleteListener(OnDeleteListener l) {
-        mStickerPlayerView.setOnDeleteListener(l);
+        this.mOnDeleteListener = l;
     }
 
     /**
@@ -623,4 +727,14 @@ public class StickerFramePlayerView extends FrameLayout {
     public void setOnUnselectedListener(OnUnselectedListener l) {
         mStickerPlayerView.setOnUnselectedListener(l);
     }
+
+    /**
+     * 当invalidate被调用时回调
+     *
+     * @param l 回调
+     */
+    public void setOnInvalidateListener(OnInvalidateListener l) {
+        mStickerPlayerView.setOnInvalidateListener(l);
+    }
+
 }

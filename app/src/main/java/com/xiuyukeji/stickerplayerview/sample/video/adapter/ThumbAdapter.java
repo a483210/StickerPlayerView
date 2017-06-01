@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.xiuyukeji.stickerplayerview.sample.R;
 import com.xiuyukeji.stickerplayerview.sample.base.BaseAdapter;
 import com.xiuyukeji.stickerplayerview.sample.widget.StickerThumbView;
+import com.xiuyukeji.stickerplayerview.sample.widget.StickerThumbView.OnDrawThumbListener;
 import com.xiuyukeji.stickerplayerview.utils.ImageUtil;
 
 import butterknife.BindView;
@@ -36,6 +37,10 @@ public class ThumbAdapter extends BaseAdapter<ThumbAdapter.ViewHolder, ThumbAdap
             super(itemView);
             ButterKnife.bind(this, itemView);
         }
+
+        public StickerThumbView getStickerThumb() {
+            return stickerThumb;
+        }
     }
 
     public static class ThumbBean {
@@ -45,6 +50,8 @@ public class ThumbAdapter extends BaseAdapter<ThumbAdapter.ViewHolder, ThumbAdap
             this.bitmap = bitmap;
         }
     }
+
+    private OnDrawThumbListener mOnDrawThumbListener;
 
     public ThumbAdapter(Context context) {
         super(context);
@@ -64,7 +71,14 @@ public class ThumbAdapter extends BaseAdapter<ThumbAdapter.ViewHolder, ThumbAdap
         holder.numberView.setText(String.valueOf(position + 1));
         holder.imageView.setImageBitmap(bean.bitmap);
 
+        holder.stickerThumb.setPosition(position);
+        holder.stickerThumb.setOnDrawThumbListener(mOnDrawThumbListener);
+
         holder.itemView.setTag(holder);
+    }
+
+    public void setOnDrawThumbListener(OnDrawThumbListener l) {
+        this.mOnDrawThumbListener = l;
     }
 
     public void recycler() {

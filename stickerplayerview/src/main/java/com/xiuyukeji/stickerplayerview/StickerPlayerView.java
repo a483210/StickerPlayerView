@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
@@ -34,12 +35,17 @@ import com.xiuyukeji.stickerplayerview.event.intefaces.OnRightTopListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnInvalidateListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnLongClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnSelectedListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnUnselectedListener;
 import com.xiuyukeji.stickerplayerview.resource.DynamicResource;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 import com.xiuyukeji.stickerplayerview.resource.ResourceHandle;
+import com.xiuyukeji.stickerplayerview.utils.StickerOperate;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.xiuyukeji.stickerplayerview.annotations.PlayerSource.EDIT;
 import static com.xiuyukeji.stickerplayerview.event.EventHandle.STATE_NORMAL;
@@ -52,6 +58,7 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkFrameRateN
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkFrameRateRange;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkPadding;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkPosition;
+import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkPositions;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkResourceNotNull;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCheck.checkTextSize;
 import static com.xiuyukeji.stickerplayerview.utils.StickerOperate.copyStickerBean;
@@ -80,11 +87,14 @@ public class StickerPlayerView extends View {
 
     private final BitmapFrameInfo mBitmapFrameInfo;
 
+    private final Matrix mDrawMatrix;
+
     private int mFrameIndex = 0;//当前帧
 
     private int mState = EDIT;
 
     private OnDeleteListener mOnDeleteListener;
+    private OnInvalidateListener mOnInvalidateListener;
 
     public StickerPlayerView(Context context) {
         this(context, null, 0, R.style.SickerPlayerViewStyle);
@@ -109,6 +119,8 @@ public class StickerPlayerView extends View {
         mPlayerHandle = new PlayerHandle(this);
 
         mBitmapFrameInfo = new BitmapFrameInfo();
+
+        mDrawMatrix = new Matrix();
 
         initAttrs(attrs, defStyleAttr, defStyleRes);
         initView();
@@ -200,10 +212,10 @@ public class StickerPlayerView extends View {
     private void setListener() {
         mEventHandle.setOnDeleteListener(new OnDeleteListener() {
             @Override
-            public void onDelete(StickerBean stickerBean) {
+            public void onDelete(StickerBean stickerBean, int position) {
                 mResourceHandle.decrementUseCount(stickerBean.getIndex());
                 if (mOnDeleteListener != null) {
-                    mOnDeleteListener.onDelete(stickerBean);
+                    mOnDeleteListener.onDelete(copyStickerBean(stickerBean), position);
                 }
                 if (mResourceHandle.getDynamicCount() == 0) {
                     mPlayerHandle.stop();
@@ -236,9 +248,27 @@ public class StickerPlayerView extends View {
         });
     }
 
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        return mEventHandle.dispatchTouchEvent(event);
+    /**
+     * 通过索引获取文字贴纸数据，如果不是文字贴纸将为Null
+     *
+     * @param position 索引
+     */
+    public TextStickerBean getTextSticker(int position) {
+        StickerBean stickerBean = obtainSticker(position);
+        if (stickerBean instanceof TextStickerBean) {
+            return (TextStickerBean) StickerOperate.copyStickerBean(stickerBean);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 通过索引获取贴纸数据
+     *
+     * @param position 索引
+     */
+    public StickerBean getSticker(int position) {
+        return StickerOperate.copyStickerBean(mDataHandle.getSticker(position));
     }
 
     /**
@@ -437,7 +467,7 @@ public class StickerPlayerView extends View {
     public void replaceSticker(Resource resource, @FrameRange int position) {
         checkPosition(position);
 
-        replaceSticker(getSticker(position), resource, position,
+        replaceSticker(obtainSticker(position), resource, position,
                 -1, -1, -1, -1, -1);
     }
 
@@ -459,7 +489,7 @@ public class StickerPlayerView extends View {
         if (position == STATE_NORMAL) {
             return;
         }
-        replaceSticker(getTextSticker(position), resource, position, -1,
+        replaceSticker(obtainTextSticker(position), resource, position, -1,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -480,7 +510,7 @@ public class StickerPlayerView extends View {
                                    @PaddingRange int bottomPadding) {
         checkPosition(position);
 
-        replaceSticker(getTextSticker(position), resource, position, -1,
+        replaceSticker(obtainTextSticker(position), resource, position, -1,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -503,7 +533,7 @@ public class StickerPlayerView extends View {
                                    @PaddingRange int bottomPadding) {
         checkPosition(position);
 
-        replaceSticker(getTextSticker(position), resource, position, delayFrame,
+        replaceSticker(obtainTextSticker(position), resource, position, delayFrame,
                 leftPadding, topPadding, rightPadding, bottomPadding);
     }
 
@@ -692,13 +722,6 @@ public class StickerPlayerView extends View {
     }
 
     /**
-     * 获得当前选中贴纸索引
-     */
-    public int getCurrentPosition() {
-        return mEventHandle.getSelectedPosition();
-    }
-
-    /**
      * 修改当前选中贴纸帧
      *
      * @param fromFrame 开始帧
@@ -803,7 +826,7 @@ public class StickerPlayerView extends View {
     public void setText(String text, @FrameRange int position) {
         checkPosition(position);
 
-        TextStickerBean textStickerBean = getTextSticker(position);
+        TextStickerBean textStickerBean = obtainTextSticker(position);
         if (textStickerBean == null) {
             return;
         }
@@ -832,7 +855,7 @@ public class StickerPlayerView extends View {
     public void setTextColor(@ColorInt int color, @FrameRange int position) {
         checkPosition(position);
 
-        TextStickerBean textStickerBean = getTextSticker(position);
+        TextStickerBean textStickerBean = obtainTextSticker(position);
         if (textStickerBean == null) {
             return;
         }
@@ -862,7 +885,7 @@ public class StickerPlayerView extends View {
         checkTextSize(size);
         checkPosition(position);
 
-        TextStickerBean textStickerBean = getTextSticker(position);
+        TextStickerBean textStickerBean = obtainTextSticker(position);
         if (textStickerBean == null) {
             return;
         }
@@ -892,7 +915,7 @@ public class StickerPlayerView extends View {
     public void setBold(boolean isBold, @FrameRange int position) {
         checkPosition(position);
 
-        TextStickerBean textStickerBean = getTextSticker(position);
+        TextStickerBean textStickerBean = obtainTextSticker(position);
         if (textStickerBean == null) {
             return;
         }
@@ -921,7 +944,7 @@ public class StickerPlayerView extends View {
     public void setItalic(boolean isItalic, @FrameRange int position) {
         checkPosition(position);
 
-        TextStickerBean textStickerBean = getTextSticker(position);
+        TextStickerBean textStickerBean = obtainTextSticker(position);
         if (textStickerBean == null) {
             return;
         }
@@ -950,7 +973,7 @@ public class StickerPlayerView extends View {
     public void setUnderline(boolean isUnderline, @FrameRange int position) {
         checkPosition(position);
 
-        TextStickerBean textStickerBean = getTextSticker(position);
+        TextStickerBean textStickerBean = obtainTextSticker(position);
         if (textStickerBean == null) {
             return;
         }
@@ -959,10 +982,17 @@ public class StickerPlayerView extends View {
     }
 
     /**
+     * 获得当前选中贴纸索引
+     */
+    public int getCurrentPosition() {
+        return mEventHandle.getSelectedPosition();
+    }
+
+    /**
      * 当前是否选中贴纸
      */
     public boolean isSelectedSticker() {
-        return getCurrentPosition() != STATE_NORMAL;
+        return mEventHandle.getSelectedPosition() != STATE_NORMAL;
     }
 
     /**
@@ -981,11 +1011,32 @@ public class StickerPlayerView extends View {
      * @param position 索引
      */
     public boolean isDynamicSticker(int position) {
-        StickerBean stickerBean = getSticker(position);
+        StickerBean stickerBean = obtainSticker(position);
         if (stickerBean == null) {
             return false;
         }
         return mResourceHandle.isDynamic(stickerBean.getIndex());
+    }
+
+    /**
+     * 获得当前选中贴纸总帧数
+     */
+    public int getStickerFrameCount() {
+        if (mEventHandle.getSelectedPosition() == STATE_NORMAL) {
+            return STATE_NORMAL;
+        }
+        return getStickerFrameCount(mEventHandle.getSelectedPosition());
+    }
+
+    /**
+     * 获得指定贴纸总帧数
+     */
+    public int getStickerFrameCount(int position) {
+        StickerBean stickerBean = obtainSticker(position);
+        if (stickerBean == null) {
+            return STATE_NORMAL;
+        }
+        return mResourceHandle.getFrameCount(stickerBean.getIndex());
     }
 
     /**
@@ -1084,6 +1135,105 @@ public class StickerPlayerView extends View {
         mPlayerHandle.resume();
     }
 
+    /**
+     * 绘制指定索引贴纸到画布上
+     *
+     * @param canvas    画布
+     * @param positions 贴纸索引集合
+     */
+    public void drawCanvas(Canvas canvas, @NonNull List<Integer> positions) {
+        checkPositions(positions);
+
+        if (mDataHandle.size() == 0) {
+            return;
+        }
+
+        long uptimeMs = Math.round(mFrameIndex * mPlayerHandle.getDelayTime());
+
+        for (int position : positions) {
+            StickerBean stickerBean = obtainSticker(position);
+            if (stickerBean == null) {
+                continue;
+            }
+
+            mResourceHandle.loadBitmap(stickerBean.getIndex(), uptimeMs, mBitmapFrameInfo);
+
+            Bitmap bitmap = mBitmapFrameInfo.getBitmap();
+            int frame = mBitmapFrameInfo.getFrame();
+
+            calculateSticker(stickerBean, mDrawMatrix, getWidth(), canvas.getWidth());
+
+            if (stickerBean instanceof TextStickerBean) {
+                TextStickerBean textStickerBean = (TextStickerBean) stickerBean;
+                mRendererHandle.drawTextSticker(canvas, mDrawMatrix, textStickerBean, bitmap, frame);
+            } else {
+                mRendererHandle.drawSticker(canvas, mDrawMatrix, stickerBean, bitmap);
+            }
+        }
+    }
+
+    /**
+     * 绘制指定帧的贴纸到画布上，需要遍历全局，效率较低
+     *
+     * @param canvas     画布
+     * @param frameIndex 帧序列
+     */
+    public void drawCanvas(Canvas canvas, @FrameRange int frameIndex) {
+        checkFrame(frameIndex);
+
+        if (mDataHandle.size() == 0) {
+            return;
+        }
+
+        long uptimeMs = Math.round(mFrameIndex * mPlayerHandle.getDelayTime());
+
+        for (Node<StickerBean> node : mDataHandle.searchStickers(frameIndex)) {
+            StickerBean stickerBean = node.getValue();
+
+            mResourceHandle.loadBitmap(stickerBean.getIndex(), uptimeMs, mBitmapFrameInfo);
+
+            Bitmap bitmap = mBitmapFrameInfo.getBitmap();
+            int frame = mBitmapFrameInfo.getFrame();
+
+            calculateSticker(stickerBean, mDrawMatrix, getWidth(), canvas.getWidth());
+
+            if (stickerBean instanceof TextStickerBean) {
+                TextStickerBean textStickerBean = (TextStickerBean) stickerBean;
+                mRendererHandle.drawTextSticker(canvas, mDrawMatrix, textStickerBean, bitmap, frame);
+            } else {
+                mRendererHandle.drawSticker(canvas, mDrawMatrix, stickerBean, bitmap);
+            }
+        }
+    }
+
+    /**
+     * 获得全部贴纸数据
+     *
+     * @return 迭代器
+     */
+    public ArrayList<StickerBean> getStickers() {
+        ArrayList<StickerBean> stickers = new ArrayList<>();
+        Iterator<StickerBean> iterator = mDataHandle.getStickers();
+        while (iterator.hasNext()) {
+            StickerBean stickerBean = iterator.next().getValue();
+            stickers.add(StickerOperate.copyStickerBean(stickerBean));//克隆数据防止外部修改
+        }
+        return stickers;
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        if (mOnInvalidateListener != null) {
+            mOnInvalidateListener.onInvalidate();
+        }
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        return mEventHandle.dispatchTouchEvent(event);
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         mPlayerHandle.cancel();
@@ -1157,9 +1307,9 @@ public class StickerPlayerView extends View {
         return position;
     }
 
-    //获得文字贴纸
-    private TextStickerBean getTextSticker(int position) {
-        StickerBean stickerBean = getSticker(position);
+    //获取文字贴纸数据
+    public TextStickerBean obtainTextSticker(int position) {
+        StickerBean stickerBean = obtainSticker(position);
         if (stickerBean instanceof TextStickerBean) {
             return (TextStickerBean) stickerBean;
         } else {
@@ -1167,8 +1317,8 @@ public class StickerPlayerView extends View {
         }
     }
 
-    //获得贴纸
-    private StickerBean getSticker(int position) {
+    //获取贴纸数据
+    private StickerBean obtainSticker(int position) {
         return mDataHandle.getSticker(position);
     }
 
@@ -1251,6 +1401,15 @@ public class StickerPlayerView extends View {
      */
     public void setOnUnselectedListener(OnUnselectedListener l) {
         mEventHandle.setOnUnselectedListener(l);
+    }
+
+    /**
+     * 当invalidate被调用时回调
+     *
+     * @param l 回调
+     */
+    public void setOnInvalidateListener(OnInvalidateListener l) {
+        this.mOnInvalidateListener = l;
     }
 
     @Override

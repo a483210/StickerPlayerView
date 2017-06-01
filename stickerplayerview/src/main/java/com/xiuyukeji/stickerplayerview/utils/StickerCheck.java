@@ -8,6 +8,7 @@ import com.xiuyukeji.stickerplayerview.annotations.PositionRange;
 import com.xiuyukeji.stickerplayerview.annotations.TextSizeRange;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -40,6 +41,20 @@ public class StickerCheck {
         if (position < PositionRange.POSITION_FROM) {
             throw new StickerException(String.format(Locale.getDefault(), "索引(position)必须大于%d！",
                     PositionRange.POSITION_FROM));
+        }
+    }
+
+    /**
+     * 检查索引集合
+     *
+     * @param positions 索引集合
+     */
+    public static void checkPositions(List<Integer> positions) {
+        if (positions == null) {
+            throw new StickerException("索引集合(positions)不允许为空！");
+        }
+        for (int position : positions) {
+            checkPosition(position);
         }
     }
 

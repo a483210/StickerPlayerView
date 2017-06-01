@@ -2,7 +2,6 @@ package com.xiuyukeji.stickerplayerview.sample.video;
 
 import android.graphics.Bitmap;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -11,8 +10,9 @@ import android.view.View;
 
 import com.blankj.utilcode.util.ImageUtils;
 import com.trello.rxlifecycle2.android.ActivityEvent;
-import com.xiuyukeji.stickerplayerview.StickerPlayerView;
+import com.xiuyukeji.stickerplayerview.StickerFramePlayerView;
 import com.xiuyukeji.stickerplayerview.annotations.PlayerSource;
+import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 import com.xiuyukeji.stickerplayerview.event.EventHandle;
 import com.xiuyukeji.stickerplayerview.sample.R;
@@ -20,8 +20,9 @@ import com.xiuyukeji.stickerplayerview.sample.base.BaseActivity;
 import com.xiuyukeji.stickerplayerview.sample.base.RxIndex;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.ColorAdapter;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.StickerAdapter;
-import com.xiuyukeji.stickerplayerview.sample.video.adapter.StickerAdapter.StickerBean;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.ThumbAdapter;
+import com.xiuyukeji.stickerplayerview.sample.video.adapter.ThumbAdapter.ViewHolder;
+import com.xiuyukeji.stickerplayerview.sample.video.bean.StickerItem;
 import com.xiuyukeji.stickerplayerview.sample.widget.MyGifImageView;
 import com.xiuyukeji.stickerplayerview.sample.widget.recycler.FixedItemLayoutManager;
 import com.xiuyukeji.stickerplayerview.sample.widget.recycler.ReboundScrollListener;
@@ -54,7 +55,7 @@ public class VideoActivity extends BaseActivity {
     @BindView(R.id.gif)
     MyGifImageView mGifImage;
     @BindView(R.id.sticker)
-    StickerPlayerView mStickerView;
+    StickerFramePlayerView mStickerView;
 
     @BindView(R.id.thumbRecycler)
     RecyclerView mThumbRecyclerView;
@@ -76,6 +77,8 @@ public class VideoActivity extends BaseActivity {
 
     private int mThumbPosition;
     private boolean mIsScrollChange = true;
+
+    private ViewHolder mCurrentHolder;
 
     @Override
     protected int getLayoutId() {
@@ -139,14 +142,19 @@ public class VideoActivity extends BaseActivity {
                 return;
             mThumbRecyclerView.smoothScrollToPosition(position);
         });
+        mThumbAdapter.setOnDrawThumbListener((canvas, position) ->
+                mStickerView.drawCanvas(canvas, position));
         mStickerAdapter.setOnItemClickListener((holder, v, position) -> {
             if (!mIsScrollChange) {
                 return;
             }
-            mStickerView.addTextSticker(0, 60,
-                    createAssetsResource(VideoActivity.this, "tuzi.gif"),
-                    "testText", 0xff000000, StickerUtil.dpToPx(VideoActivity.this, 18),
-                    5, 54, 113, 47, 118);
+
+            StickerItem item = mStickerAdapter.get(position);
+
+            mStickerView.addTextSticker(mStickerView.getCurrentFrame(),
+                    createAssetsResource(VideoActivity.this, item.getPath()),
+                    item.getText(), item.getTextColor(), item.getTextSize(),
+                    item.getLeftPadding(), item.getTopPadding(), item.getRightPadding(), item.getBottomPadding());
         });
         mColorAdapter.setOnItemClickListener((holder, v, position) -> {
             if (!mIsScrollChange) {
@@ -154,8 +162,8 @@ public class VideoActivity extends BaseActivity {
             }
             mStickerView.setTextColor(mColorAdapter.get(position));
         });
-
-        mStickerView.setOnSelectedListener(stickerBean -> {
+        mStickerView.setOnSelectedListener(position -> {
+            StickerBean stickerBean = mStickerView.getSticker(position);
             if (stickerBean instanceof TextStickerBean) {
                 TextStickerBean textStickerBean = (TextStickerBean) stickerBean;
                 mBoldView.setSelected(textStickerBean.isBold());
@@ -179,6 +187,13 @@ public class VideoActivity extends BaseActivity {
                 return true;
             });
             dialog.show();
+        });
+        mStickerView.setOnInvalidateListener(() -> {
+            if (mCurrentHolder != null) {
+                mCurrentHolder.getStickerThumb().invalidate();
+            } else {
+                searchHolder(mThumbPosition);
+            }
         });
     }
 
@@ -278,10 +293,11 @@ public class VideoActivity extends BaseActivity {
     }
 
     private void loadSticker() {
-        mStickerAdapter.add(new StickerBean("dynamic.gif"));
-        mStickerAdapter.add(new StickerBean("text1.png"));
-        mStickerAdapter.add(new StickerBean("text2.png"));
-        mStickerAdapter.add(new StickerBean("tuzi.gif"));
+        mStickerAdapter.add(new StickerItem(StickerItem.TEXT, "text1.png", "text1", 0xff000000,
+                StickerUtil.dpToPx(VideoActivity.this, 18), 176, 80, 74, 97));
+        mStickerAdapter.add(new StickerItem(StickerItem.TEXT, "text2.png", "text2", 0xff000000,
+                StickerUtil.dpToPx(VideoActivity.this, 18), 175, 123, 188, 152));
+
         mStickerAdapter.notifyDataSetChanged();
     }
 
@@ -294,15 +310,34 @@ public class VideoActivity extends BaseActivity {
 
         @Override
         public void onScrollSelected(int position) {
+            searchHolder(position);
             loadThumb(position);
             mIsScrollChange = true;
         }
     }
 
-    public static class NotScroll implements View.OnTouchListener {
+    private static class NotScroll implements View.OnTouchListener {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             return true;
+        }
+    }
+
+    private void searchHolder(int position) {
+        int count = mThumbRecyclerView.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = mThumbRecyclerView.getChildAt(i);
+            Object tag = child.getTag();
+            if (tag == null) {
+                continue;
+            }
+            if (!(tag instanceof ViewHolder)) {
+                continue;
+            }
+            ViewHolder holder = (ViewHolder) tag;
+            if (holder.getLayoutPosition() == position) {
+                mCurrentHolder = holder;
+            }
         }
     }
 
@@ -329,26 +364,24 @@ public class VideoActivity extends BaseActivity {
     }
 
     private void copySticker(int id) {
-        if (mStickerView.isDynamicSticker()) {
-            new AlertDialog.Builder(this)
-                    .setCancelable(false)
-                    .setMessage("发现你选择的是动态贴纸，请选择复制模式")
-                    .setPositiveButton("以每一帧计算", (dialog, which) -> startCopySticker(id, 1))
-                    .setNegativeButton("以贴纸总时间计算", (dialog, which) -> startCopySticker(id, 1))
-                    .show();
-        } else {
-            startCopySticker(id, 1);
-        }
-    }
-
-    private void startCopySticker(int id, int delayFrame) {
+        int count = mThumbPosition;
+        int gifCount = mGifImage.getGifCount();
         switch (id) {
             case R.id.one:
+                count += 1;
                 break;
             case R.id.five:
+                count += 5;
                 break;
             case R.id.all:
+                count += gifCount;
                 break;
+        }
+        for (int i = mThumbPosition + 1; i < count; i++) {
+            if (i >= gifCount) {
+                break;
+            }
+            mStickerView.copySticker(i);
         }
     }
 

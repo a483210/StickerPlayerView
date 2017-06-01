@@ -424,7 +424,7 @@ public class EventHandle extends ClickEvent {
         }
 
         if (mOnDeleteListener != null) {
-            mOnDeleteListener.onDelete(stickerBean);
+            mOnDeleteListener.onDelete(stickerBean, position);
         }
     }
 
@@ -438,18 +438,15 @@ public class EventHandle extends ClickEvent {
 
     @Override
     protected void click() {
-        if (mStickerBean == null) {
-            return;
-        }
-        if (mOnClickStickerListener != null) {
-            mOnClickStickerListener.onClick(mStickerBean);
+        if (mStickerBean != null && mOnClickStickerListener != null) {
+            mOnClickStickerListener.onClick(mSelectedPosition);
         }
     }
 
     @Override
     protected void doubleClick() {
         if (mStickerBean != null && mOnDoubleClickStickerListener != null) {
-            mOnDoubleClickStickerListener.onDoubleClick(mStickerBean);
+            mOnDoubleClickStickerListener.onDoubleClick(mSelectedPosition);
         }
     }
 
@@ -457,7 +454,7 @@ public class EventHandle extends ClickEvent {
     protected void longClick() {
         mState = STATE_CANCEL;
         if (mStickerBean != null && mOnLongClickStickerListener != null) {
-            mOnLongClickStickerListener.onLongClick(mStickerBean);
+            mOnLongClickStickerListener.onLongClick(mSelectedPosition);
         }
     }
 
@@ -488,7 +485,7 @@ public class EventHandle extends ClickEvent {
         mView.invalidate();
 
         if (mOnSelectedListener != null) {
-            mOnSelectedListener.onSelected(mStickerBean);
+            mOnSelectedListener.onSelected(position);
         }
     }
 
@@ -497,14 +494,16 @@ public class EventHandle extends ClickEvent {
             return;
         }
 
-        mSelectedPosition = STATE_NORMAL;
+        int position = mSelectedPosition;
 
-        if (mOnUnselectedListener != null) {
-            mOnUnselectedListener.onUnselected(mStickerBean);
-        }
+        mSelectedPosition = STATE_NORMAL;
         mStickerBean = null;
 
         mView.invalidate();
+
+        if (mOnUnselectedListener != null) {
+            mOnUnselectedListener.onUnselected(position);
+        }
     }
 
     private void invalidateSelected() {

@@ -34,8 +34,9 @@ public class StickerThumbView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (mOnDrawThumbListener != null)
+        if (mOnDrawThumbListener != null) {
             mOnDrawThumbListener.onDrawThumb(canvas, mPosition);
+        }
     }
 
     public void setOnDrawThumbListener(OnDrawThumbListener l) {
