@@ -5,4 +5,5 @@
     <string name="copy_sticker_five">复制到后五张</string>
     <string name="copy_sticker_all">复制到后全部</string>
     <string name="copy_sticker">复制贴纸</string>
+    <string name="confirm">确定</string>
 </resources>

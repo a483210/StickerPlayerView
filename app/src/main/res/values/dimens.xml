@@ -5,4 +5,6 @@
     <dimen name="video_color_layout_size">32dp</dimen>
     <dimen name="video_style_item_padding">2.5dp</dimen>
     <dimen name="video_layout_margin">5dp</dimen>
+    <dimen name="confirm_padding_lr">10dp</dimen>
+    <dimen name="confirm_padding_tb">5dp</dimen>
 </resources>

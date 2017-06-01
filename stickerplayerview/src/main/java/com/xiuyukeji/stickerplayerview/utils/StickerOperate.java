@@ -8,7 +8,7 @@ import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
  *
  * @author Created by jz on 2017/4/18 13:22
  */
-public class StickerOperate {
+public final class StickerOperate {
 
     private StickerOperate() {
     }

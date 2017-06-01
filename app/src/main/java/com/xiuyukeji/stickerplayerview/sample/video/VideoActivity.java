@@ -7,8 +7,10 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 
 import com.blankj.utilcode.util.ImageUtils;
+import com.blankj.utilcode.util.KeyboardUtils;
 import com.trello.rxlifecycle2.android.ActivityEvent;
 import com.xiuyukeji.stickerplayerview.StickerFramePlayerView;
 import com.xiuyukeji.stickerplayerview.annotations.PlayerSource;
@@ -18,6 +20,7 @@ import com.xiuyukeji.stickerplayerview.event.EventHandle;
 import com.xiuyukeji.stickerplayerview.sample.R;
 import com.xiuyukeji.stickerplayerview.sample.base.BaseActivity;
 import com.xiuyukeji.stickerplayerview.sample.base.RxIndex;
+import com.xiuyukeji.stickerplayerview.sample.utils.TUtils;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.ColorAdapter;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.StickerAdapter;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.ThumbAdapter;
@@ -51,6 +54,8 @@ public class VideoActivity extends BaseActivity {
     Toolbar mToolbar;
     @BindView(R.id.start)
     View mStartView;
+    @BindView(R.id.stop)
+    View mStopView;
 
     @BindView(R.id.gif)
     MyGifImageView mGifImage;
@@ -71,6 +76,13 @@ public class VideoActivity extends BaseActivity {
     @BindView(R.id.underline)
     View mUnderlineView;
 
+    @BindView(R.id.mask)
+    View mMaskView;
+    @BindView(R.id.textLay)
+    View mTextLayout;
+    @BindView(R.id.edit)
+    EditText mEditView;
+
     private ThumbAdapter mThumbAdapter;
     private StickerAdapter mStickerAdapter;
     private ColorAdapter mColorAdapter;
@@ -80,6 +92,8 @@ public class VideoActivity extends BaseActivity {
 
     private ViewHolder mCurrentHolder;
     private int mLastDrawPosition;
+
+    private String mStickerText;
 
     @Override
     protected int getLayoutId() {
@@ -165,6 +179,7 @@ public class VideoActivity extends BaseActivity {
             }
             mStickerView.setTextColor(mColorAdapter.get(position));
         });
+
         mStickerView.setOnSelectedListener(position -> {
             StickerBean stickerBean = mStickerView.getSticker(position);
             if (stickerBean instanceof TextStickerBean) {
@@ -174,12 +189,19 @@ public class VideoActivity extends BaseActivity {
                 mUnderlineView.setSelected(textStickerBean.isUnderline());
             }
         });
-        mStickerView.setOnUnselectedListener(stickerBean -> {
+        mStickerView.setOnUnselectedListener(position -> {
             mBoldView.setSelected(false);
             mItalicView.setSelected(false);
             mUnderlineView.setSelected(false);
         });
-        mStickerView.setOnLongClickStickerListener(stickerBean -> {
+        mStickerView.setOnInvalidateListener(() -> {
+            if (mLastDrawPosition != mThumbPosition) {
+                searchHolder(mThumbPosition);
+                mLastDrawPosition = mThumbPosition;
+            }
+            mCurrentHolder.getStickerThumb().invalidate();
+        });
+        mStickerView.setOnLongClickStickerListener(position -> {
             BottomDialog dialog = new BottomDialog(VideoActivity.this);
             dialog.title(R.string.copy_sticker);
             dialog.canceledOnTouchOutside(true);
@@ -191,16 +213,29 @@ public class VideoActivity extends BaseActivity {
             });
             dialog.show();
         });
-        mStickerView.setOnInvalidateListener(() -> {
-            if (mLastDrawPosition != mThumbPosition) {
-                searchHolder(mThumbPosition);
-                mLastDrawPosition = mThumbPosition;
+        mStickerView.setOnDoubleClickStickerListener(position -> {
+            TextStickerBean stickerBean = mStickerView.getTextSticker(position);
+
+            showTextLayout();
+
+            mStickerText = stickerBean.getText();
+
+            mEditView.setText(mStickerText);
+            mEditView.setSelection(mStickerText.length());
+        });
+
+        mMaskView.setOnClickListener(v -> {
+            cancelStickerText();
+        });
+        mEditView.addTextChangedListener(new TUtils.OnTextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                mStickerView.setText(s.toString());
             }
-            mCurrentHolder.getStickerThumb().invalidate();
         });
     }
 
-    @OnClick({R.id.start, R.id.stop, R.id.bold, R.id.italic, R.id.underline})
+    @OnClick({R.id.start, R.id.stop, R.id.bold, R.id.italic, R.id.underline, R.id.confirm})
     void onClick(View v) {
         switch (v.getId()) {
             case R.id.start:
@@ -220,6 +255,9 @@ public class VideoActivity extends BaseActivity {
                 break;
             case R.id.underline:
                 setStyle(mUnderlineView);
+                break;
+            case R.id.confirm:
+                confirmStickerText();
                 break;
         }
     }
@@ -387,6 +425,34 @@ public class VideoActivity extends BaseActivity {
             mStickerView.copySticker(i);
         }
         mThumbAdapter.notifyDataSetChanged();
+    }
+
+    private void showTextLayout() {
+        mMaskView.setVisibility(View.VISIBLE);
+        mTextLayout.setVisibility(View.VISIBLE);
+        mStartView.setVisibility(View.INVISIBLE);
+        mStopView.setVisibility(View.INVISIBLE);
+        KeyboardUtils.showSoftInput(mEditView);
+    }
+
+    private void hideTextLayout() {
+        mMaskView.setVisibility(View.GONE);
+        mTextLayout.setVisibility(View.INVISIBLE);
+        mStartView.setVisibility(View.VISIBLE);
+        mStopView.setVisibility(View.VISIBLE);
+        KeyboardUtils.hideSoftInput(this);
+
+        mStickerText = null;
+    }
+
+    private void cancelStickerText() {
+        mStickerView.setText(mStickerText);
+
+        hideTextLayout();
+    }
+
+    private void confirmStickerText() {
+        hideTextLayout();
     }
 
     @Override

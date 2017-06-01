@@ -16,7 +16,8 @@ import java.util.Locale;
  *
  * @author Created by jz on 2017/4/26 11:59
  */
-public class StickerCheck {
+public final class StickerCheck {
+
     private StickerCheck() {
     }
 

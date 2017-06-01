@@ -12,7 +12,7 @@ import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
  *
  * @author Created by jz on 2017/4/12 16:56
  */
-public class StickerCalculateUtil {
+public final class StickerCalculateUtil {
 
     private StickerCalculateUtil() {
     }

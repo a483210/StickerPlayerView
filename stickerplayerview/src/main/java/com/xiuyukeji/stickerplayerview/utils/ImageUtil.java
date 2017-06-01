@@ -9,7 +9,7 @@ import android.os.Build;
  *
  * @author Created by jz on 2017/4/19 11:17
  */
-public class ImageUtil {
+public final class ImageUtil {
 
     private ImageUtil() {
     }
