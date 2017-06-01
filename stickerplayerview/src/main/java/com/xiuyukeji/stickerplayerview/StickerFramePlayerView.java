@@ -6,7 +6,6 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.widget.FrameLayout;
@@ -38,13 +37,13 @@ import java.util.ArrayList;
  *
  * @author Created by jz on 2017/5/30 13:35
  */
-@UiThread
 public class StickerFramePlayerView extends FrameLayout {
 
     private final StickerPlayerView mStickerPlayerView;
 
     private final SparseArray<ArrayList<Integer>> mFramePositions;
 
+    private OnCopyListener mOnCopyListener;
     private OnDeleteListener mOnDeleteListener;
 
     public StickerFramePlayerView(Context context) {
@@ -75,6 +74,15 @@ public class StickerFramePlayerView extends FrameLayout {
     }
 
     private void setListener() {
+        mStickerPlayerView.setOnCopyListener(new com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener() {
+            @Override
+            public void onCopy(int fromFrame, int toFrame, int position) {
+                addFramePosition(fromFrame, position);
+                if (mOnCopyListener != null) {
+                    mOnCopyListener.onCopy(fromFrame, position);
+                }
+            }
+        });
         mStickerPlayerView.setOnDeleteListener(new OnDeleteListener() {
             @Override
             public void onDelete(StickerBean stickerBean, int position) {
@@ -321,48 +329,35 @@ public class StickerFramePlayerView extends FrameLayout {
     }
 
     /**
-     * 复制指定贴纸到当前帧
+     * 复制当前选中贴纸到指定帧
      *
-     * @param position 索引
+     * @param frameIndex 帧序列
      */
-    public void copySticker(@FrameRange int position) {
-        mStickerPlayerView.copySticker(position);
+    public void copySticker(@FrameRange int frameIndex) {
+        mStickerPlayerView.copySticker(mStickerPlayerView.getCurrentPosition(), frameIndex, frameIndex);
     }
 
     /**
-     * 复制当前选中的贴纸，从fromFrame到toFrame
+     * 复制指定贴纸到指定帧
      *
-     * @param fromFrame 开始帧
-     * @param toFrame   结束帧
+     * @param position   索引
+     * @param frameIndex 帧序列
      */
-    public void copySticker(@FrameRange int fromFrame, @FrameRange int toFrame) {
-        mStickerPlayerView.copySticker(fromFrame, toFrame);
-    }
-
-    /**
-     * 复制指定贴纸，从fromFrame到toFrame
-     *
-     * @param position  索引
-     * @param fromFrame 开始帧
-     * @param toFrame   结束帧
-     */
-    public void copySticker(@FrameRange int position,
-                            @FrameRange int fromFrame, @FrameRange int toFrame) {
-        mStickerPlayerView.copySticker(position, fromFrame, toFrame);
+    public void copySticker(@FrameRange int position, @FrameRange int frameIndex) {
+        mStickerPlayerView.copySticker(position, frameIndex, frameIndex);
     }
 
     /**
      * 复制指定贴纸，从fromFrame到toFrame
      *
-     * @param position  索引
-     * @param dx        平移x
-     * @param dy        平移y
-     * @param fromFrame 开始帧
-     * @param toFrame   结束帧
+     * @param position   索引
+     * @param dx         平移x
+     * @param dy         平移y
+     * @param frameIndex 帧序列
      */
     public void copySticker(@FrameRange int position, int dx, int dy,
-                            @FrameRange int fromFrame, @FrameRange int toFrame) {
-        mStickerPlayerView.copySticker(position, dx, dy, fromFrame, toFrame);
+                            @FrameRange int frameIndex) {
+        mStickerPlayerView.copySticker(position, dx, dy, frameIndex, frameIndex);
     }
 
     /**
@@ -637,6 +632,10 @@ public class StickerFramePlayerView extends FrameLayout {
         return mStickerPlayerView.getStickers();
     }
 
+    private void addFramePosition(int position) {
+        addFramePosition(mStickerPlayerView.getCurrentPosition(), position);
+    }
+
     //记录frame的position，提高某些函数查找效率
     private void addFramePosition(int frame, int position) {
         ArrayList<Integer> positions = mFramePositions.get(frame);
@@ -672,6 +671,15 @@ public class StickerFramePlayerView extends FrameLayout {
      */
     public void setOnLeftBottomListener(OnLeftBottomListener l) {
         mStickerPlayerView.setOnLeftBottomListener(l);
+    }
+
+    /**
+     * 复制贴纸时回调
+     *
+     * @param l 回调
+     */
+    public void setOnCopyListener(OnCopyListener l) {
+        this.mOnCopyListener = l;
     }
 
     /**
@@ -737,4 +745,7 @@ public class StickerFramePlayerView extends FrameLayout {
         mStickerPlayerView.setOnInvalidateListener(l);
     }
 
+    public interface OnCopyListener {
+        void onCopy(int frameIndex, int position);
+    }
 }

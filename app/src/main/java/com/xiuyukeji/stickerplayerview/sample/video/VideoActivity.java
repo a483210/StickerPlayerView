@@ -79,6 +79,7 @@ public class VideoActivity extends BaseActivity {
     private boolean mIsScrollChange = true;
 
     private ViewHolder mCurrentHolder;
+    private int mLastDrawPosition;
 
     @Override
     protected int getLayoutId() {
@@ -142,8 +143,10 @@ public class VideoActivity extends BaseActivity {
                 return;
             mThumbRecyclerView.smoothScrollToPosition(position);
         });
-        mThumbAdapter.setOnDrawThumbListener((canvas, position) ->
-                mStickerView.drawCanvas(canvas, position));
+        mThumbAdapter.setOnDrawThumbListener((canvas, position) -> {
+            mStickerView.drawCanvas(canvas, position);
+            mLastDrawPosition = position;
+        });
         mStickerAdapter.setOnItemClickListener((holder, v, position) -> {
             if (!mIsScrollChange) {
                 return;
@@ -189,11 +192,11 @@ public class VideoActivity extends BaseActivity {
             dialog.show();
         });
         mStickerView.setOnInvalidateListener(() -> {
-            if (mCurrentHolder != null) {
-                mCurrentHolder.getStickerThumb().invalidate();
-            } else {
+            if (mLastDrawPosition != mThumbPosition) {
                 searchHolder(mThumbPosition);
+                mLastDrawPosition = mThumbPosition;
             }
+            mCurrentHolder.getStickerThumb().invalidate();
         });
     }
 
@@ -310,7 +313,6 @@ public class VideoActivity extends BaseActivity {
 
         @Override
         public void onScrollSelected(int position) {
-            searchHolder(position);
             loadThumb(position);
             mIsScrollChange = true;
         }
@@ -337,6 +339,7 @@ public class VideoActivity extends BaseActivity {
             ViewHolder holder = (ViewHolder) tag;
             if (holder.getLayoutPosition() == position) {
                 mCurrentHolder = holder;
+                break;
             }
         }
     }
@@ -377,12 +380,13 @@ public class VideoActivity extends BaseActivity {
                 count += gifCount;
                 break;
         }
-        for (int i = mThumbPosition + 1; i < count; i++) {
+        for (int i = mThumbPosition + 1; i <= count; i++) {
             if (i >= gifCount) {
                 break;
             }
             mStickerView.copySticker(i);
         }
+        mThumbAdapter.notifyDataSetChanged();
     }
 
     @Override

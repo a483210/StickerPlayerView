@@ -73,6 +73,7 @@ public class ThumbAdapter extends BaseAdapter<ThumbAdapter.ViewHolder, ThumbAdap
 
         holder.stickerThumb.setPosition(position);
         holder.stickerThumb.setOnDrawThumbListener(mOnDrawThumbListener);
+        holder.stickerThumb.invalidate();
 
         holder.itemView.setTag(holder);
     }

@@ -10,7 +10,6 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,6 +32,7 @@ import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftBottomListener;
 import com.xiuyukeji.stickerplayerview.event.intefaces.OnLeftTopListener;
 import com.xiuyukeji.stickerplayerview.event.intefaces.OnRightTopListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnClickStickerListener;
+import com.xiuyukeji.stickerplayerview.intefaces.OnCopyListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDeleteListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnDoubleClickStickerListener;
 import com.xiuyukeji.stickerplayerview.intefaces.OnInvalidateListener;
@@ -71,7 +71,6 @@ import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.dpToPx;
  *
  * @author Created by jz on 2017/4/11 16:52
  */
-@UiThread
 public class StickerPlayerView extends View {
 
     public static final String TAG = "StickerPlayerView";
@@ -93,6 +92,7 @@ public class StickerPlayerView extends View {
 
     private int mState = EDIT;
 
+    private OnCopyListener mOnCopyListener;
     private OnDeleteListener mOnDeleteListener;
     private OnInvalidateListener mOnInvalidateListener;
 
@@ -681,7 +681,11 @@ public class StickerPlayerView extends View {
 
         mResourceHandle.addedUseCount(newStickerBean.getIndex());
 
-        addSticker(newStickerBean);
+        int position = addSticker(newStickerBean);
+
+        if (mOnCopyListener != null) {
+            mOnCopyListener.onCopy(fromFrame, toFrame, position);
+        }
     }
 
     /**
@@ -1347,6 +1351,15 @@ public class StickerPlayerView extends View {
      */
     public void setOnLeftBottomListener(OnLeftBottomListener l) {
         mEventHandle.setOnLeftBottomListener(l);
+    }
+
+    /**
+     * 复制贴纸时回调
+     *
+     * @param l 回调
+     */
+    public void setOnCopyListener(OnCopyListener l) {
+        this.mOnCopyListener = l;
     }
 
     /**
