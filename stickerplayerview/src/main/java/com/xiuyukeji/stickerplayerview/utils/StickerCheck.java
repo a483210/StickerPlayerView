@@ -27,9 +27,9 @@ public final class StickerCheck {
      * @param textSize 文本大小
      */
     public static void checkTextSize(int textSize) {
-        if (textSize < TextSizeRange.TEXT_SIZE_FROM || textSize > TextSizeRange.TEXT_SIZE_TO) {
-            throw new StickerException(String.format(Locale.getDefault(), "文本大小(textSize)必须在[%d-%d]之间！",
-                    TextSizeRange.TEXT_SIZE_FROM, TextSizeRange.TEXT_SIZE_TO));
+        if (textSize < TextSizeRange.TEXT_SIZE_FROM) {
+            throw new StickerException(String.format(Locale.getDefault(), "文本大小(textSize)必须大于%d！",
+                    TextSizeRange.TEXT_SIZE_FROM));
         }
     }
 

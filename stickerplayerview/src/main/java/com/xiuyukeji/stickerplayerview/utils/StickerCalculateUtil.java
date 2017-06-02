@@ -31,10 +31,8 @@ public final class StickerCalculateUtil {
         int newTextWidth = calculateTextWidth(newLayout);
 
         StaticLayout oldLayout = textStickerBean.getStaticLayout();
-        int oldTextWidth;
-        if (oldLayout == null) {
-            oldTextWidth = newTextWidth;
-        } else {
+        int oldTextWidth = 0;
+        if (oldLayout != null) {
             oldTextWidth = calculateTextWidth(oldLayout);
         }
 
