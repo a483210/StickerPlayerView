@@ -132,6 +132,7 @@ public class StickerPlayerView extends View {
         if (attrs == null) {
             return;
         }
+
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs,
                 R.styleable.StickerPlayerView, defStyleAttr, defStyleRes);
 
@@ -834,7 +835,14 @@ public class StickerPlayerView extends View {
         if (textStickerBean == null) {
             return;
         }
+        String oldText = textStickerBean.getText();
+        if (text == null && oldText == null
+                || text != null && oldText != null && text.equals(oldText)) {
+            return;
+        }
+
         textStickerBean.setText(text);
+
         invalidate(textStickerBean);
     }
 
@@ -863,6 +871,10 @@ public class StickerPlayerView extends View {
         if (textStickerBean == null) {
             return;
         }
+        if (textStickerBean.getTextColor() == color) {
+            return;
+        }
+
         textStickerBean.setTextColor(color);
         invalidate(textStickerBean);
     }
@@ -893,6 +905,10 @@ public class StickerPlayerView extends View {
         if (textStickerBean == null) {
             return;
         }
+        if (textStickerBean.getTextSize() == size) {
+            return;
+        }
+
         textStickerBean.setTextSize(size);
         invalidate(textStickerBean);
     }
@@ -923,6 +939,10 @@ public class StickerPlayerView extends View {
         if (textStickerBean == null) {
             return;
         }
+        if (textStickerBean.isBold() == isBold) {
+            return;
+        }
+
         textStickerBean.setBold(isBold);
         invalidate(textStickerBean);
     }
@@ -952,6 +972,10 @@ public class StickerPlayerView extends View {
         if (textStickerBean == null) {
             return;
         }
+        if (textStickerBean.isItalic() == isItalic) {
+            return;
+        }
+
         textStickerBean.setItalic(isItalic);
         invalidate(textStickerBean);
     }
@@ -981,6 +1005,10 @@ public class StickerPlayerView extends View {
         if (textStickerBean == null) {
             return;
         }
+        if (textStickerBean.isUnderline() == isUnderline) {
+            return;
+        }
+
         textStickerBean.setUnderline(isUnderline);
         invalidate(textStickerBean);
     }
@@ -1073,6 +1101,7 @@ public class StickerPlayerView extends View {
         if (frameIndex == mFrameIndex) {
             return;
         }
+
         this.mFrameIndex = frameIndex;
 
         mDataHandle.setFrameIndex(frameIndex);
@@ -1108,6 +1137,10 @@ public class StickerPlayerView extends View {
      * @param state {@link PlayerSource#EDIT} and {@link PlayerSource#PLAYER}
      */
     public void setPlayerState(@PlayerSource int state) {
+        if (mState == state) {
+            return;
+        }
+
         this.mState = state;
         if (state == EDIT) {
             mPlayerHandle.start();
@@ -1241,9 +1274,11 @@ public class StickerPlayerView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         mPlayerHandle.cancel();
+
         if (mDataHandle.size() == 0) {
             return;
         }
+
         int selectedPosition = mEventHandle.getSelectedPosition();
         for (Node<StickerBean> node : mDataHandle.getCurrentStickers()) {
             StickerBean stickerBean = node.getValue();
@@ -1271,6 +1306,7 @@ public class StickerPlayerView extends View {
                 mRendererHandle.drawSelected(canvas, stickerBean);
             }
         }
+
         mPlayerHandle.nextFrame();
     }
 

@@ -26,7 +26,7 @@ import com.xiuyukeji.stickerplayerview.sample.video.adapter.StickerAdapter;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.ThumbAdapter;
 import com.xiuyukeji.stickerplayerview.sample.video.adapter.ThumbAdapter.ViewHolder;
 import com.xiuyukeji.stickerplayerview.sample.video.bean.StickerItem;
-import com.xiuyukeji.stickerplayerview.sample.widget.MyGifImageView;
+import com.xiuyukeji.stickerplayerview.sample.widget.player.MyGifImageView;
 import com.xiuyukeji.stickerplayerview.sample.widget.recycler.FixedItemLayoutManager;
 import com.xiuyukeji.stickerplayerview.sample.widget.recycler.ReboundScrollListener;
 import com.xiuyukeji.stickerplayerview.utils.ImageUtil;

@@ -1,4 +1,4 @@
-package com.xiuyukeji.stickerplayerview.sample.widget;
+package com.xiuyukeji.stickerplayerview.sample.widget.player;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -13,9 +13,9 @@ import android.view.ViewGroup;
 import com.blankj.utilcode.util.ScreenUtils;
 import com.xiuyukeji.stickerplayerview.resource.Resource;
 import com.xiuyukeji.stickerplayerview.resource.impl.GifResource;
-import com.xiuyukeji.stickerplayerview.sample.utils.scheduler.OnFrameListener;
-import com.xiuyukeji.stickerplayerview.sample.utils.scheduler.OnFrameUpdateListener;
-import com.xiuyukeji.stickerplayerview.sample.utils.scheduler.Scheduler;
+import com.xiuyukeji.stickerplayerview.sample.widget.player.scheduler.OnFrameListener;
+import com.xiuyukeji.stickerplayerview.sample.widget.player.scheduler.OnFrameUpdateListener;
+import com.xiuyukeji.stickerplayerview.sample.widget.player.scheduler.Scheduler;
 import com.xiuyukeji.stickerplayerview.utils.ImageUtil;
 import com.xiuyukeji.stickerplayerview.utils.StickerUtil;
 

@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -13,6 +12,7 @@ import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
 
+import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateTextSize;
 import static com.xiuyukeji.stickerplayerview.utils.StickerCalculateUtil.calculateTextSticker;
 import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.PAINT_FLAG;
 
@@ -95,13 +95,12 @@ public class RendererHandle {
         }
 
         StaticLayout staticLayout = textStickerBean.getStaticLayout();
-        if (staticLayout == null || !staticLayout.getText().equals(text)) {
-            staticLayout = new StaticLayout(text, mTextPaint, textStickerBean.getTextWidth(),
-                    Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
+        if (staticLayout == null || !text.equals(staticLayout.getText())) {//如果是第一次绘制或者文字变化
+            staticLayout = calculateTextSize(mTextPaint, textStickerBean, text);//重新计算文字大小
             textStickerBean.setStaticLayout(staticLayout);
         }
 
-        calculateTextSticker(textStickerBean, mTextPoint, staticLayout.getHeight());//这里需要重新计算文字位置
+        calculateTextSticker(mTextPoint, textStickerBean, staticLayout.getHeight());//这里需要重新计算文字位置
 
         canvas.save();
 

@@ -1,11 +1,15 @@
 package com.xiuyukeji.stickerplayerview.utils;
 
 import android.graphics.Matrix;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 
 import com.xiuyukeji.stickerplayerview.bean.IconBean;
 import com.xiuyukeji.stickerplayerview.bean.MatrixBean;
 import com.xiuyukeji.stickerplayerview.bean.StickerBean;
 import com.xiuyukeji.stickerplayerview.bean.TextStickerBean;
+
+import static com.xiuyukeji.stickerplayerview.utils.StickerUtil.createStaticLayout;
 
 /**
  * 贴纸计算类
@@ -17,13 +21,72 @@ public final class StickerCalculateUtil {
     private StickerCalculateUtil() {
     }
 
+    public static StaticLayout calculateTextSize(TextPaint textPaint, TextStickerBean textStickerBean, String newText) {
+        int width = textStickerBean.getTextWidth();
+        int height = textStickerBean.getTextHeight();
+        int textSize = textStickerBean.getTextSize();
+        int curTextSize = textStickerBean.getCurTextSize();
+
+        StaticLayout newLayout = createStaticLayout(newText, textPaint, width);
+        int newTextWidth = calculateTextWidth(newLayout);
+
+        StaticLayout oldLayout = textStickerBean.getStaticLayout();
+        int oldTextWidth;
+        if (oldLayout == null) {
+            oldTextWidth = newTextWidth;
+        } else {
+            oldTextWidth = calculateTextWidth(oldLayout);
+        }
+
+        int textRange = newLayout.getWidth() * newLayout.getHeight();
+        int range = height * width;
+
+        if (newTextWidth > oldTextWidth) {//减小
+            while (range < textRange) {
+                curTextSize--;
+                textPaint.setTextSize(curTextSize);
+
+                newLayout = createStaticLayout(newText, textPaint, width);
+                textRange = newLayout.getWidth() * newLayout.getHeight();
+            }
+        } else if (newTextWidth < oldTextWidth) {//放大
+            StaticLayout lastLayout = newLayout;
+            while (textRange <= range && curTextSize <= textSize) {//寻找最大的一个
+                curTextSize++;
+                textPaint.setTextSize(curTextSize);
+
+                lastLayout = newLayout;
+                newLayout = createStaticLayout(newText, textPaint, width);
+                textRange = newLayout.getWidth() * newLayout.getHeight();
+            }
+            curTextSize--;
+            textPaint.setTextSize(curTextSize);
+            newLayout = lastLayout;
+        }
+
+        textStickerBean.setCurTextSize(curTextSize);
+
+        return newLayout;
+    }
+
+    //计算文字真实宽度
+    private static int calculateTextWidth(StaticLayout staticLayout) {
+        int width = 0;
+        int count = staticLayout.getLineCount();
+        for (int i = 0; i < count; i++) {
+            width += staticLayout.getLineWidth(i);
+        }
+        return width;
+    }
+
     /**
      * 重新计算贴纸文字位置
      *
+     * @param point           填充坐标
      * @param textStickerBean 贴纸数据
      * @param textHeight      文字高度
      */
-    public static void calculateTextSticker(TextStickerBean textStickerBean, float[] point,
+    public static void calculateTextSticker(float[] point, TextStickerBean textStickerBean,
                                             int textHeight) {
         point[0] = textStickerBean.getLeftPadding();
         point[1] = textStickerBean.getTopPadding() + (textStickerBean.getTextHeight() - textHeight) / 2f;

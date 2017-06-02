@@ -30,7 +30,7 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/barLayout">
 
-        <com.xiuyukeji.stickerplayerview.sample.widget.MyGifImageView
+        <com.xiuyukeji.stickerplayerview.sample.widget.player.MyGifImageView
             android:id="@+id/gif"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -162,12 +162,14 @@
             android:id="@+id/edit"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:maxHeight="120dp" />
 
         <TextView
             android:id="@+id/confirm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:background="@color/success_stroke_color"
             android:paddingBottom="@dimen/confirm_padding_tb"
             android:paddingLeft="@dimen/confirm_padding_lr"

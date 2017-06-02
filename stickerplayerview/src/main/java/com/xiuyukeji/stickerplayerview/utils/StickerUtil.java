@@ -4,6 +4,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 
 /**
  * 贴纸工具类
@@ -53,4 +56,17 @@ public final class StickerUtil {
         srcBitmap.recycle();
         return dstBitmap;
     }
+
+    /**
+     * 统一创建StaticLayout
+     *
+     * @param text  文字
+     * @param paint 画笔
+     * @param width 宽度
+     */
+    public static StaticLayout createStaticLayout(String text, TextPaint paint, int width) {
+        return new StaticLayout(text, paint, width,
+                Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
+    }
+
 }

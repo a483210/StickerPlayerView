@@ -129,6 +129,11 @@ public class DataHandle {
 
         int oldFromFrame = stickerBean.getFromFrame();
         int oldToFrame = stickerBean.getToFrame();
+
+        if (oldFromFrame == fromFrame && oldToFrame == toFrame) {
+            return;
+        }
+
         stickerBean.setFromFrame(fromFrame);
         stickerBean.setToFrame(toFrame);
 
